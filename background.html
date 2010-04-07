@@ -1,0 +1,72 @@
+<html>
+<head><script type="text/javascript" src="jquery-1.3.2.js"></script></head>
+
+<body>
+<script>
+chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+	console.log("got a request");
+	console.log(request);
+	
+	if (request.type==="load") {
+		$.get(request.url, null, function(ajaxResult) {
+			console.log(ajaxResult);
+			var response = {
+				"tree": xmlTreeToJson(ajaxResult),
+				"current":$('results current node taxonID', ajaxResult).text()
+			};
+			console.log(response);
+			sendResponse(response);
+		});
+	} else {
+		sendResponse({});
+	}
+});
+
+function xmlTreeToJson(xml) {
+	console.log("transforming xml tree to JSON");
+	var root;
+	
+	//assemble the ancestry
+	var node = {};
+	$('results ancestry node', xml).each(function() {
+		if (root === undefined) {
+			root = xmlNodeToJson(this);
+			node = root;
+		} else {
+			node.children = [xmlNodeToJson(this)];
+			node = node.children[0];
+		}
+	});
+	
+	//add the current node
+	var currentElement = $('results current node', xml).get(0);
+	node.children = [xmlNodeToJson(currentElement)];
+	node = node.children[0];
+	
+	//add the current node's children
+	$('results children node', xml).each(function() {
+		node.children.push(xmlNodeToJson(this));
+	});
+	
+	console.log("transformed tree: ");
+	console.log(root);
+	return root;
+}
+
+function xmlNodeToJson(xml) {
+	console.log("transforming xml node to JSON: " + $('taxonID', xml).text());
+	return {
+		"id":$('taxonID', xml).text(),
+		"name":$('nameString', xml).text(),
+		"data":{
+			"rankName":$('rankName', xml).text(),
+			"valid":$('valid', xml).text(),
+			"enable":$('enable', xml).text(),
+		},
+		"children": [ ]
+	};
+}
+
+</script>
+</body>
+</html>
