@@ -2,10 +2,10 @@
 var jQuery, TextHTMLTree, TM;
 
 function EOLTreeMap(container) {
-	jQuery("<div id='thejit' ></div>").width('800px').height('600px').appendTo(container);
+	jQuery("<div id='thejit' ></div>").width('100%').height('100%').appendTo(container);
 	var tree = new TextHTMLTree(jQuery('#taxonomic-text-container')[0], true);
 
-	console.log("Starting tree viewer 1432");
+	console.log("Starting tree viewer");
 
     var tm = new TM.Squarified({
 		levelsToShow: 1,
