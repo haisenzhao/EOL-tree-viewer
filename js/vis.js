@@ -5,7 +5,7 @@ function EOLTreeMap(container) {
 	jQuery("<div id='thejit' ></div>").width('800px').height('600px').appendTo(container);
 	var tree = new TextHTMLTree(jQuery('#taxonomic-text-container')[0], true);
 
-	console.log("Starting tree viewer 1257");
+	console.log("Starting tree viewer 1432");
 
     var tm = new TM.Squarified({
 		levelsToShow: 1,
@@ -54,24 +54,21 @@ function EOLTreeMap(container) {
         },
 		
 		onCreateElement:  function (content, node, isLeaf, head, body) {  
-			//TODO calculate the actual host name (eol.org or www.eol.org), or try using just path as URL, to avoid same-origin problems
 			if (node.id === 0) {
 				return;
 			}
 			
-			head.innerHTML += " <a id='page-link' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>";
-			//jQuery(head).after(" <a class='closeDOMWindow' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>");
-			
+			head.innerHTML += " <a id='page-link' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>";			
 			var textType = "GeneralDescription";
 			
 			console.log("getting tooltip for " + node.id);
-			var url = "http://www.eol.org/api/pages/" + node.id + "?images=1&subject=" + textType;
+			var url = "/api/pages/" + node.id + "?images=1&subject=" + textType;
 			console.log(url);
 			jQuery.get(url, 
 				function (apiResponse) {
 					var imageObjectURL = jQuery("dataType:contains('StillImage')", apiResponse).prev().text(); //hack because jQuery won't select dc:identifier
 					if (imageObjectURL.length > 0) {
-						imageObjectURL = "http://www.eol.org/api/data_objects/" + imageObjectURL;
+						imageObjectURL = "/api/data_objects/" + imageObjectURL;
 						console.log("image object url: " + imageObjectURL);
 						
 						jQuery.get(imageObjectURL, function (object) {
@@ -86,7 +83,7 @@ function EOLTreeMap(container) {
 					
 					var descriptionObjectURL = jQuery("subject:contains('" + textType + "')", apiResponse).prev().prev().text(); //hack because jQuery won't select dc:identifier
 					if (descriptionObjectURL.length > 0) {
-						descriptionObjectURL = "http://www.eol.org/api/data_objects/" + descriptionObjectURL;
+						descriptionObjectURL = "/api/data_objects/" + descriptionObjectURL;
 						console.log("description object url: " + descriptionObjectURL);
 						
 						jQuery.get(descriptionObjectURL, function (object) {
@@ -98,7 +95,7 @@ function EOLTreeMap(container) {
 		},
 		
 		request: function (nodeId, level, onComplete) {
-			var url = "http://www.eol.org/navigation/show_tree_view/" + nodeId;
+			var url = "/navigation/show_tree_view/" + nodeId;
 			jQuery.get(url, function (data) {
 				var tree = new TextHTMLTree(data, false);
 				onComplete.onComplete(nodeId, tree);

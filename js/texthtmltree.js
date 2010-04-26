@@ -54,9 +54,5 @@ TextHTMLTree.prototype.getSubtree = function (html) {
 		node.children.push(TextHTMLTree.prototype.getSubtree(this));
 	});
 	
-	//if (node.children.length > 0) {
-	//	node.data.$area = 0;
-	//}
-	
 	return node;
 };

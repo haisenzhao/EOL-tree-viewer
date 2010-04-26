@@ -1,5 +1,3 @@
-change URLs to paths and get rid of the window.location stuff
-
 fix the path to the current taxon not loading ancestor-siblings
 
 make sure the size is only defined in one place.  preferably by the size of the client container.
@@ -7,3 +5,5 @@ make sure the size is only defined in one place.  preferably by the size of the 
 fix the tooltip location so at least the top is on screen.  find a way to show detail with a stationary element.
 
 replace the xml api calls with html api calls.  (reduces the number of round-trips to the server by 2/3).
+
+try to make sibling sort order at least stable

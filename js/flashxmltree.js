@@ -1,6 +1,7 @@
 "use strict";
 var jQuery, window;
 
+/* The flash browser has been removed, so FlashXMLTree should be deprecated */ 
 function FlashXMLTree(xml) {
 	this.setTree(xml);
 	console.log("transformed tree: ");
