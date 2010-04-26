@@ -1,5 +1,3 @@
-//TODO add image and description to data for each node
-
 function TextHTMLTree(html, prependAncestors) {
 	prependAncestors = prependAncestors !== undefined ? prependAncestors : false;
 
@@ -12,7 +10,7 @@ function TextHTMLTree(html, prependAncestors) {
 		
 		//add the kingdom subtrees
 		var tree = this;
-		jQuery('> ul > li', html).each(function() {
+		jQuery('> ul > li', html).each(function() { //this selector does not seem to work in Firefox
 			tree.children.push(TextHTMLTree.prototype.getSubtree(this));
 		});
 		
@@ -35,7 +33,7 @@ function TextHTMLTree(html, prependAncestors) {
  * html is expected to be the <li> element of the desired root node
  */
 TextHTMLTree.prototype.getSubtree = function(html) {
-	var currentNode = jQuery('> span a:first',html);
+	var currentNode = jQuery('> span a:first',html); //this selector does not seem to work in Firefox
 	var href = currentNode.attr('href');
 	var node = {
 		data: {

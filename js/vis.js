@@ -1,49 +1,9 @@
-// $(document).ready(function() {
-	// console.log("starting javascript vis extension");
-
-	// //TM uses html elements, other vis types will need this canvas
-	// // var canvas = new Canvas('jitcanvas', {
-        // // 'injectInto': 'thejit',
-        // // 'width': 800,
-        // // 'height': 600
-    // // });
-
-	
-	// // //get the tree from flashxml
-	// // var url = getEOLTreeURL();
-	// // jQuery.get( url, function (xml, textStatus) {
-		// // console.log("got xml tree");
-		
-		// // var tree = new FlashXMLTree(xml);
-		// // //console.log(JSON.stringify(tree));
-		
-		// // //TODO display the tree
-	// // }, "xml" );
-
-	// //testing another option: get the tree from html
-	// var tree = new TextHTMLTree(jQuery('#taxonomic-text-container')[0], true);
-	// show(tree);
-	
-// });
-
-function showVis() {
+showVis = function() {
 	var tree = new TextHTMLTree(jQuery('#taxonomic-text-container')[0], true);
 	show(tree);
 }
 
-getEOLTreeURL = function() {
-	//finds the flashxml URL in an EOL page
-	var url = $('#eol_nav param[name="movie"] ').attr("value");
-	url = url.substring(url.indexOf("&myfilename=") + "&myfilename=".length);
-	
-	//chrome script is picky about same-origin (eol.org vs www.eol.org), so I'll get the actual hostname
-	url = "http://" + window.location.host + "/flashxml/" + url;
-	console.log("the flash navigation xml is at " + url);
-	
-	return url;
-}
-
-function show(tree){
+show = function(tree){
 
     var infovis = document.getElementById('thejit');
     var w = infovis.offsetWidth, h = infovis.offsetHeight;
@@ -103,7 +63,8 @@ function show(tree){
 				return;
 			}
 			
-			head.innerHTML += " <a href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>"; //FIXME this needs to close the lightbox first
+			head.innerHTML += " <a id='page-link' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>";
+			//$(head).after(" <a class='closeDOMWindow' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>");
 			
 			var textType = "GeneralDescription";
 			
@@ -148,6 +109,12 @@ function show(tree){
 			});
 		},
     });
+	
+	//TM.Squarified.implement({  
+	//	'onLeftClick': function(elem) {  
+	//		alert('left click');  
+	//	}  
+	//}); 
     
     //load tree and plot
     tm.loadJSON(tree);

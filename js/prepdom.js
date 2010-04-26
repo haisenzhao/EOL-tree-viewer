@@ -15,23 +15,3 @@ $(document).ready(function() {
 	$('#lightbox').hide();
 	
 });
-
-
-// {
-	// //This should all be changes that would be made to the html to accomodate the new visualization
-	
-	// $("#browser-text").after("<div id='thejit' style='display:none;'></div>");
-
-	// // $("#textarea > a:first-child + a").removeAttr("onclick").attr("href","#thejit").openDOMWindow({ 
-		// // eventType:'click',
-		// // width: 800,
-        // // height: 600
-	// // }); 
-
-	// $("#browser-text").before(' <a href="#thejit">JIT</a> ').openDOMWindow({ 
-		// eventType:'click',
-		// width: 800,
-        // height: 600
-	// }); 
-
-// }
