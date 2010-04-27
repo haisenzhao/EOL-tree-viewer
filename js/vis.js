@@ -44,7 +44,7 @@ function EOLTreeMap(container) {
 			}				
 
 			EOLTreeMap.getAPIData(node, function () {
-				if (isLeaf) {
+				if (isLeaf && node.imageURL) {
 					head.innerHTML += "<div><img src='" + node.imageURL + "' height=100%></img><div>";
 				}
 			});
@@ -83,44 +83,14 @@ EOLTreeMap.getAPIData = function (node, callback) {
 
 	//get the tooltip content from the API
 	var textType = "GeneralDescription";
-	
-	console.log("getting tooltip for " + node.id);
-	var url = "/api/pages/" + node.id + "?images=1&subject=" + textType;
-	console.log(url);
+	var url = "/api/pages/" + node.id + "?details=1&images=1&subject=" + textType;
 	jQuery.get(url, 
 		function (apiResponse) {
-			EOLTreeMap.getAPIImageURL(apiResponse, node, callback);
-			EOLTreeMap.getAPIDescription(apiResponse, node, callback, textType);
+			node.imageURL = jQuery("dataType:contains('StillImage')", apiResponse).siblings('mediaURL:first').text();
+			node.description = jQuery("dataObject:has(subject:contains('" + textType + "')) description", apiResponse);
+			callback();
 		}, 'xml'
 	);
-};
-
-EOLTreeMap.getAPIImageURL = function (XmlApiResponse, node, callback) {
-	var imageObjectURL = jQuery("dataType:contains('StillImage')", XmlApiResponse).prev().text(); //hack because jQuery won't select dc:identifier
-	if (imageObjectURL.length > 0) {
-		imageObjectURL = "/api/data_objects/" + imageObjectURL;
-		console.log("image object url: " + imageObjectURL);
-		
-		jQuery.get(imageObjectURL, function (object) {
-			//pick the first mediaURL element
-			node.imageURL = jQuery("mediaURL:first", object).text();
-			console.log("image url: " + node.imageURL);
-			callback();
-		}, 'xml');
-	}
-};
-
-EOLTreeMap.getAPIDescription = function (XmlApiResponse, node, callback, textType) {
-	var descriptionObjectURL = jQuery("subject:contains('" + textType + "')", XmlApiResponse).prev().prev().text(); //hack because jQuery won't select dc:identifier
-	if (descriptionObjectURL.length > 0) {
-		descriptionObjectURL = "/api/data_objects/" + descriptionObjectURL;
-		console.log("description object url: " + descriptionObjectURL);
-		
-		jQuery.get(descriptionObjectURL, function (object) {
-			node.description = jQuery("description", object).text();
-			callback();
-		}, 'xml');
-	}
 };
 
 TreeUtil.loadAllChildren = function (tree, controller, callback) {
