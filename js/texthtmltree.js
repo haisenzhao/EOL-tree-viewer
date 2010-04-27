@@ -14,12 +14,12 @@ function TextHTMLTree(html, prependAncestors) {
 		//add the kingdom subtrees
 		var tree = this;
 		jQuery('> ul > li', html).each(function () { //this selector does not seem to work in a Firefox greasemonkey script
-			tree.children.push(TextHTMLTree.prototype.getSubtree(this));
+			tree.children.push(TextHTMLTree.prototype.createSubtree(this));
 		});
 		
 	} else {
 		//root at the current node
-		var lastone = TextHTMLTree.prototype.getSubtree(jQuery('li.lastone', html)[0]);
+		var lastone = TextHTMLTree.prototype.createSubtree(jQuery('li.lastone', html)[0]);
 		this.id = lastone.id;
 		this.name = lastone.name;
 		this.data = lastone.data;
@@ -32,10 +32,10 @@ function TextHTMLTree(html, prependAncestors) {
 
 
 /* 
- * Gets a subtree using some html <li> element from http://eol.org/navigation/show_tree_view/[id]
+ * Creates a subtree using some html <li> element from http://eol.org/navigation/show_tree_view/[id]
  * html is expected to be the <li> element of the desired root node
  */
-TextHTMLTree.prototype.getSubtree = function (html) {
+TextHTMLTree.prototype.createSubtree = function (html) {
 	var currentNode = jQuery('> span a:first', html); //this selector does not seem to work in a Firefox greasemonkey script
 	var href = currentNode.attr('href');
 	var node = {
@@ -51,7 +51,7 @@ TextHTMLTree.prototype.getSubtree = function (html) {
 
 	//loop through the children and add them
 	jQuery('> ul > li, > div > ul > li', html).each(function () {
-		node.children.push(TextHTMLTree.prototype.getSubtree(this));
+		node.children.push(TextHTMLTree.prototype.createSubtree(this));
 	});
 	
 	return node;

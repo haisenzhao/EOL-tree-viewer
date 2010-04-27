@@ -10,41 +10,19 @@ function EOLTreeMap(container) {
 
     var tm = new TM.Squarified({
 		levelsToShow: 1,
-	
-        //Where to inject the treemap.
         rootId: 'thejit',
-
-        //Add click handlers for
-        //zooming the Treemap in and out
         addLeftClickHandler: true,
         addRightClickHandler: true,
-        
-        //When hovering a node highlight the nodes
-        //between the root node and the hovered node. This
-        //is done by adding the 'in-path' CSS class to each node.
         selectPathOnHover: true,
         
-        //Allow tips
         Tips: {
 			allow: true,
-			//add positioning offsets
 			offsetX: 20,
 			offsetY: 20,
-			//implement the onShow method to
-			//add content to the tooltip when a node
-			//is hovered
-			onShow: function (tip, node, isLeaf, domElement) {
-				tip.innerHTML = "<div class=\"tip-title\">" + node.name + "</div>" + 
-				"<div class=\"tip-text\" id='tip-text'></div>"; 
-				if (node.imageURL) {
-					jQuery("#tip-text").append("<img src='" + node.imageURL + "'></img>");
-				}
-				if (node.description) {
-					jQuery("#tip-text").append(node.description);
-				}
-			  
-			}  
 
+			onShow: function (tip, node, isLeaf, domElement) {
+				tip.innerHTML = EOLTreeMap.getTooltip(node);
+			}  
         },
 
         //Remove all element events before destroying it.
@@ -55,44 +33,17 @@ function EOLTreeMap(container) {
         },
 		
 		onCreateElement:  function (content, node, isLeaf, head, body) {  
+		
 			if (node.id === 0) {
 				return;
 			}
 			
-			head.innerHTML += " <a id='page-link' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>";			
-			var textType = "GeneralDescription";
-			
-			console.log("getting tooltip for " + node.id);
-			var url = "/api/pages/" + node.id + "?images=1&subject=" + textType;
-			console.log(url);
-			jQuery.get(url, 
-				function (apiResponse) {
-					var imageObjectURL = jQuery("dataType:contains('StillImage')", apiResponse).prev().text(); //hack because jQuery won't select dc:identifier
-					if (imageObjectURL.length > 0) {
-						imageObjectURL = "/api/data_objects/" + imageObjectURL;
-						console.log("image object url: " + imageObjectURL);
-						
-						jQuery.get(imageObjectURL, function (object) {
-							//pick the first mediaURL element
-							node.imageURL = jQuery("mediaURL:first", object).text();
-							if (isLeaf) {
-								head.innerHTML += "<div><img src='" + node.imageURL + "' height=100%></img><div>";
-							}
-							console.log("image url: " + node.imageURL);
-						}, 'xml');
-					}
-					
-					var descriptionObjectURL = jQuery("subject:contains('" + textType + "')", apiResponse).prev().prev().text(); //hack because jQuery won't select dc:identifier
-					if (descriptionObjectURL.length > 0) {
-						descriptionObjectURL = "/api/data_objects/" + descriptionObjectURL;
-						console.log("description object url: " + descriptionObjectURL);
-						
-						jQuery.get(descriptionObjectURL, function (object) {
-							node.description = jQuery("description", object).text();
-						}, 'xml');
-					}
-				}, 'xml'
-			);
+			//add the link out to the EOL page
+			if (node.data.path) {
+				head.innerHTML += " <a id='page-link' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>";	
+			}				
+
+			EOLTreeMap.getAPIData(content, node, isLeaf, head, body);
 		},
 		
 		request: function (nodeId, level, onComplete) {
@@ -108,9 +59,64 @@ function EOLTreeMap(container) {
     tm.loadJSON(tree);
 }
 
+EOLTreeMap.getTooltip = function (node) {
+	var tooltipHtml = "<div class=\"tip-title\">" + node.name + "</div>" + 
+		"<div class=\"tip-text\" id='tip-text'></div>"; 
+	if (node.imageURL) {
+		tooltipHtml += "<img src='" + node.imageURL + "'></img>";
+	}
+	if (node.description) {
+		tooltipHtml += node.description;
+	}
+	
+	return tooltipHtml;
+};
+
+EOLTreeMap.getAPIData = function (content, node, isLeaf, head, body) {
+	if (node.imageURL || node.description) {
+		//return if API data already fetched
+		return;
+	}
+
+	//get the tooltip content from the API
+	var textType = "GeneralDescription";
+	
+	console.log("getting tooltip for " + node.id);
+	var url = "/api/pages/" + node.id + "?images=1&subject=" + textType;
+	console.log(url);
+	jQuery.get(url, 
+		function (apiResponse) {
+			var imageObjectURL = jQuery("dataType:contains('StillImage')", apiResponse).prev().text(); //hack because jQuery won't select dc:identifier
+			if (imageObjectURL.length > 0) {
+				imageObjectURL = "/api/data_objects/" + imageObjectURL;
+				console.log("image object url: " + imageObjectURL);
+				
+				jQuery.get(imageObjectURL, function (object) {
+					//pick the first mediaURL element
+					node.imageURL = jQuery("mediaURL:first", object).text();
+					if (isLeaf) {
+						head.innerHTML += "<div><img src='" + node.imageURL + "' height=100%></img><div>";
+					}
+					console.log("image url: " + node.imageURL);
+				}, 'xml');
+			}
+			
+			var descriptionObjectURL = jQuery("subject:contains('" + textType + "')", apiResponse).prev().prev().text(); //hack because jQuery won't select dc:identifier
+			if (descriptionObjectURL.length > 0) {
+				descriptionObjectURL = "/api/data_objects/" + descriptionObjectURL;
+				console.log("description object url: " + descriptionObjectURL);
+				
+				jQuery.get(descriptionObjectURL, function (object) {
+					node.description = jQuery("description", object).text();
+				}, 'xml');
+			}
+		}, 'xml'
+	);
+};
+
 TreeUtil.loadAllChildren = function (tree, controller, callback) {
 
-	if (tree.id === 0) {
+	if (tree.id === 0 || tree.data.childrenFetched) {
 		callback();
 	} else {
 		controller.request(tree.id, 0, {
@@ -120,7 +126,7 @@ TreeUtil.loadAllChildren = function (tree, controller, callback) {
 						tree.children.push(subtree.children[child]);
 					}
 				}
-				
+				tree.data.childrenFetched = true;
 				callback();
 			}
 		});
