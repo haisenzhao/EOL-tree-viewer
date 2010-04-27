@@ -2,6 +2,8 @@
 var jQuery, TextHTMLTree, TM;
 
 function EOLTreeMap(container) {
+	this.fixSubtreeLoader(); //doesn't seem to work...
+
 	jQuery("<div id='thejit' ></div>").width('100%').height('100%').appendTo(container);
 	var tree = new TextHTMLTree(jQuery('#taxonomic-text-container')[0], true);
 
@@ -105,3 +107,48 @@ function EOLTreeMap(container) {
     
     tm.loadJSON(tree);
 }
+
+EOLTreeMap.prototype.fixSubtreeLoader = function () {
+	//hopefully a temporary hack of the JIT library to see if I can fix the current node's ancestor-siblings not displaying.
+	//doesn't seem to work...
+    TreeUtil.loadSubtrees = function (tree, controller) {
+		//first, make sure the children of the root are all loaded
+		controller.request(tree.id, 0, {
+			onComplete: function(nodeId, subtree) {
+				for (child in subtree.children) {
+					if (!tree.children.containsID(subtree.children[child].id)) {
+						tree.children.push(subtree.children[child]);
+					}
+				}
+				
+				var maxLevel = controller.request && controller.levelsToShow;
+				var leaves = TreeUtil.getLeaves(tree, maxLevel),
+				len = leaves.length,
+				selectedNode = {};
+				if(len == 0) controller.onComplete();
+				for(var i=0, counter=0; i<len; i++) {
+					var leaf = leaves[i], id = leaf.node.id;
+					selectedNode[id] = leaf.node;
+					controller.request(id, leaf.level, {
+						onComplete: function(nodeId, tree) {
+							var ch = tree.children;
+							selectedNode[nodeId].children = ch;
+							if(++counter == len) {
+								controller.onComplete();
+							}
+						}
+					});
+				}
+			}
+        });
+	
+
+    }
+	
+	Array.prototype.containsID = function (id) {
+		for (i in this) {
+			if (this[i].id === id) return true;
+		}
+		return false;
+	}
+};

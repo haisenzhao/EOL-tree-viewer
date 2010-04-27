@@ -5,3 +5,5 @@ fix the tooltip location so at least the top is on screen.  find a way to show d
 replace the xml api calls with html api calls.  (reduces the number of round-trips to the server by 2/3).
 
 try to make sibling sort order at least stable
+
+show all ancestors instead of just the next one up
