@@ -2,7 +2,6 @@
 var jQuery, TextHTMLTree, TM;
 
 function EOLTreeMap(container) {
-	this.fixSubtreeLoader(); //doesn't seem to work...
 
 	jQuery("<div id='thejit' ></div>").width('100%').height('100%').appendTo(container);
 	var tree = new TextHTMLTree(jQuery('#taxonomic-text-container')[0], true);
@@ -101,6 +100,7 @@ function EOLTreeMap(container) {
 			jQuery.get(url, function (data) {
 				var tree = new TextHTMLTree(data, false);
 				onComplete.onComplete(nodeId, tree);
+				//todo use jQuery.ajax and add a error handler that just calls onComplete, then consider getting rid of the top 'if' in loadAllChildren
 			});
 		}
     });
@@ -108,11 +108,11 @@ function EOLTreeMap(container) {
     tm.loadJSON(tree);
 }
 
-EOLTreeMap.prototype.fixSubtreeLoader = function () {
-	//hopefully a temporary hack of the JIT library to see if I can fix the current node's ancestor-siblings not displaying.
-	//doesn't seem to work...
-    TreeUtil.loadSubtrees = function (tree, controller) {
-		//first, make sure the children of the root are all loaded
+TreeUtil.loadAllChildren = function (tree, controller, callback) {
+
+	if (tree.id === 0) {
+		callback();
+	} else {
 		controller.request(tree.id, 0, {
 			onComplete: function(nodeId, subtree) {
 				for (child in subtree.children) {
@@ -121,34 +121,43 @@ EOLTreeMap.prototype.fixSubtreeLoader = function () {
 					}
 				}
 				
-				var maxLevel = controller.request && controller.levelsToShow;
-				var leaves = TreeUtil.getLeaves(tree, maxLevel),
-				len = leaves.length,
-				selectedNode = {};
-				if(len == 0) controller.onComplete();
-				for(var i=0, counter=0; i<len; i++) {
-					var leaf = leaves[i], id = leaf.node.id;
-					selectedNode[id] = leaf.node;
-					controller.request(id, leaf.level, {
-						onComplete: function(nodeId, tree) {
-							var ch = tree.children;
-							selectedNode[nodeId].children = ch;
-							if(++counter == len) {
-								controller.onComplete();
-							}
-						}
-					});
-				}
+				callback();
 			}
-        });
-	
+		});
+	}
+}
 
-    }
+
+//a hack of the JIT's TreeUtil to fix the current node's ancestor-siblings not loading.
+TreeUtil.loadSubtrees = function (tree, controller) {
+	//first, make sure the children of the root are all loaded
+	this.loadAllChildren(tree, controller, function () {
+
+		var maxLevel = controller.request && controller.levelsToShow;
+		var leaves = TreeUtil.getLeaves(tree, maxLevel),
+		len = leaves.length,
+		selectedNode = {};
+		if(len == 0) controller.onComplete();
+		for(var i=0, counter=0; i<len; i++) {
+			var leaf = leaves[i], id = leaf.node.id;
+			selectedNode[id] = leaf.node;
+			controller.request(id, leaf.level, {
+				onComplete: function(nodeId, tree) {
+					var ch = tree.children;
+					selectedNode[nodeId].children = ch;
+					if(++counter == len) {
+						controller.onComplete();
+					}
+				}
+			});
+		}
+	});
+}
+
 	
-	Array.prototype.containsID = function (id) {
+Array.prototype.containsID = function (id) {
 		for (i in this) {
 			if (this[i].id === id) return true;
 		}
 		return false;
-	}
-};
+}
