@@ -43,7 +43,11 @@ function EOLTreeMap(container) {
 				head.innerHTML += " <a id='page-link' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>";	
 			}				
 
-			EOLTreeMap.getAPIData(content, node, isLeaf, head, body);
+			EOLTreeMap.getAPIData(node, function () {
+				if (isLeaf) {
+					head.innerHTML += "<div><img src='" + node.imageURL + "' height=100%></img><div>";
+				}
+			});
 		},
 		
 		request: function (nodeId, level, onComplete) {
@@ -72,10 +76,9 @@ EOLTreeMap.getTooltip = function (node) {
 	return tooltipHtml;
 };
 
-EOLTreeMap.getAPIData = function (content, node, isLeaf, head, body) {
+EOLTreeMap.getAPIData = function (node, callback) {
 	if (node.imageURL || node.description) {
-		//return if API data already fetched
-		return;
+		callback();
 	}
 
 	//get the tooltip content from the API
@@ -86,32 +89,38 @@ EOLTreeMap.getAPIData = function (content, node, isLeaf, head, body) {
 	console.log(url);
 	jQuery.get(url, 
 		function (apiResponse) {
-			var imageObjectURL = jQuery("dataType:contains('StillImage')", apiResponse).prev().text(); //hack because jQuery won't select dc:identifier
-			if (imageObjectURL.length > 0) {
-				imageObjectURL = "/api/data_objects/" + imageObjectURL;
-				console.log("image object url: " + imageObjectURL);
-				
-				jQuery.get(imageObjectURL, function (object) {
-					//pick the first mediaURL element
-					node.imageURL = jQuery("mediaURL:first", object).text();
-					if (isLeaf) {
-						head.innerHTML += "<div><img src='" + node.imageURL + "' height=100%></img><div>";
-					}
-					console.log("image url: " + node.imageURL);
-				}, 'xml');
-			}
-			
-			var descriptionObjectURL = jQuery("subject:contains('" + textType + "')", apiResponse).prev().prev().text(); //hack because jQuery won't select dc:identifier
-			if (descriptionObjectURL.length > 0) {
-				descriptionObjectURL = "/api/data_objects/" + descriptionObjectURL;
-				console.log("description object url: " + descriptionObjectURL);
-				
-				jQuery.get(descriptionObjectURL, function (object) {
-					node.description = jQuery("description", object).text();
-				}, 'xml');
-			}
+			EOLTreeMap.getAPIImageURL(apiResponse, node, callback);
+			EOLTreeMap.getAPIDescription(apiResponse, node, callback, textType);
 		}, 'xml'
 	);
+};
+
+EOLTreeMap.getAPIImageURL = function (XmlApiResponse, node, callback) {
+	var imageObjectURL = jQuery("dataType:contains('StillImage')", XmlApiResponse).prev().text(); //hack because jQuery won't select dc:identifier
+	if (imageObjectURL.length > 0) {
+		imageObjectURL = "/api/data_objects/" + imageObjectURL;
+		console.log("image object url: " + imageObjectURL);
+		
+		jQuery.get(imageObjectURL, function (object) {
+			//pick the first mediaURL element
+			node.imageURL = jQuery("mediaURL:first", object).text();
+			console.log("image url: " + node.imageURL);
+			callback();
+		}, 'xml');
+	}
+};
+
+EOLTreeMap.getAPIDescription = function (XmlApiResponse, node, callback, textType) {
+	var descriptionObjectURL = jQuery("subject:contains('" + textType + "')", XmlApiResponse).prev().prev().text(); //hack because jQuery won't select dc:identifier
+	if (descriptionObjectURL.length > 0) {
+		descriptionObjectURL = "/api/data_objects/" + descriptionObjectURL;
+		console.log("description object url: " + descriptionObjectURL);
+		
+		jQuery.get(descriptionObjectURL, function (object) {
+			node.description = jQuery("description", object).text();
+			callback();
+		}, 'xml');
+	}
 };
 
 TreeUtil.loadAllChildren = function (tree, controller, callback) {
