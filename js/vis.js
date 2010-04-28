@@ -55,7 +55,6 @@ function EOLTreeMap(container) {
 			jQuery.get(url, function (data) {
 				var tree = new TextHTMLTree(data, false);
 				onComplete.onComplete(nodeId, tree);
-				//todo use jQuery.ajax and add a error handler that just calls onComplete, then consider getting rid of the top 'if' in loadAllChildren
 			});
 		}
     });
@@ -110,7 +109,7 @@ TreeUtil.loadAllChildren = function (tree, controller, callback) {
 			}
 		});
 	}
-}
+};
 
 
 //a hack of the JIT's TreeUtil to fix the current node's ancestor-siblings not loading.
@@ -137,12 +136,41 @@ TreeUtil.loadSubtrees = function (tree, controller) {
 			});
 		}
 	});
-}
+};
 
+  /*
+	Modifying the layout to sort equal-area nodes alphabetically
+
+        par - The parent node of the json subtree.  
+        ch - An Array of nodes
+      coord - A coordinates object specifying width, height, left and top style properties.
+  */
+TM.Squarified.prototype.processChildrenLayout = function (par, ch, coord) {
+	//compute children real areas
+	var parentArea = coord.width * coord.height;
+	var i, totalChArea=0, chArea = [];
+	for(i=0; i < ch.length; i++) {
+		chArea[i] = parseFloat(ch[i].data.$area);
+		totalChArea += chArea[i];
+	}
+	for(i=0; i<chArea.length; i++) {
+		ch[i]._area = parentArea * chArea[i] / totalChArea;
+	}
+	var minimumSideValue = (this.layout.horizontal())? coord.height : coord.width;
+	ch.sort(this.sortComparator);
+	var initElem = [ch[0]];
+	var tail = ch.slice(1);
+	this.squarify(tail, initElem, minimumSideValue, coord);
+};
+
+TM.Squarified.prototype.sortComparator = function (a, b) {
+	var diff = a._area - b._area;
+	return diff || a.name.localeCompare(b.name);
+};
 	
 Array.prototype.containsID = function (id) {
 		for (i in this) {
 			if (this[i].id === id) return true;
 		}
 		return false;
-}
+};
