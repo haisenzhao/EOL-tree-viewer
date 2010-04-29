@@ -11,3 +11,9 @@ consider giving the path to the current page's subtree more area, or at least gi
 use the new ping service
 
 make labels and borders bigger
+
+update description to include scrolling of detail pane(pgup/pgdn or arrows)
+
+try to prevent the scrolling from bubbling up to the eol page
+
+try to catch mouse wheel events to scroll the detail pane

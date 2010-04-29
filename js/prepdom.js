@@ -1,7 +1,7 @@
 var jQuery, EOLTreeMap;
 
 jQuery(document).ready(function () {
-	var w = 600;
+	var w = jQuery("#content").width();
 	var h = 800;
 
 	jQuery("<div id='lightbox'></div>").width(w).height(h).appendTo("body");

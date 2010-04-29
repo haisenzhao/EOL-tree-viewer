@@ -1,27 +1,19 @@
-#right-container {
-    display:none;
-}
-
-#thejit {
-    width:800px;
-}
-
 #thejit div {
     position:absolute;
     overflow:hidden;
-    font-size:11px;
+    font-size:20px;
     font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;    
 }
 
 #thejit .content {
-    background-color:#333;
+    background-color:#555;
     border:0px solid #111;
 }
 
 #thejit .head {
     color:white;
     background-color:#444;
-    
+
 }
 
 #thejit .head.in-path {
@@ -70,10 +62,9 @@
 	width: 500px;
 	display:block;
 }
- 
-.album {
-    width:100px;
-    margin:3px;
+
+.tip-title {
+	font-size:20px;
 }
 
 input {

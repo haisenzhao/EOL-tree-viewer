@@ -3,7 +3,8 @@ var jQuery, TextHTMLTree, TM;
 
 function EOLTreeMap(container) {
 
-	jQuery("<div id='thejit' ></div>").width('100%').height('100%').appendTo(container);
+	jQuery("<div id='thejit' ></div>").appendTo(container);
+	jQuery("<div id='jitdetail' ></div>").appendTo(container);
 	var tree = new TextHTMLTree(jQuery('#taxonomic-text-container')[0], true);
 
 	console.log("Starting tree viewer");
@@ -15,16 +16,17 @@ function EOLTreeMap(container) {
         addRightClickHandler: true,
         selectPathOnHover: true,
 		orientation:"v",
+		titleHeight:22,
         
-        Tips: {
-			allow: true,
-			offsetX: 20,
-			offsetY: 20,
+        // Tips: {
+			// allow: true,
+			// offsetX: 20,
+			// offsetY: 20,
 
-			onShow: function (tip, node, isLeaf, domElement) {
-				tip.innerHTML = EOLTreeMap.getTooltip(node);
-			}  
-        },
+			// onShow: function (tip, node, isLeaf, domElement) {
+				// tip.innerHTML = EOLTreeMap.getDetail(node);
+			// }  
+        // },
 
         //Remove all element events before destroying it.
         onDestroyElement: function (content, tree, isLeaf, leaf) {
@@ -49,6 +51,15 @@ function EOLTreeMap(container) {
 					head.innerHTML += "<div><img src='" + node.imageURL + "' height=100%></img><div>";
 				}
 			});
+			
+			jQuery(content).hover(
+				function handlerIn(eventObject) {
+					jQuery("#jitdetail").html(EOLTreeMap.getDetail(node));
+				}, 
+				function handlerOut(eventObject) {
+					//do nothing?
+				}
+			);
 		},
 		
 		request: function (nodeId, level, onComplete) {
@@ -61,11 +72,10 @@ function EOLTreeMap(container) {
     });
     
     tm.loadJSON(tree);
-	tm.initializeElements();
-	tm.view(1); //FIXME
+	//tm.view(tree.currentNodeId); //FIXME
 }
 
-EOLTreeMap.getTooltip = function (node) {
+EOLTreeMap.getDetail = function (node) {
 	var tooltipHtml = "<div class=\"tip-title\">" + node.name + "</div>" + 
 		"<div class=\"tip-text\" id='tip-text'></div>"; 
 	if (node.imageURL) {
