@@ -1,11 +1,13 @@
-fix the tooltip location so at least the top is on screen.  find a way to show detail with a stationary element.  Consider using http://swip.codylindley.com/DOMWindowDemo.html#example7
-
-try to make sibling sort order at least stable
+fix the tooltip location so at least the top is on screen.  find a way to show detail with a stationary element.  Consider using http://swip.codylindley.com/DOMWindowDemo.html#example700000
 
 show all ancestors instead of just the next one up
 
 center the images
 
+scale the images to fit largest container dimension
+
 consider giving the path to the current page's subtree more area, or at least giving it a different color
 
 use the new ping service
+
+make labels and borders bigger

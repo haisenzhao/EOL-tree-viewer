@@ -3,6 +3,8 @@ var jQuery;
 
 function TextHTMLTree(html, prependAncestors) {
 	prependAncestors = prependAncestors !== undefined ? prependAncestors : false;
+	
+	this.currentNodeId = jQuery('a.lastone:first', html).attr('href').replace("/pages/", "");
 
 	if (prependAncestors) {
 		//root at a dummy node, parent of all kingdoms

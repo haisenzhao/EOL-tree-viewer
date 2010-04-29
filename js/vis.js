@@ -14,6 +14,7 @@ function EOLTreeMap(container) {
         addLeftClickHandler: true,
         addRightClickHandler: true,
         selectPathOnHover: true,
+		orientation:"v",
         
         Tips: {
 			allow: true,
@@ -60,6 +61,8 @@ function EOLTreeMap(container) {
     });
     
     tm.loadJSON(tree);
+	tm.initializeElements();
+	tm.view(1); //FIXME
 }
 
 EOLTreeMap.getTooltip = function (node) {
@@ -86,7 +89,7 @@ EOLTreeMap.getAPIData = function (node, callback) {
 	jQuery.get(url, 
 		function (apiResponse) {
 			node.imageURL = jQuery("dataType:contains('StillImage')", apiResponse).siblings('mediaURL:first').text();
-			node.description = jQuery("dataObject:has(subject:contains('" + textType + "')) description", apiResponse);
+			node.description = jQuery("dataObject:has(subject:contains('" + textType + "')) description", apiResponse).text();
 			callback();
 		}, 'xml'
 	);
