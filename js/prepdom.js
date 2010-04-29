@@ -10,6 +10,7 @@ jQuery(document).ready(function () {
 	
 	jQuery("<a href='#lightbox'>TreeMap viewer</a>").appendTo("#textarea").openDOMWindow({ 
 		eventType: 'click',
+		overlayOpacity: 75,
 		width: w,
         height: h,
 		windowPadding: 0

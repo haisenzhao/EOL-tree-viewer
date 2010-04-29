@@ -8,6 +8,10 @@
 	display:block;
 }
 
+#thejit .title {
+	white-space:nowrap;
+}
+
 #thejit .content {
 	position:absolute;
     background-color:#555;

@@ -17,16 +17,6 @@ function EOLTreeMap(container) {
         selectPathOnHover: true,
 		orientation:"v",
 		titleHeight:22,
-        
-        // Tips: {
-			// allow: true,
-			// offsetX: 20,
-			// offsetY: 20,
-
-			// onShow: function (tip, node, isLeaf, domElement) {
-				// tip.innerHTML = EOLTreeMap.getDetail(node);
-			// }  
-        // },
 
         //Remove all element events before destroying it.
         onDestroyElement: function (content, tree, isLeaf, leaf) {
@@ -51,21 +41,18 @@ function EOLTreeMap(container) {
 					jQuery(head).wrapInner("<div class='title'></div>");
 				
 					var image = jQuery("<img class='node' src='" + node.imageURL + "'></img>");
-					var imageAR = image[0].width/image[0].height;
-					var containerAR = node.coord.width/(node.coord.height - 25);
-					
-					if (imageAR >= containerAR) {
-						//fit height
-						console.log("Setting height to " + (node.coord.height - 25));
-						image[0].height = node.coord.height - 25;
-						console.log("Height is now " + image[0].height);
+					image.load(function handler(eventObject) {
+						var imageAR = image[0].width/image[0].height;
+						var containerAR = node.coord.width/(node.coord.height - 25);
 						
-					} else {
-						//fit width
-						console.log("Setting width to " + (node.coord.width));
-						image[0].width = node.coord.width;
-						console.log("Width is now " + image[0].width);
-					}
+						if (imageAR >= containerAR) {
+							//fit height
+							image[0].height = node.coord.height - 25;
+						} else {
+							//fit width
+							image[0].width = node.coord.width;
+						}
+					});
 					
 					image.appendTo(head);
 				}
