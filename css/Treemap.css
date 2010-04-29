@@ -1,16 +1,21 @@
-#thejit div {
-    position:absolute;
+#thejit div{
     overflow:hidden;
     font-size:20px;
     font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;    
 }
 
+#thejit img.node {
+	display:block;
+}
+
 #thejit .content {
+	position:absolute;
     background-color:#555;
     border:0px solid #111;
 }
 
 #thejit .head {
+	position:absolute;
     color:white;
     background-color:#444;
 
@@ -21,10 +26,12 @@
 }
 
 #thejit .body {
+	position:absolute;
     background-color:black;
 }
 
 #thejit .leaf {
+	position:absolute;
     color:white;
     background-color:#111;
     display:table-cell;

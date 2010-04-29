@@ -42,13 +42,32 @@ function EOLTreeMap(container) {
 			}
 			
 			//add the link out to the EOL page
-			if (node.data.path) {
-				head.innerHTML += " <a id='page-link' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>";	
+			if (node.data.path) {	
+				jQuery("<a class='page-link' href=" + node.data.path + "><img alt='eol page' src='/images/external_link.png'></a>").prependTo(head);
 			}				
 
 			EOLTreeMap.getAPIData(node, function () {
 				if (isLeaf && node.imageURL) {
-					head.innerHTML += "<div><img src='" + node.imageURL + "' height=100%></img><div>";
+					jQuery(head).wrapInner("<div class='title'></div>");
+				
+					var image = jQuery("<img class='node' src='" + node.imageURL + "'></img>");
+					var imageAR = image[0].width/image[0].height;
+					var containerAR = node.coord.width/(node.coord.height - 25);
+					
+					if (imageAR >= containerAR) {
+						//fit height
+						console.log("Setting height to " + (node.coord.height - 25));
+						image[0].height = node.coord.height - 25;
+						console.log("Height is now " + image[0].height);
+						
+					} else {
+						//fit width
+						console.log("Setting width to " + (node.coord.width));
+						image[0].width = node.coord.width;
+						console.log("Width is now " + image[0].width);
+					}
+					
+					image.appendTo(head);
 				}
 			});
 			
