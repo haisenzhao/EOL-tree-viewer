@@ -128,37 +128,52 @@ EOLTreeMap.prototype.getTM = function () {
 						jQuery(".eol_page", head).wrap("<div class='title'></div>");
 						var title = jQuery(".title", head);
 						var container = jQuery(head);
-						var availableHeight = container.innerHeight() - title.outerHeight();
-						var containerAR = container.innerWidth() / availableHeight;
 						
 						var image = new Image();
 						image.src = node.imageURL;
-						jQuery(image).load(function handler(eventObject) {
-							//TODO: does this callback work if the image has already been cached?
-							var imageAR = this.width / this.height;
-							
-							if (imageAR >= containerAR) {
-								//image aspect ratio is wider than container: fit height, center width overlap
-								var calcWidth = (availableHeight / this.height) * this.width;
-								this.height = availableHeight;
-								this.width = calcWidth; //force IE to maintain aspect ratio
-								jQuery(this).css("marginLeft",  (container.innerWidth() - calcWidth) / 2);
-							}
-							else {
-								//image aspect ratio is taller than container: fit width, center height overlap
-								var calcHeight = (container.innerWidth() / this.width) * this.height;
-								this.width = container.innerWidth();
-								this.height = calcHeight; //force IE to maintain aspect ratio
-								jQuery(this).css("marginTop",  (availableHeight - calcHeight) / 2);
-							}
-							
-							jQuery("<div class='image'></div>").append(this).appendTo(head); //wrapping in a div to hide the overflow
-							jQuery(head).removeClass("loading");
-						});
 						
-						jQuery(image).error(function handler(eventObject) {
+						if (image.complete) {
+							EOLTreeMap.placeNodeImage(image, container, title);
+							jQuery("<div class='image'></div>").append(image).appendTo(head); //wrapping in a div to hide the overflow
 							jQuery(head).removeClass("loading");
-						});
+						} else {
+							jQuery(image).load(function handler(eventObject) {
+								EOLTreeMap.placeNodeImage(image, container, title);
+								jQuery("<div class='image'></div>").append(image).appendTo(head); //wrapping in a div to hide the overflow
+								jQuery(head).removeClass("loading");
+							});
+							
+							jQuery(image).error(function handler(eventObject) {
+								jQuery(head).removeClass("loading");
+							});
+						}
+						
+//						jQuery(image).load(function handler(eventObject) {
+//							//TODO: does this callback work if the image has already been cached?
+//							var imageAR = this.width / this.height;
+//							
+//							if (imageAR >= containerAR) {
+//								//image aspect ratio is wider than container: fit height, center width overlap
+//								var calcWidth = (availableHeight / this.height) * this.width;
+//								this.height = availableHeight;
+//								this.width = calcWidth; //force IE to maintain aspect ratio
+//								jQuery(this).css("marginLeft",  (container.innerWidth() - calcWidth) / 2);
+//							}
+//							else {
+//								//image aspect ratio is taller than container: fit width, center height overlap
+//								var calcHeight = (container.innerWidth() / this.width) * this.height;
+//								this.width = container.innerWidth();
+//								this.height = calcHeight; //force IE to maintain aspect ratio
+//								jQuery(this).css("marginTop",  (availableHeight - calcHeight) / 2);
+//							}
+//							
+//							jQuery("<div class='image'></div>").append(this).appendTo(head); //wrapping in a div to hide the overflow
+//							jQuery(head).removeClass("loading");
+//						});
+//						
+//						jQuery(image).error(function handler(eventObject) {
+//							jQuery(head).removeClass("loading");
+//						});
 					} else {
 						jQuery(head).removeClass("loading");
 					}
@@ -224,14 +239,37 @@ EOLTreeMap.getAPIData = function (node, callback) {
 			//TODO: I should take all of the image URLs, as back up in case a server is down. (like right now, for example, lifedesks.org is down.)
 			node.imageURL = jQuery("dataType:contains('StillImage')", apiResponse).siblings('mediaURL:first').text();
 			
-			node.description = jQuery("dataObject:has(subject:contains('" + textType + "')) dc\\:description", apiResponse).text();
+			//node.description = jQuery("dataObject:has(subject:contains('" + textType + "')) dc\\:description", apiResponse).text();
 			//okay, this is absurd, but it appears to be the only way to get jQuery 1.3.2 to select this dc:description element in all browsers
-//			node.description = jQuery("subject:contains('" + textType + "')", apiResponse).parent().children().filter(function () {
-//				return this.tagName === "dc:description";
-//			}).text();
+			node.description = jQuery("subject:contains('" + textType + "')", apiResponse).parent().children().filter(function () {
+				return this.tagName === "dc:description";
+			}).text();
 			callback();
 		},
 		'xml');
+};
+
+EOLTreeMap.placeNodeImage = function (image, container, title) {
+	//TODO create a container before calling this that does not include the title
+	var availableHeight = container.innerHeight() - title.outerHeight();
+	var containerAR = container.innerWidth() / availableHeight;
+	
+	var imageAR = image.width / image.height;
+	
+	if (imageAR >= containerAR) {
+		//image aspect ratio is wider than container: fit height, center width overlap
+		var calcWidth = (availableHeight / image.height) * image.width;
+		image.height = availableHeight;
+		image.width = calcWidth; //force IE to maintain aspect ratio
+		jQuery(image).css("marginLeft",  (container.innerWidth() - calcWidth) / 2);
+	}
+	else {
+		//image aspect ratio is taller than container: fit width, center height overlap
+		var calcHeight = (container.innerWidth() / image.width) * image.height;
+		image.width = container.innerWidth();
+		image.height = calcHeight; //force IE to maintain aspect ratio
+		jQuery(image).css("marginTop",  (availableHeight - calcHeight) / 2);
+	}
 };
 
 //TreeUtil.loadAllChildren = function (tree, controller, callback) {
