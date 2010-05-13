@@ -1,15 +1,15 @@
+#thejit .loading {
+  background: url(../images/ajax-loader.gif) no-repeat center center;
+}
+
 #thejit div{
     overflow:hidden;
-    font-size:20px;
+    font-size:18px;
     font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;    
 }
 
 #thejit img.node {
 	display:block;
-}
-
-#thejit .title {
-	white-space:nowrap;
 }
 
 #thejit .content {
@@ -22,7 +22,16 @@
 	position:absolute;
     color:white;
     background-color:#444;
+	white-space:nowrap;
+	direction:rtl;
+}
 
+#thejit .breadcrumb {
+	font-size:9px;
+}
+
+#thejit .breadcrumb a{
+	cursor:pointer;
 }
 
 #thejit .head.in-path {
@@ -52,7 +61,7 @@
     background-color: #9FD4FF;
 }
 
-#thejit .over-head { /* boy i'm funny! */
+#thejit .over-head { 
     background-color:#A4D9FF;
     color:black;
 }

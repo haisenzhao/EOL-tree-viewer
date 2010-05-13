@@ -1,15 +1,25 @@
-show all ancestors instead of just the next one up?
-
 center the images
-
-use the new ping service
 
 update description to include scrolling of detail pane(pgup/pgdn or arrows)
 
-try to prevent the scrolling from bubbling up to the eol page
+(on EOL page) try to prevent the scrolling from bubbling up to the eol page
 
 try to catch mouse wheel events to scroll the detail pane
 
-make initial location be the current page's node.  (with only one ancestor shown?)
+(on EOL page) make initial location be the current page's node.  (with only one ancestor shown?)
 
 make the details pane get focus, so it can scroll
+
+add busy spinners when stuff is loading so the user doesn't go clicking around an unresponsive ui.  (Also, either disable clicking until it's ready, or stop loading and immediately respond to a click.) Needs some torture testing.  Test subject B was able to make it freeze with some over-enthusiastic clicking.
+
+add help text at the top of the page
+
+if the image includes a caption (and/or copyright info, etc), go ahead and display it below the image in the detail panel
+
+check if the $(img).load is not being called for images that are already cached.  
+
+As a stand-alone page, it will not have a classification selected.  I should add a classification drop-down and add a step to the navigation where I look up the node in the selected classification for the selected taxon concept.
+
+consider fitting names to boxes.  (But I want to avoid giving the impression that any node is more important just because its box is wide enough to accomodate the name at full size).
+
+What to do about very high-branching nodes? Life > Animalia > Arthropoda > Insecta > Diptera

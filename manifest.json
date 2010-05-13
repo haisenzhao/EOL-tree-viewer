@@ -1,7 +1,7 @@
 {
 	"name": "EOL tree lightbox",
 	"version": "0.2.0.1",
-	"description": "Uses the JIT to visualize EOL classification in a lightbox",
+	"description": "Uses the JIT to visualize EOL classification in a treemap",
 	"permissions": [
 		"http://*.eol.org/",
 		"http://eol.org/"

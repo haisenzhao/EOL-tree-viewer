@@ -1,0 +1,29 @@
+<html>
+<head>
+<link type="text/css" rel="stylesheet" media="all" href="/sites/default/files/kurie/treemap/css/viewer.css" />
+<link type="text/css" rel="stylesheet" media="all" href="/sites/default/files/kurie/treemap/css/Treemap.css" />
+<script src="/sites/default/files/kurie/treemap/js/jquery-1.4.2.js"></script>
+<script src="/sites/default/files/kurie/treemap/js/Jit/jit.js"></script>
+<script src="/sites/default/files/kurie/treemap/js/texthtmltree.js"></script>
+<script src="/sites/default/files/kurie/treemap/js/vis.js"></script>
+</head>
+<body>
+<div id='content'></div>
+<!-- TODO: add a classification selector and a search box -->
+
+
+<script>
+$(document).ready(function() {
+	var w = 960;
+	var h = 800;
+	jQuery("#content").width(w).height(h);
+
+	tm = new EOLTreeMap(jQuery("#content")[0]);
+	tm.ping(function () {
+		tm.loadTaxonConcept(1); //for now, just start with animalia in the user's default classification
+	});
+});
+</script>
+
+</body>
+</html>
