@@ -1,15 +1,14 @@
 #thejit .loading {
-  /*background: url(../images/ajax-loader.gif) no-repeat center center;*/
+	background: url(../images/ajax-loader.gif) no-repeat center center;
 }
 
 #thejit div{
     overflow:hidden;
-    font-size:18px;
-    font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;    
 }
 
-#thejit img.node {
+#thejit img {
 	display:block;
+	overflow:hidden;
 }
 
 #thejit .content {
@@ -22,8 +21,12 @@
 	position:absolute;
     color:white;
     background-color:#444;
-	white-space:nowrap;
 	direction:rtl;
+	overflow:visible;
+}
+
+#thejit .title {
+	font-size:18px;
 }
 
 #thejit .breadcrumb {
@@ -64,31 +67,4 @@
 #thejit .over-head { 
     background-color:#A4D9FF;
     color:black;
-}
-
-/*TOOLTIPS*/
-.tip {
-    color: #fff;
-    width: 500px;
-    background-color: black;
-    opacity:0.9;
-    filter:alpha(opacity=90);
-    font-size:10px;
-    font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
-    padding:7px;
-}
-
-.tip img {
-	width: 500px;
-	display:block;
-}
-
-.tip-title {
-	font-size:20px;
-}
-
-input {
-    font-size:10px;
-    font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
-
 }

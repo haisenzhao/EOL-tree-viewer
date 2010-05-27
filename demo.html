@@ -8,17 +8,13 @@
 <script src="/sites/default/files/kurie/treemap/js/vis.js"></script>
 </head>
 <body>
-<div id='content'></div>
+<div id='container'></div>
 <!-- TODO: add a classification selector and a search box -->
 
 
 <script>
 $(document).ready(function() {
-	var w = 960;
-	var h = 800;
-	jQuery("#content").width(w).height(h);
-
-	tm = new EOLTreeMap(jQuery("#content")[0]);
+	tm = new EOLTreeMap(jQuery("#container")[0]);
 	tm.ping(function () {
 		tm.loadTaxonConcept(1); //for now, just start with animalia in the user's default classification
 	});

@@ -2,8 +2,23 @@ function EOLTreeMap(container) {
 	jQuery("<div id='thejit' ></div>").appendTo(container);
 	jQuery("<div id='jitdetail' ></div>").appendTo(container);
 	
+	this.tm = this.getTM();
+	this.detailFrozen = false;
+	
 	var that = this;
-	that.tm = that.getTM();
+	jQuery(document).keydown(function (eventObject) {
+		if (eventObject.keyCode === 70) {
+			that.detailFrozen = true;
+		}
+	});
+	
+	jQuery(document).keyup(function (eventObject) {
+		if (eventObject.keyCode === 70) {
+			that.detailFrozen = false;
+		}
+	});
+	
+	jQuery("#thejit").focus();
 }
 
 EOLTreeMap.prototype.ping = function (callback) {
@@ -34,13 +49,7 @@ EOLTreeMap.prototype.loadTaxonConcept = function (taxonConceptID, classification
 	//TODO: find this ID in the given classification and figure out how to map that to /navigation/show_tree_view/ ids, which don't seem to be the same
 
 	var url = "/navigation/show_tree_view/" + taxonConceptID;
-	console.log(url);
 	var that = this;
-//	jQuery.get(url, function (data) {
-//		var tree = new TextHTMLTree(data, true);
-//		that.loadTree(tree);
-//		that.tm.view(taxonConceptID);
-//	});
 
 	jQuery.ajax({
 		url: url,
@@ -57,7 +66,6 @@ EOLTreeMap.prototype.loadTaxonConcept = function (taxonConceptID, classification
 };
 
 EOLTreeMap.prototype.getTM = function () {
-	console.log("Starting tree viewer");
 
 	var thisEOLTreeMap = this;
 
@@ -85,6 +93,8 @@ EOLTreeMap.prototype.getTM = function () {
 			
 			//make the node title a link to the EOL page
 			jQuery(head).wrapInner(EOLTreeMap.link(node));
+			jQuery("a.eol_page", head).addClass("title");
+			
 			
 			//do breadcrumbs
 			if (jQuery(content).parent().attr("id") === this.rootId) {
@@ -107,12 +117,10 @@ EOLTreeMap.prototype.getTM = function () {
 					ancestor = ancestor.parent;
 				} 
 			} else {
-				//adding the click handler myself, to avoid it being added to the top title bar
-				//TODO: this can be taken out of the if/else now
-				//TODO: consider making that breadcrumb bar a separate element outside thejit, and go back to built-in click handler
+				//adding the click handler myself, to avoid it being added to the top title bar and to ignore clicks on links
 				jQuery(head).click(function (eventObject) {
-					//ignores clicks on links
-					if (!(eventObject.target instanceof HTMLAnchorElement)) {
+
+					if (!(eventObject.target.nodeName === "A")) {
 						thisEOLTreeMap.tm.onLeftClick(head);
 					}
 				});
@@ -124,22 +132,24 @@ EOLTreeMap.prototype.getTM = function () {
 
 			EOLTreeMap.getAPIData(node, function () {
 				if (isLeaf) {
-					if (node.imageURL) {
-						jQuery(".eol_page", head).wrap("<div class='title'></div>");
+					if (node.image) {
+						//jQuery(".eol_page", head).wrap("<div class='title'></div>");
 						var title = jQuery(".title", head);
-						var container = jQuery(head);
+						var availableHeight = jQuery(head).innerHeight() - title.outerHeight();
+						var container = jQuery("<div class='image'></div>").appendTo(head).height(availableHeight);
+						
 						
 						var image = new Image();
-						image.src = node.imageURL;
+						image.src = node.image.url;
 						
 						if (image.complete) {
-							EOLTreeMap.placeNodeImage(image, container, title);
-							jQuery("<div class='image'></div>").append(image).appendTo(head); //wrapping in a div to hide the overflow
+							EOLTreeMap.placeNodeImage(image, container, availableHeight);
+							jQuery(image).appendTo(container);
 							jQuery(head).removeClass("loading");
 						} else {
 							jQuery(image).load(function handler(eventObject) {
-								EOLTreeMap.placeNodeImage(image, container, title);
-								jQuery("<div class='image'></div>").append(image).appendTo(head); //wrapping in a div to hide the overflow
+								EOLTreeMap.placeNodeImage(image, container, availableHeight);
+								jQuery(image).appendTo(container);
 								jQuery(head).removeClass("loading");
 							});
 							
@@ -148,44 +158,36 @@ EOLTreeMap.prototype.getTM = function () {
 							});
 						}
 						
-//						jQuery(image).load(function handler(eventObject) {
-//							//TODO: does this callback work if the image has already been cached?
-//							var imageAR = this.width / this.height;
-//							
-//							if (imageAR >= containerAR) {
-//								//image aspect ratio is wider than container: fit height, center width overlap
-//								var calcWidth = (availableHeight / this.height) * this.width;
-//								this.height = availableHeight;
-//								this.width = calcWidth; //force IE to maintain aspect ratio
-//								jQuery(this).css("marginLeft",  (container.innerWidth() - calcWidth) / 2);
-//							}
-//							else {
-//								//image aspect ratio is taller than container: fit width, center height overlap
-//								var calcHeight = (container.innerWidth() / this.width) * this.height;
-//								this.width = container.innerWidth();
-//								this.height = calcHeight; //force IE to maintain aspect ratio
-//								jQuery(this).css("marginTop",  (availableHeight - calcHeight) / 2);
-//							}
-//							
-//							jQuery("<div class='image'></div>").append(this).appendTo(head); //wrapping in a div to hide the overflow
-//							jQuery(head).removeClass("loading");
-//						});
-//						
-//						jQuery(image).error(function handler(eventObject) {
-//							jQuery(head).removeClass("loading");
-//						});
 					} else {
 						jQuery(head).removeClass("loading");
+						jQuery(head).append("<p>No image available</p>");
 					}
 				}
 			});
 			
+			//TODO: hover() seems to be unreliable.  replace with .mouseenter() and .mouseleave()? (new in jQuery 1.4)
+//				$(content).bind({
+//				  click: function() {
+//				    $(this).text('Mouse Clicked');
+//				  },
+//				  mouseenter: function() {
+//				    $(this).text('Mouse Entered');
+//				  },
+//				  mouseleave: function() {
+//				    $(this).text('Mouse Left');
+//				  }
+//				});
+			
 			jQuery(content).hover(
 				function handlerIn(eventObject) {
-					jQuery("#jitdetail").html(EOLTreeMap.getDetail(node));
+					if (!thisEOLTreeMap.detailFrozen) {
+						jQuery("#jitdetail").html(EOLTreeMap.getDetail(node));
+					}
 				}, 
 				function handlerOut(eventObject) {
-					//do nothing?
+					if (!thisEOLTreeMap.detailFrozen) {
+						jQuery("#jitdetail").empty();
+					}
 				}
 			);
 		},
@@ -214,20 +216,31 @@ EOLTreeMap.link = function (node) {
 };
 
 EOLTreeMap.getDetail = function (node) {
-	var tooltipHtml = "<div class=\"tip-title\">" + node.name + "</div>" + 
-		"<div class=\"tip-text\" id='tip-text'></div>"; 
-	if (node.imageURL) {
-		tooltipHtml += "<img src='" + node.imageURL + "'></img>";
+	var detail = jQuery("<div>");
+	jQuery("<div>" + node.name + "</div>").addClass("title").appendTo(detail);
+		
+	if (node.image) {
+		var image = new Image();
+		image.src = node.image.url;
+		var caption = jQuery("<figcaption>").html(node.image.title);
+		jQuery("<figure>").append(image).append(caption).appendTo(detail);
 	}
-	if (node.description) {
-		tooltipHtml += "<div class='description'>" + node.description + "</div>";
+	if (node.text && node.text.description) {
+		var description = jQuery("<div class='description'>" + node.text.description + "</div>");
+		if (node.text.provider) {
+			description.prepend("<h2>from " + node.text.provider.name + ": </h2>");
+		}
+		detail.append(description);
 	}
 	
-	return tooltipHtml;
+	//make all the links open in a new page
+	jQuery("a", detail).attr("target", "_blank");
+	
+	return detail;
 };
 
 EOLTreeMap.getAPIData = function (node, callback) {
-	if (node.imageURL || node.description) {
+	if (node.image || node.text) {
 		callback();
 	}
 
@@ -236,22 +249,40 @@ EOLTreeMap.getAPIData = function (node, callback) {
 	var url = "/api/pages/" + node.id + "?details=1&images=1&subject=" + textType;
 	jQuery.get(url, 
 		function (apiResponse) {
-			//TODO: I should take all of the image URLs, as back up in case a server is down. (like right now, for example, lifedesks.org is down.)
-			node.imageURL = jQuery("dataType:contains('StillImage')", apiResponse).siblings('mediaURL:first').text();
+			//TODO: move these into node.data
 			
-			//node.description = jQuery("dataObject:has(subject:contains('" + textType + "')) dc\\:description", apiResponse).text();
-			//okay, this is absurd, but it appears to be the only way to get jQuery 1.3.2 to select this dc:description element in all browsers
-			node.description = jQuery("subject:contains('" + textType + "')", apiResponse).parent().children().filter(function () {
-				return this.tagName === "dc:description";
-			}).text();
+			var imageObjects = jQuery("dataType:contains('StillImage')", apiResponse).parent();
+			imageObjects.each(function(index, imageObject) {
+				//TODO: make each node have an array of images, so I can grab more for a slideshow later
+				//TODO consider getting the image data_object separately, so I can get the associated taxon name instead of counting on the (often crappy) <title> field.  (requires an extra trip to the server, will slow things down.)
+				//TODO: I should take all of the image mediaURLs, as back up in case a server is down. (like right now, for example, lifedesks.org is down.)
+				node.image = {
+					url: jQuery('mediaURL:first', imageObject).text(),
+					title: jQuery('title', imageObject).text(), //FIXME this query seems to be failing on FF
+					description: jQuery("dc\\:description", imageObject).text() || jQuery("description", imageObject).text() //note: the first query fails on Chrome, the second fails on FF
+				};	
+			});
+
+			var textObjects = jQuery("subject:contains('" + textType + "')", apiResponse).parent();
+			textObjects.each(function(index, textObject) {
+				var provider = jQuery("agent[role='provider']", textObject);
+				
+				node.text = {
+					description: jQuery("dc\\:description", textObject).text() || jQuery("description", textObject).text(), //note: the first query fails on Chrome, the second fails on FF
+					provider: {
+						homepage: provider.attr("homepage"),
+						name: provider.text()
+					}
+				}
+			});
+
+			
 			callback();
 		},
 		'xml');
 };
 
-EOLTreeMap.placeNodeImage = function (image, container, title) {
-	//TODO create a container before calling this that does not include the title
-	var availableHeight = container.innerHeight() - title.outerHeight();
+EOLTreeMap.placeNodeImage = function (image, container, availableHeight) {
 	var containerAR = container.innerWidth() / availableHeight;
 	
 	var imageAR = image.width / image.height;
@@ -271,42 +302,6 @@ EOLTreeMap.placeNodeImage = function (image, container, title) {
 		jQuery(image).css("marginTop",  (availableHeight - calcHeight) / 2);
 	}
 };
-
-//TreeUtil.loadAllChildren = function (tree, controller, callback) {
-//	//TODO: move into TreeUtil.implement call?
-//	if (tree.id === 0 || tree.data.childrenFetched) {
-//		callback();
-//	} else {
-//		controller.request(tree.id, 0, {
-//			onComplete: function(nodeId, subtree) {
-//				for (child in subtree.children) {
-//					if (!tree.children.containsID(subtree.children[child].id)) {
-//						tree.children.push(subtree.children[child]); //TODO: update children's depths
-//					}
-//				}
-//				tree.data.childrenFetched = true;
-//				callback();
-//			}
-//		});
-//	}
-//};
-//
-//TreeUtil.getSubtreeWithAncestors = function(tree, id){
-//	//TODO: move into TreeUtil.implement call?
-//	if (tree.id == id) {
-//		return jQuery.extend(true, {}, tree); //TODO: only copy to some depth, to avoid huge unnecessary subtree copies
-//	}
-//	for (var i = 0, ch = tree.children; i < ch.length; i++) {
-//		var t = this.getSubtreeWithAncestors(ch[i], id);
-//		if (t != null) {
-//			//make a clone of the root of 'tree', make it the parent of t and return the clone
-//			var root = jQuery.extend(false, {}, tree);
-//			root.children = [t];
-//			return root;
-//		}
-//	}
-//	return null;
-//};
 
 TreeUtil.loadSubtrees = function (tree, controller) {
 	var maxLevel = controller.request && controller.levelsToShow;
@@ -339,43 +334,6 @@ TreeUtil.loadSubtrees = function (tree, controller) {
 		});
 	}
 };
-
-/* a hack of the JIT's TreeUtil to fix the current node's ancestor-siblings not loading.  
- * This is only useful if you are starting somewhere below depth=1 (kingdoms), i.e. for the 
- * browser extension or a viewer served with the EOL page.  For now it is useless and
- * somewhat broken.  I should reimplement this if I plan to use this on an EOL page.
- */
-//TreeUtil.loadSubtrees = function (tree, controller) {
-//	//TODO: move into TreeUtil.implement call?
-//	//first, make sure the children of the root are all loaded
-//	this.loadAllChildren(tree, controller, function () {
-//		//on the callback, load subtrees
-//		var maxLevel = controller.request && controller.levelsToShow;
-//		var leaves = TreeUtil.getLeaves(tree, maxLevel),
-//		len = leaves.length,
-//		selectedNode = {};
-//		if(len == 0) controller.onComplete();
-//		for(var i=0, counter=0; i<len; i++) {
-//			var leaf = leaves[i], id = leaf.node.id;
-//			selectedNode[id] = leaf.node;
-//			controller.request(id, leaf.level, {
-//				onComplete: function(nodeId, tree) {
-//					var ch = tree.children;
-//					selectedNode[nodeId].children = ch;
-//					
-//					//update the new descendants' depths
-//					TreeUtil.each(tree, function (node) {
-//						node.depth += tree.depth;
-//					});
-//					
-//					if(++counter == len) {
-//						controller.onComplete();
-//					}
-//				}
-//			});
-//		}
-//	});
-//};
 
   /*
 	Modifying the layout to sort equal-area nodes alphabetically
@@ -422,7 +380,7 @@ TM.Squarified.implement({
 	
 	//a node is displayed as a leaf if it is at the max displayable depth or if it is actually a leaf
 	leaf: function (tree) {
-		return tree.depth >= this.shownTree.depth + this.controller.levelsToShow || tree.children === 0;
+		return tree.depth >= this.shownTree.depth + this.controller.levelsToShow || tree.children.length === 0;
 	},
 	
 	loadJSON: function (json) {

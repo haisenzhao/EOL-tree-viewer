@@ -46,7 +46,10 @@ function TextHTMLTree(html, prependAncestors) {
 TextHTMLTree.prototype.createSubtree = function (html, depth) {
 	var currentNode = jQuery('> span a:first', html); //this selector does not seem to work in a Firefox greasemonkey script
 	//var href = currentNode.attr('href');
-	var href=currentNode[0].pathname;
+	var href=currentNode[0].pathname; //whether pathname includes the leading slash seems to be browser-dependent
+	if (href.charAt(0) !== "/") {
+		href = "/" + href;
+	}
 	var node = {
 		data: {
 			path: href,
