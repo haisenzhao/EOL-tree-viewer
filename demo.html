@@ -1,23 +1,24 @@
 <html>
 <head>
-<link type="text/css" rel="stylesheet" media="all" href="/sites/default/files/kurie/treemap/css/viewer.css" />
-<link type="text/css" rel="stylesheet" media="all" href="/sites/default/files/kurie/treemap/css/Treemap.css" />
-<script src="/sites/default/files/kurie/treemap/js/jquery-1.4.2.js"></script>
-<script src="/sites/default/files/kurie/treemap/js/Jit/jit.js"></script>
-<script src="/sites/default/files/kurie/treemap/js/texthtmltree.js"></script>
-<script src="/sites/default/files/kurie/treemap/js/vis.js"></script>
+<link type="text/css" rel="stylesheet" media="all" href="css/viewer.css" />
+<link type="text/css" rel="stylesheet" media="all" href="css/Treemap.css" />
+<script src="js/lib/jit.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="js/eolapi.js"></script>
+<script src="js/eoltreemap.js"></script>
 </head>
 <body>
-<div id='container'></div>
+<div id='thejit'></div>
+<div id='jitdetail'></div>
 <!-- TODO: add a classification selector and a search box -->
+<!-- TODO: make another div for breadcrumbs -->
 
 
 <script>
 $(document).ready(function() {
-	tm = new EOLTreeMap(jQuery("#container")[0]);
-	tm.ping(function () {
-		tm.loadTaxonConcept(1); //for now, just start with animalia in the user's default classification
-	});
+	var tm = new EOLTreeMap(jQuery("#thejit")[0]);
+	tm.show(24974884);
+
 });
 </script>
 
