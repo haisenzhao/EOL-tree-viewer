@@ -4,21 +4,32 @@
 <link type="text/css" rel="stylesheet" media="all" href="css/style.css" />
 <link type="text/css" rel="stylesheet" media="all" href="css/detail.css" />
 <link type="text/css" rel="stylesheet" media="all" href="css/treemap.css" />
-<script src="js/lib/jit.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
+<script src="js/lib/jit.js"></script>
+<script src="js/lib/jquery.ba-hashchange.js"></script>
 <script src="js/eolapi.js"></script>
 <script src="js/eoltreemap.js"></script>
+
 </head>
 <body>
 <div id='thejit'></div>
 <div id='jitdetail'></div>
 <div id='breadcrumb'></div>
 <!-- TODO: add a classification selector and a search box -->
+<!-- TODO handle resize -->
 
 <script>
 $(document).ready(function() {
 	var tm = new EOLTreeMap(jQuery("#thejit")[0]);
-	tm.show(24974884);
+	
+	$(window).bind( 'hashchange', function(){
+		if (location.hash) {
+			tm.show(location.hash.slice(1));
+		} else {
+			location.hash = 24974884; //By default redirect to Animalia in the CoL
+		}
+	});
+	$(window).trigger( 'hashchange' );
 
 });
 </script>

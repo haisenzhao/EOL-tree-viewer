@@ -9,37 +9,37 @@ function EOLTreeMap(container) {
 
 	this.rootId = container.id;
 	jQuery(container).addClass("treemap-container");
-	this.backingTree = null;
 	this.api = new EolApi();
 	this.controller.api = this.api;
+	//this.controller.treemap = this;
 }
 
 EOLTreeMap.prototype = new TM.Squarified(EOLTreeMap.config);
 EOLTreeMap.prototype.constructor = EOLTreeMap;
 
 EOLTreeMap.prototype.show = function (id) {
-	if (this.backingTree === null) {
+	if (this.tree === null) {
 		var that = this;
 		this.api.hierarchy_entries(id, function (json) {
-			that.backingTree = json;
-			
-			//set some fields TM needs
-			TreeUtil.each(json, function (node) {
-				node.id = node.taxonID;
-				node.data = { $area: 1.0 };
-				if (!node.children) {
-					node.children = [];
-				}
-			});
-			
+			EOLTreeMap.prepareForTreeMap(json);
 			that.loadJSON(json);
 		});
 	} else {
-		//TODO.  for now, just replace it
-		this.backingTree = null;
-		this.show(id);
+		this.view(id);
 	}
 };
+
+EOLTreeMap.prepareForTreeMap = function (apiHierarchy) {
+	//set some fields TM needs
+	TreeUtil.each(apiHierarchy, function (node) {
+		node.id = node.taxonID;
+		node.name = node.scientificName;
+		node.data = { $area: 1.0 };
+		if (!node.children) {
+			node.children = [];
+		}
+	});
+}
 
 EOLTreeMap.prototype.setAreas = function (tree, computeArea) {
 	//go over the whole tree and apply compteArea to nodes
@@ -56,40 +56,60 @@ EOLTreeMap.prototype.controller.onDestroyElement = function (content, tree, isLe
 };
 
 EOLTreeMap.prototype.controller.onCreateElement = function (content, node, isLeaf, head, body) {  
-	
-	//note that isLeaf will be false when leaves have images, but TM.leaf(node) will be true
-	if (!this.Color.allow && TM.leaf(node)) {
+	if (!this.Color.allow && node != null && TM.leaf(node)) {
 		this.insertImage(node, body);
 	}
 };
 
+EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
+	
+	//Wrap an EOL link around all head divs and an internal hash link around all of the body divs
+	var that = this;
+	jQuery("#" + tree.id).find("div .content").each(function (element) {
+		var node = TreeUtil.getSubtree(tree, this.id);
+		var elem1 = jQuery(this).children()[0];
+		var elem2 = jQuery(this).children()[1];
+		
+		if (node && elem1) {
+			jQuery(elem1).wrap("<a href=http://www.eol.org/" + node.taxonConceptID + ">");
+			if (elem2) {
+				jQuery(elem2).wrap("<a href=#" + node.id + ">");
+			}
+			
+		}
+	});
+
+}
+
 EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
-	//TODO
-	onComplete.onComplete(nodeId, tree);
+	var node = this.api.hierarchy_entries(nodeId, function (json) {
+		EOLTreeMap.prepareForTreeMap(json);
+		onComplete.onComplete(nodeId, json);
+	});
 };
 
-EOLTreeMap.prototype.controller.insertImage = function (node, body) {
+EOLTreeMap.prototype.controller.insertImage = function (node, container) {
 	this.api.decorateNode(node, function () {
 		if (node.image) {
 			var image = new Image();
 			image.src = node.image.eolThumbnailURL;
 			
 			if (image.complete) {
-				EOLTreeMap.resizeImage(image, body);
-				jQuery(body).html(image);
+				EOLTreeMap.resizeImage(image, container);
+				jQuery(container).html(image);
 			} else {
 				jQuery(image).load(function handler(eventObject) {
-					EOLTreeMap.resizeImage(image, body);
-					jQuery(body).html(image);
-					//TODO if the body element is big, consider replacing with full size image
+					EOLTreeMap.resizeImage(image, container);
+					jQuery(container).html(image);
+					//TODO if the container element is big, consider replacing with full size image
 				});
 				
 				jQuery(image).error(function handler(eventObject) {
-					jQuery(body).html("No image available");
+					jQuery(container).html("No image available");
 				});
 			}
 		} else {
-			jQuery(body).html("No image available");
+			jQuery(container).html("No image available");
 		}
 	});
 };
@@ -129,7 +149,6 @@ EOLTreeMap.prototype.createBox = function (json, coord, html) {
 		if (this.config.Color.allow) {
 			box = this.leafBox(json, coord);
 		} else {
-			html = "<img src='images/ajax-loader.gif'>";
 			box = this.headBox(json, coord) + this.bodyBox(html, coord);
 		}
 	} else {
@@ -137,14 +156,4 @@ EOLTreeMap.prototype.createBox = function (json, coord, html) {
 	}
 
 	return this.contentBox(json, coord, box);
-};
-
-EOLTreeMap.prototype.headBox = function(json, coord) {
-	var config = this.config, offst = config.offset;
-	var c = {
-		'height' : config.titleHeight + "px",
-		'width' : (coord.width - offst) + "px",
-		'left' : offst / 2 + "px"
-	};
-	return "<div class=\"head\" style=\"" + this.toStyle(c) + "\">" + json.scientificName + "</div>";
 };
