@@ -1,0 +1,26 @@
+#jitdetail {
+	color: #fff;
+    background-color: black;
+	overflow:auto;
+	line-height:normal;
+}
+
+#jitdetail img {
+	width:100%;
+	display:block;
+}
+
+#jitdetail .title {
+	font-size:20px;
+}
+
+#jitdetail figcaption {
+	color:gray;
+}
+
+#jitdetail figcaption a:link {
+	color:gray;
+}
+#jitdetail figcaption a:visited {
+	color:gray;
+}

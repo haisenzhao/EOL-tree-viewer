@@ -1,0 +1,16 @@
+html, body {
+    font-size:10px;
+    font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
+    background-color:black;
+}
+
+a:link {
+	color:white;
+}
+a:visited {
+	color:white;
+}
+
+.loading {
+	background: url(../images/ajax-loader.gif) no-repeat center center;
+}

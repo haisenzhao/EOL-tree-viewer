@@ -1,0 +1,51 @@
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="js/eolapi.js"></script>
+</head>
+<body>
+<div id='container'></div>
+
+<script>
+$(document).ready(function() {
+	var api = new EolApi();
+	api.ping(
+		function success() {
+			jQuery("#container").append("<p>ping success</p>");
+		},
+		function error() {
+			jQuery("#container").append("<p>ping error</p>");
+		}
+	);
+	
+	api.hierarchy_entries(24974884, function (json) {
+		jQuery("#container").append("<p>" + json.scientificName + " (EOL page #" + json.taxonConceptID + ")</p>");
+	});
+	
+	api.pages(1, new EolApiConfig(), function (json) {
+		var imageURL = json.dataObjects.filter(function (item) {
+			return item.dataType === "http://purl.org/dc/dcmitype/StillImage";
+		})[0].eolMediaURL;
+		var text = json.dataObjects.filter(function (item) {
+			return item.dataType === "http://purl.org/dc/dcmitype/Text";
+		})[0].description;
+		jQuery("#container").append("<img src=" + imageURL + ">");
+		jQuery("#container").append(text);
+	});
+	
+	api.hierarchy_entries(24974884, function (json) {
+		var firstChild = json.children[0];
+
+		api.appendChildren(firstChild, function () {
+			jQuery("#container").append("<p>The first child is " + firstChild.scientificName + "</p>" );
+			jQuery("#container").append("<p>It has these children: </p>");
+			json.children[0].children.forEach(function(child) {
+				jQuery("#container").append("<p>" + child.scientificName + "</p>");
+			});
+		});
+	});
+});
+</script>
+
+</body>
+</html>

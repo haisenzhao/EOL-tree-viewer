@@ -1,19 +1,21 @@
+EOLTreeMap.config = {
+	levelsToShow: 1,
+	orientation: "v",
+	titleHeight: 22,
+	offset:2
+};
+
 function EOLTreeMap(container) {
 
 	this.rootId = container.id;
+	jQuery(container).addClass("treemap-container");
 	this.backingTree = null;
 	this.api = new EolApi();
 	this.controller.api = this.api;
 }
 
 EOLTreeMap.prototype = new TM.Squarified(EOLTreeMap.config);
-//EOLTreeMap.prototype.constructor = EOLTreeMap;
-
-EOLTreeMap.config = {
-	levelsToShow: 1,
-	orientation: "v",
-	titleHeight: 22
-};
+EOLTreeMap.prototype.constructor = EOLTreeMap;
 
 EOLTreeMap.prototype.show = function (id) {
 	if (this.backingTree === null) {
@@ -71,7 +73,6 @@ EOLTreeMap.prototype.controller.insertImage = function (node, body) {
 		if (node.image) {
 			var image = new Image();
 			image.src = node.image.eolThumbnailURL;
-			//TODO resize image to fit
 			
 			if (image.complete) {
 				EOLTreeMap.resizeImage(image, body);
@@ -94,6 +95,7 @@ EOLTreeMap.prototype.controller.insertImage = function (node, body) {
 };
 
 EOLTreeMap.resizeImage = function (image, container) {
+	container = jQuery(container); //so I can get the size in any browser
 	var containerAR = container.innerWidth() / container.innerHeight();
 	
 	var imageAR = image.width / image.height;
@@ -101,7 +103,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 	if (imageAR >= containerAR) {
 		//image aspect ratio is wider than container: fit height, center width overlap
 		var calcWidth = (container.innerHeight() / image.height) * image.width;
-		image.height = availableHeight;
+		image.height = container.innerHeight();
 		image.width = calcWidth; //force IE to maintain aspect ratio
 		jQuery(image).css("marginLeft",  (container.innerWidth() - calcWidth) / 2);
 	}
@@ -110,7 +112,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 		var calcHeight = (container.innerWidth() / image.width) * image.height;
 		image.width = container.innerWidth();
 		image.height = calcHeight; //force IE to maintain aspect ratio
-		jQuery(image).css("marginTop",  (availableHeight - calcHeight) / 2);
+		jQuery(image).css("marginTop",  (container.innerHeight() - calcHeight) / 2);
 	}
 };
 
@@ -127,7 +129,6 @@ EOLTreeMap.prototype.createBox = function (json, coord, html) {
 		if (this.config.Color.allow) {
 			box = this.leafBox(json, coord);
 		} else {
-			//TODO get actual image for node
 			html = "<img src='images/ajax-loader.gif'>";
 			box = this.headBox(json, coord) + this.bodyBox(html, coord);
 		}

@@ -1,0 +1,39 @@
+/* Required for the JIT treemap layout */
+.treemap-container div {
+	position:absolute;
+}
+
+/* Other styling */
+.treemap-container {
+	line-height:normal;
+	text-align: center;
+	color: #fff;
+}
+
+.treemap-container .content {
+    background-color:#555;
+	overflow:hidden;
+}
+
+.treemap-container .head {
+	font-size:16px;
+    color:white;
+    background-color:#444;
+}
+
+.treemap-container .body {
+    background-color:black;
+	overflow:hidden;
+}
+
+.treemap-container .leaf {
+    color:white;
+    background-color:#111;
+    display:table-cell;
+    vertical-align:middle;
+    border:1px solid #000;
+}
+
+.treemap-container img {
+	overflow:hidden;
+}
