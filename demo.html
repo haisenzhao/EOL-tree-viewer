@@ -13,7 +13,7 @@
 </head>
 <body>
 <div id='thejit'></div>
-<div id='jitdetail'></div>
+<div id='jitdetail'><div class='title'></div><figure><img><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
 <div id='breadcrumb'></div>
 <!-- TODO: add a classification selector and a search box -->
 <!-- TODO handle resize -->
@@ -25,11 +25,37 @@ $(document).ready(function() {
 	$(window).bind( 'hashchange', function(){
 		if (location.hash) {
 			tm.show(location.hash.slice(1));
+			//TODO update the breadcrumb
 		} else {
 			location.hash = 24974884; //By default redirect to Animalia in the CoL
 		}
 	});
 	$(window).trigger( 'hashchange' );
+	
+	tm.addNodeSelectHandler(function (node) {
+		if (node == null) {
+			jQuery("#jitdetail div.title").empty();
+			jQuery("#jitdetail figure img").css("display","none");
+			jQuery("#jitdetail figure figcaption").empty();
+			jQuery("#jitdetail div.description h2").empty();
+			jQuery("#jitdetail div.description div").empty();
+		} else {
+			jQuery("#jitdetail div.title").html(node.name);
+			if (node.image) {
+				jQuery("#jitdetail figure img")[0].src = node.image.eolMediaURL;
+				jQuery("#jitdetail figure img").css("display","block");
+				//jQuery("#jitdetail figure figcaption").html(node.image.taxonConcepts[0].scientificName); //TODO get the full dataobject and use the taxonConcept for the caption.  also, pick the taxonConcept for the current hierarchy, instead of just using the first one
+				jQuery("#jitdetail figure figcaption").html(node.image.title);
+			}
+			
+			if (node.text) {
+				if (node.text.provider && node.text.provider.name) {
+					jQuery("#jitdetail div.description h2").html("From " + node.text.provider.name);
+				}
+				jQuery("#jitdetail div.description div").html(node.text.description);
+			}
+		}
+	});
 
 });
 </script>

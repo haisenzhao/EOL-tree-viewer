@@ -13,6 +13,7 @@ function EOLTreeMap(container) {
 	jQuery(container).addClass("treemap-container");
 	this.api = new EolApi();
 	this.controller.api = this.api;
+	this.nodeSelectHandlers = [];
 	
 	/* Using controller.onBeforeCompute to set this.shownTree before plot is 
 	 * called, where it's needed for leaf calc.  But can't give controller 
@@ -24,6 +25,18 @@ function EOLTreeMap(container) {
 	this.controller.setShownTree = function(json) {
 		that.shownTree = json;
 	}
+	
+	jQuery("div.content").live("mouseenter", function() {
+		console.log("mouse entered " + this.id);
+		that.select(this.id);
+	});
+	
+	jQuery("div.content").live("mouseleave", function() {
+		console.log("mouse left " + this.id);
+		that.select(null);
+	});
+	
+	
 }
 
 EOLTreeMap.prototype = new TM.Squarified(EOLTreeMap.config);
@@ -40,6 +53,21 @@ EOLTreeMap.prototype.show = function (id) {
 		this.view(id);
 	}
 };
+
+/* 
+ * Calls callback(node) when a node is 'selected' (for display, not navigation). 
+ * Calls callback(null) when no node is selected.
+ */
+EOLTreeMap.prototype.addNodeSelectHandler = function(handler) {
+	this.nodeSelectHandlers.push(handler);
+}
+
+EOLTreeMap.prototype.select = function(id) {
+	var node = TreeUtil.getSubtree(this.tree, id);
+	this.nodeSelectHandlers.forEach(function(handler) {
+		handler(node);
+	});
+}
 
 EOLTreeMap.prepareForTreeMap = function (apiHierarchy) {
 	//set some fields TM needs
@@ -61,7 +89,7 @@ EOLTreeMap.setAreas = function (tree, computeArea) {
 };
 
 EOLTreeMap.resizeImage = function (image, container) {
-	container = jQuery(container); //so I can get the size in any browser
+	container = jQuery(container);
 	var containerAR = container.innerWidth() / container.innerHeight();
 	
 	var imageAR = image.width / image.height;
@@ -83,7 +111,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 };
 
 
-/* Overrides TM.createBox */
+/* Overrides TM.createBox to render a leaf with title and image */
 EOLTreeMap.prototype.createBox = function (json, coord, html) {
 	var box;
 	if (this.leaf(json)) {
@@ -98,6 +126,21 @@ EOLTreeMap.prototype.createBox = function (json, coord, html) {
 
 	return this.contentBox(json, coord, box);
 };
+
+///* Overrides TM.bodyBox to remove offset between head box and body box */
+//EOLTreeMap.prototype.bodyBox = function(html, coord) {
+//    var config = this.config,
+//    th = config.titleHeight,
+//    offst = config.offset;
+//    var c = {
+//      'width': (coord.width - offst) + "px",
+//      'height':(coord.height - offst - th) + "px",
+//      'top':   th + "px",
+//      'left':  (offst / 2) + "px"
+//    };
+//    return "<div class=\"body\" style=\""
+//      + this.toStyle(c) +"\">" + html + "</div>";
+//};
 
 /* a node is displayed as a leaf if it is at the max displayable depth or if it is actually a leaf in the current tree */
 EOLTreeMap.prototype.leaf = function (node) {
@@ -139,7 +182,7 @@ EOLTreeMap.prototype.controller.onDestroyElement = function (content, tree, isLe
 
 EOLTreeMap.prototype.controller.onCreateElement = function (content, node, isLeaf, head, body) {  
 	if (!this.Color.allow && node != null && TM.leaf(node)) {
-		this.insertImage(node, body);
+		this.insertBodyContent(node, body);
 	}
 };
 
@@ -149,7 +192,7 @@ EOLTreeMap.prototype.controller.onBeforeCompute = function(tree){
 
 EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 	
-	//Wrap an EOL link around all head divs and an internal hash link around all of the body divs
+	//Wrap an EOL link around all head divs and a navigation hash link around all of the body divs
 	var that = this;
 	jQuery("#" + tree.id).find("div .content").each(function (element) {
 		var node = TreeUtil.getSubtree(tree, this.id);
@@ -161,7 +204,6 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 			if (elem2) {
 				jQuery(elem2).wrap("<a href=#" + node.id + ">");
 			}
-			
 		}
 	});
 
@@ -174,34 +216,53 @@ EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
 	});
 };
 
-EOLTreeMap.prototype.controller.insertImage = function (node, container) {
-	var placeholder = new Image();
+EOLTreeMap.prototype.controller.insertBodyContent = function (node, container) {
+//	if (node.image.image) {
+//		//already loaded full size image
+//		that.insertImage(node.image.image, container, function(){});
+//		return;
+//	}
 	
+	var placeholder = new Image();
+	placeholder.src = "images/ajax-loader.gif";
+	jQuery(container).html(placeholder);
+	
+	var that = this;
 	this.api.decorateNode(node, function () {
 		if (node.image) {
-			var image = new Image();
-			//image.src = node.image.eolMediaURL;
-			image.src = node.image.eolThumbnailURL;
-			
-			if (image.complete) {
-				EOLTreeMap.resizeImage(image, container);
-				jQuery(container).html(image);
-			} else {
-				jQuery(image).load(function handler(eventObject) {
-					EOLTreeMap.resizeImage(image, container);
-					jQuery(container).html(image);
-					//TODO if the container element is big, consider replacing with full size image
-				});
-				
-				jQuery(image).error(function handler(eventObject) {
-					jQuery(container).html("No image available");
-				});
-			}
+			var thumb = new Image();
+			thumb.src = node.image.eolThumbnailURL;
+			that.insertImage(thumb, container, function(){
+				if (thumb.naturalWidth < jQuery(container).innerWidth()) { //TODO: not sure if image.naturalWidth is supported on all browsers.  Test.
+					node.image.image = new Image();
+					node.image.image.src = node.image.eolMediaURL;
+					that.insertImage(node.image.image, container, function(){});
+				}
+			});
 		} else {
 			jQuery(container).html("No image available");
 		}
 	});
 };
+
+EOLTreeMap.prototype.controller.insertImage = function (image, container, callback) {
+	if (image.complete) {
+		EOLTreeMap.resizeImage(image, container);
+		jQuery(container).html(image);
+		callback();
+	} else {
+		jQuery(image).load(function handler(eventObject) {
+			EOLTreeMap.resizeImage(image, container);
+			jQuery(container).html(image);
+			callback();
+		});
+		
+		jQuery(image).error(function handler(eventObject) {
+			jQuery(container).html("No image available");
+			callback();
+		});
+	}
+}
 
 /* A minor edit to loadSubtrees to make it merge the entire incoming json node 
  * with the existing node, instead of just tacking on the new child array */
