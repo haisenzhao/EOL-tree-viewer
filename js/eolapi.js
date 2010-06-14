@@ -44,10 +44,11 @@ EolApi.prototype.data_objects = function (objectID, onSuccess) {
 EolApi.prototype.decorateNode = function (node, callback) {
 	this.pages(node.taxonConceptID, this.defaultConfig, function (json) {
 		//just appending the whole dataObject to the node
-		node.image = json.dataObjects.filter(function (item) {
+		node.image = jQuery.grep(json.dataObjects, function (item) {
 			return item.dataType === "http://purl.org/dc/dcmitype/StillImage";
 		})[0];
-		node.text = json.dataObjects.filter(function (item) {
+		
+		node.text = jQuery.grep(json.dataObjects, function (item) {
 			return item.dataType === "http://purl.org/dc/dcmitype/Text";
 		})[0];
 		callback();

@@ -62,7 +62,7 @@ EOLTreeMap.prototype.addNodeSelectHandler = function(handler) {
 
 EOLTreeMap.prototype.select = function(id) {
 	var node = TreeUtil.getSubtree(this.tree, id);
-	this.nodeSelectHandlers.forEach(function(handler) {
+	jQuery.each(this.nodeSelectHandlers, function(index, handler) {
 		handler(node);
 	});
 };
@@ -194,8 +194,9 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
       'left':  offst / 2 + "px"
     };
     var breadcrumbs = "";
-    json.ancestors.forEach(function (ancestor) {
+    jQuery.each(json.ancestors, function (index, ancestor) {
     	breadcrumbs += "<a class='breadcrumb ancestor' href='#" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a> > ";
+    	//TODO make these selectable so they are shown in the detail view.  I guess this means I have to make them div.content?  Or make a new class .selectable.  Probably that.
     });
     breadcrumbs += "<a class='breadcrumb' href='http://www.eol.org/" + json.taxonConceptID + "'>" + json.name + "</a>";
     return "<div class=\"head\" style=\"" + this.toStyle(c) + "\">" + breadcrumbs + "</div>";
@@ -253,7 +254,7 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 	
 	//Wrap an EOL link around all head divs and a navigation hash link around all of the body divs
 	var that = this;
-	jQuery("#" + tree.id).find("div .content").each(function (element) {
+	jQuery("#" + tree.id).find("div .content").each(function (index, element) {
 		var node = TreeUtil.getSubtree(tree, this.id);
 		var elem1 = jQuery(this).children()[0];
 		var elem2 = jQuery(this).children()[1];

@@ -11,6 +11,10 @@ a:visited {
 	color:white;
 }
 
+a img {
+	border:none;
+}
+
 .loading {
 	background: url(../images/ajax-loader.gif) no-repeat center center;
 }

@@ -1,6 +1,11 @@
 <html>
 <head>
 <title>EOL Treemap</title>
+
+<!--[if lt IE 9]>
+<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
 <link type="text/css" rel="stylesheet" media="all" href="css/layout.css" />
 <link type="text/css" rel="stylesheet" media="all" href="css/style.css" />
 <link type="text/css" rel="stylesheet" media="all" href="css/detail.css" />
@@ -48,10 +53,17 @@ $(document).ready(function() {
 			}
 			
 			if (node.text) {
-				if (node.text.provider && node.text.provider.name) {
-					jQuery("#jitdetail div.description h2").html("From " + node.text.provider.name);
+				if (node.text.agents) {
+					var providers = jQuery.grep(node.text.agents, function (agent){
+						return agent.role === "provider";
+					});
+					if (providers[0]) {
+						jQuery("#jitdetail div.description h2").html("From " + providers[0].full_name + ":");
+					}
+					
 				}
-				jQuery("#jitdetail div.description div").html(node.text.description);
+				var description = node.text.description.replace(/&nbsp;/gm, " "); //remove ugly whitespace (Animal Diversity Web content, for example)
+				jQuery("#jitdetail div.description div").html(description);
 			}
 		}
 	});
