@@ -3,7 +3,7 @@
 function EolApiConfig() {
 	this.images = 1;
 	this.text = 1;
-	this.subjects = "TaxonBiology|GeneralDescription|Description";
+	//this.subjects = "TaxonBiology|GeneralDescription|Description";
 	this.details = 1;
 	this.common_names = 0;
 	this.vetted = 0;

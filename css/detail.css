@@ -5,9 +5,8 @@
 	line-height:normal;
 }
 
-#jitdetail img {
+#jitdetail figure div.image img {
 	width:100%;
-	display:block;
 }
 
 #jitdetail .title {

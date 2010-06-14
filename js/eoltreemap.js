@@ -251,6 +251,11 @@ EOLTreeMap.prototype.controller.onBeforeCompute = function(tree){
 };
 
 EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
+	/*
+	 * Adding these elements to the tree in the plotting (createBox, etc...) 
+	 * functions or in onCreateElement breaks the tree traversal in 
+	 * initializeElements, so I have to add them here
+	 */
 	
 	//Wrap an EOL link around all head divs and a navigation hash link around all of the body divs
 	var that = this;
@@ -260,9 +265,9 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 		var elem2 = jQuery(this).children()[1];
 		
 		if (node && elem1) {
-			jQuery(elem1).wrap("<a class='head' href=http://www.eol.org/" + node.taxonConceptID + ">");
+			jQuery(elem1).wrap("<a class='head' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
 			if (elem2) {
-				jQuery(elem2).wrap("<a class='body' href=#" + node.id + ">");
+				jQuery(elem2).wrap("<a class='body' href=#" + node.id + "></a>");
 			}
 		}
 	});
