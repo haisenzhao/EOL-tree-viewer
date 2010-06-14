@@ -110,7 +110,7 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 			that.graft(subtree, json, callback);
 		});
 	} else {
-		var childMatch = subtree.children.filter(function (child) {return child.taxonID == json.taxonID })[0];
+		var childMatch = jQuery.grep(subtree.children, function (child) {return child.taxonID == json.taxonID })[0];
 		if (childMatch) {
 			//found the location of the hierarchy entry
 			EOLTreeMap.prepareForTreeMap(json);
@@ -118,8 +118,8 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 			callback(childMatch);
 		} else {
 			//try the next ancestor on json's array
-			var nextAncestorID = json.ancestors.filter(function (ancestor) {return ancestor.parentNameUsageID == subtree.taxonID })[0].taxonID;
-			var nextAncestor = subtree.children.filter(function (child) {return child.taxonID == nextAncestorID })[0];
+			var nextAncestorID = jQuery.grep(json.ancestors, function (ancestor) {return ancestor.parentNameUsageID == subtree.taxonID })[0].taxonID;
+			var nextAncestor = jQuery.grep(subtree.children, function (child) {return child.taxonID == nextAncestorID })[0];
 			this.graft(nextAncestor, json, callback);
 		}
 	}
@@ -334,6 +334,10 @@ EOLTreeMap.prototype.controller.insertImage = function (image, container, callba
 		callback();
 	} else {
 		jQuery(image).load(function handler(eventObject) {
+			//have to set these for IE.  (They already exist in other browsers...)
+			image.naturalWidth = image.width;
+			image.naturalHeight = image.height;
+			
 			EOLTreeMap.resizeImage(image, container);
 			jQuery(container).html(image);
 			callback();
