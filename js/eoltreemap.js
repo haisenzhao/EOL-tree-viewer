@@ -1,4 +1,3 @@
-//TODO: only-child "Not Assigned" nodes should be skipped, and their children shown
 EOLTreeMap.config = {
 	levelsToShow: 1,
 	titleHeight: 22,
@@ -13,6 +12,10 @@ function EOLTreeMap(container) {
 	this.controller.api = this.api;
 	this.nodeSelectHandlers = [];
 	
+	//create a stump tree, so view() has something to graft to.
+	this.tree = { taxonID:"24974884",  scientificName:"Animalia" };
+	EOLTreeMap.prepareForTreeMap(this.tree);
+	
 	/* Using controller.onBeforeCompute to set this.shownTree before plot is 
 	 * called, where it's needed for leaf calc.  But can't give controller 
 	 * a field referring back to this EOLTreeMap because the reference cycle appears 
@@ -25,15 +28,13 @@ function EOLTreeMap(container) {
 		that.shownTree = json;
 	}
 	
-	jQuery("div.content").live("mouseenter", function() {
+	jQuery(".selectable").live("mouseenter", function() {
 		that.select(this.id);
 	});
 	
-	jQuery("div.content").live("mouseleave", function() {
+	jQuery(".selectable").live("mouseleave", function() {
 		that.select(null);
 	});
-	
-	//TODO try a jQuery.live() click handler instead of wrapping the body boxes in <a>s? 
 }
 
 EOLTreeMap.prototype = new TM.Squarified(EOLTreeMap.config);
@@ -97,7 +98,7 @@ EOLTreeMap.prototype.view = function(id) {
  * Adds an EOL hierarchy entry to a subtree, fetching its ancestors as necessary 
  * json: the hierarchy entry
  * subtree: a subtree containing this entry
- * callback: 
+ * callback: callback(node_in_tree_for_json)
  */
 EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 	var that = this;
@@ -147,18 +148,18 @@ EOLTreeMap.resizeImage = function (image, container) {
 	container = jQuery(container);
 	var containerAR = container.innerWidth() / container.innerHeight();
 	
-	var imageAR = image.width / image.height;
+	var imageAR = image.naturalWidth / image.naturalHeight;
 	
 	if (imageAR >= containerAR) {
 		//image aspect ratio is wider than container: fit height, center width overlap
-		var calcWidth = (container.innerHeight() / image.height) * image.width;
+		var calcWidth = (container.innerHeight() / image.naturalHeight) * image.naturalWidth;
 		image.height = container.innerHeight();
 		image.width = calcWidth; //force IE to maintain aspect ratio
 		jQuery(image).css("marginLeft",  (container.innerWidth() - calcWidth) / 2);
 	}
 	else {
 		//image aspect ratio is taller than container: fit width, center height overlap
-		var calcHeight = (container.innerWidth() / image.width) * image.height;
+		var calcHeight = (container.innerWidth() / image.naturalWidth) * image.naturalHeight;
 		image.width = container.innerWidth();
 		image.height = calcHeight; //force IE to maintain aspect ratio
 		jQuery(image).css("marginTop",  (container.innerHeight() - calcHeight) / 2);
@@ -186,6 +187,13 @@ EOLTreeMap.prototype.createBox = function (json, coord, html) {
 	return this.contentBox(json, coord, box);
 };
 
+EOLTreeMap.prototype.contentBox = function(json, coord, html) {
+    var c = {};
+    for(var i in coord) c[i] = coord[i] + "px";
+    return "<div class=\"content selectable\" style=\"" + this.toStyle(c) 
+       + "\" id=\"" + json.id + "\">" + html + "</div>";
+};
+
 EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
     var config = this.config, offst = config.offset;
     var c = {
@@ -195,7 +203,7 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
     };
     var breadcrumbs = "";
     jQuery.each(json.ancestors, function (index, ancestor) {
-    	breadcrumbs += "<a class='breadcrumb ancestor' href='#" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a> > ";
+    	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + ancestor.taxonID + "' id='" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a> > ";
     	//TODO make these selectable so they are shown in the detail view.  I guess this means I have to make them div.content?  Or make a new class .selectable.  Probably that.
     });
     breadcrumbs += "<a class='breadcrumb' href='http://www.eol.org/" + json.taxonConceptID + "'>" + json.name + "</a>";
@@ -222,7 +230,7 @@ EOLTreeMap.prototype.processChildrenLayout = function (par, ch, coord) {
 	}
 	var minimumSideValue = (this.layout.horizontal())? coord.height : coord.width;
 	
-	//kgu: sorting by area (required for treemap), then name
+	//kgu: sorting by area (required for treemap), then name.  Most of the time areas are all going to be the same.
 	ch.sort(function (a, b) {
 		var diff = a._area - b._area;
 		return diff || a.name.localeCompare(b.name);
@@ -241,7 +249,7 @@ EOLTreeMap.prototype.controller.onDestroyElement = function (content, tree, isLe
 };
 
 EOLTreeMap.prototype.controller.onCreateElement = function (content, node, isLeaf, head, body) {  
-	if (!this.Color.allow && node != null && TM.leaf(node)) {
+	if (!this.Color.allow && node != null && this.leaf(node)) {
 		this.insertBodyContent(node, body);
 	}
 };
@@ -283,32 +291,40 @@ EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
 };
 
 EOLTreeMap.prototype.controller.insertBodyContent = function (node, container) {
-//	if (node.image.image) {
-//		//already loaded full size image
-//		that.insertImage(node.image.image, container, function(){});
-//		return;
-//	}
+	var that = this;
 	
 	var placeholder = new Image();
 	placeholder.src = "images/ajax-loader.gif";
 	jQuery(container).html(placeholder);
 	
-	var that = this;
-	this.api.decorateNode(node, function () {
-		if (node.image) {
-			var thumb = new Image();
-			thumb.src = node.image.eolThumbnailURL;
-			that.insertImage(thumb, container, function(){
-				if (thumb.naturalWidth < jQuery(container).innerWidth()) { //TODO: not sure if image.naturalWidth is supported on all browsers.  Test.
+	if (!node.apiContentFetched) {
+		this.api.decorateNode(node, function () {
+			node.apiContentFetched = true;
+			that.insertBodyContent(node, container);
+		});
+		return;
+	}
+	
+	if (node.image) {
+		if (node.image.image) {
+			this.insertImage(node.image.image, container, function(){});
+		} else {
+			if (!node.image.thumb) {
+				node.image.thumb = new Image();
+				node.image.thumb.src = node.image.eolThumbnailURL;
+			}
+			this.insertImage(node.image.thumb, container, function(){
+				if (node.image.thumb.naturalWidth < jQuery(container).innerWidth()) {
 					node.image.image = new Image();
 					node.image.image.src = node.image.eolMediaURL;
 					that.insertImage(node.image.image, container, function(){});
 				}
 			});
-		} else {
-			jQuery(container).html("No image available");
 		}
-	});
+	} else {
+		jQuery(container).html("No image available");
+	}
+
 };
 
 EOLTreeMap.prototype.controller.insertImage = function (image, container, callback) {
@@ -328,6 +344,12 @@ EOLTreeMap.prototype.controller.insertImage = function (image, container, callba
 			callback();
 		});
 	}
+};
+
+EOLTreeMap.prototype.controller.leaf = function (node) {
+	//FIXME: this is redundant, but I can't put a reference to this EOLTreeMap in the controller, for the reason given in the constructor.
+	return node.children.length === 0 ||
+			(node.ancestors.length >= this.shownTree.ancestors.length + this.levelsToShow);
 };
 
 /* A minor edit to loadSubtrees to make it merge the entire incoming json node 
