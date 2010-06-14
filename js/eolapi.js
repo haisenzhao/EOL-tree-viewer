@@ -53,14 +53,3 @@ EolApi.prototype.decorateNode = function (node, callback) {
 		callback();
 	});
 };
-
-EolApi.prototype.appendChildren = function (node, callback) {
-    this.hierarchy_entries(node.taxonID, function (json) {
-        if (node.children) {
-			//TODO merge
-        } else {
-            node.children = json.children;
-        }
-		callback();
-    });
-};

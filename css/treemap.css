@@ -10,23 +10,27 @@
 	color: #fff;
 }
 
-.treemap-container .content {
+.treemap-container div.content {
     background-color:#555;
 	overflow:hidden;
 }
 
-.treemap-container .head {
+.treemap-container div.head {
 	font-size:16px;
     color:white;
     background-color:black;
 }
 
-.treemap-container .body {
+.treemap-container div.body {
     background-color:black;
 	overflow:hidden;
 }
 
-.treemap-container .leaf {
+.treemap-container a.body {
+	text-decoration: none;
+}
+
+.treemap-container div.leaf {
     color:white;
     background-color:#111;
     display:table-cell;
@@ -37,3 +41,8 @@
 .treemap-container img {
 	overflow:hidden;
 }
+
+.treemap-container a.breadcrumb.ancestor {
+	text-decoration: none;
+}
+

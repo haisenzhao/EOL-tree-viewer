@@ -1,8 +1,6 @@
-//TODO: user starts on a non-root node and then enters a URL (or clicks a bookmark, etc) for a node not in this subtree.  JIT fails to find the node.  Need to fetch ancestors of current tree and new tree and graft the two together at their MRCA.
 //TODO: only-child "Not Assigned" nodes should be skipped, and their children shown
 EOLTreeMap.config = {
 	levelsToShow: 1,
-	orientation: "v",
 	titleHeight: 22,
 	offset:2
 };
@@ -23,26 +21,26 @@ function EOLTreeMap(container) {
 	 */
 	var that = this;
 	this.controller.setShownTree = function(json) {
+		this.shownTree = json;
 		that.shownTree = json;
 	}
 	
 	jQuery("div.content").live("mouseenter", function() {
-		console.log("mouse entered " + this.id);
 		that.select(this.id);
 	});
 	
 	jQuery("div.content").live("mouseleave", function() {
-		console.log("mouse left " + this.id);
 		that.select(null);
 	});
 	
-	
+	//TODO try a jQuery.live() click handler instead of wrapping the body boxes in <a>s? 
 }
 
 EOLTreeMap.prototype = new TM.Squarified(EOLTreeMap.config);
 EOLTreeMap.prototype.constructor = EOLTreeMap;
 
 EOLTreeMap.prototype.show = function (id) {
+	//TODO: once graft() is working, and there's a stump to start from, I can just call view() instead of show()
 	if (this.tree === null) {
 		var that = this;
 		this.api.hierarchy_entries(id, function (json) {
@@ -60,14 +58,71 @@ EOLTreeMap.prototype.show = function (id) {
  */
 EOLTreeMap.prototype.addNodeSelectHandler = function(handler) {
 	this.nodeSelectHandlers.push(handler);
-}
+};
 
 EOLTreeMap.prototype.select = function(id) {
 	var node = TreeUtil.getSubtree(this.tree, id);
 	this.nodeSelectHandlers.forEach(function(handler) {
 		handler(node);
 	});
-}
+};
+
+/*
+ * Override of TM.view.  Fetches nodes (and their lineage) instead of just assuming they're 
+ * already in the tree. For example, when the user jumps to a different classification
+ * or loads a bookmarked URL.
+ */
+EOLTreeMap.prototype.view = function(id) {
+	var that = this;
+
+	post = jQuery.extend({}, this.controller);
+	post.onComplete = function() {
+		that.loadTree(id);
+		jQuery("#" + that.config.rootId).focus();
+	};
+	
+	var node = TreeUtil.getSubtree(this.tree, id);
+	if (!node) {
+		this.api.hierarchy_entries(id, function (json) {
+			that.graft(that.tree, json, function (newNode) {
+				TreeUtil.loadSubtrees(newNode, post);
+			});
+		});
+	} else {
+		TreeUtil.loadSubtrees(node, post);
+	}
+};
+
+/* 
+ * Adds an EOL hierarchy entry to a subtree, fetching its ancestors as necessary 
+ * json: the hierarchy entry
+ * subtree: a subtree containing this entry
+ * callback: 
+ */
+EOLTreeMap.prototype.graft = function (subtree, json, callback) {
+	var that = this;
+	if(!subtree.children || subtree.children.length === 0) {
+		//the ancestor's full node hasn't been fetched yet.  Get it, then try again.
+		this.api.hierarchy_entries(subtree.taxonID, function (fullNode) {
+			EOLTreeMap.prepareForTreeMap(fullNode);
+			jQuery.extend(true, subtree, fullNode);
+			that.graft(subtree, json, callback);
+		});
+	} else {
+		var childMatch = subtree.children.filter(function (child) {return child.taxonID == json.taxonID })[0];
+		if (childMatch) {
+			//found the location of the hierarchy entry
+			EOLTreeMap.prepareForTreeMap(json);
+			jQuery.extend(true, childMatch, json);
+			callback(childMatch);
+		} else {
+			//try the next ancestor on json's array
+			var nextAncestorID = json.ancestors.filter(function (ancestor) {return ancestor.parentNameUsageID == subtree.taxonID })[0].taxonID;
+			var nextAncestor = subtree.children.filter(function (child) {return child.taxonID == nextAncestorID })[0];
+			this.graft(nextAncestor, json, callback);
+		}
+	}
+};
 
 EOLTreeMap.prepareForTreeMap = function (apiHierarchy) {
 	//set some fields TM needs
@@ -121,26 +176,30 @@ EOLTreeMap.prototype.createBox = function (json, coord, html) {
 			box = this.headBox(json, coord) + this.bodyBox("", coord);
 		}
 	} else {
-		box = this.headBox(json, coord) + this.bodyBox(html, coord);
+		if (json.id === this.shownTree.id) {
+			box = this.breadcrumbBox(json, coord) + this.bodyBox(html, coord);
+		} else {
+			box = this.headBox(json, coord) + this.bodyBox(html, coord);
+		}
 	}
 
 	return this.contentBox(json, coord, box);
 };
 
-///* Overrides TM.bodyBox to remove offset between head box and body box */
-//EOLTreeMap.prototype.bodyBox = function(html, coord) {
-//    var config = this.config,
-//    th = config.titleHeight,
-//    offst = config.offset;
-//    var c = {
-//      'width': (coord.width - offst) + "px",
-//      'height':(coord.height - offst - th) + "px",
-//      'top':   th + "px",
-//      'left':  (offst / 2) + "px"
-//    };
-//    return "<div class=\"body\" style=\""
-//      + this.toStyle(c) +"\">" + html + "</div>";
-//};
+EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
+    var config = this.config, offst = config.offset;
+    var c = {
+      'height': config.titleHeight + "px",
+      'width': (coord.width - offst) + "px",
+      'left':  offst / 2 + "px"
+    };
+    var breadcrumbs = "";
+    json.ancestors.forEach(function (ancestor) {
+    	breadcrumbs += "<a class='breadcrumb ancestor' href='#" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a> > ";
+    });
+    breadcrumbs += "<a class='breadcrumb' href='http://www.eol.org/" + json.taxonConceptID + "'>" + json.name + "</a>";
+    return "<div class=\"head\" style=\"" + this.toStyle(c) + "\">" + breadcrumbs + "</div>";
+};
 
 /* a node is displayed as a leaf if it is at the max displayable depth or if it is actually a leaf in the current tree */
 EOLTreeMap.prototype.leaf = function (node) {
@@ -162,7 +221,7 @@ EOLTreeMap.prototype.processChildrenLayout = function (par, ch, coord) {
 	}
 	var minimumSideValue = (this.layout.horizontal())? coord.height : coord.width;
 	
-	//kgu: inserting custom sort comparator
+	//kgu: sorting by area (required for treemap), then name
 	ch.sort(function (a, b) {
 		var diff = a._area - b._area;
 		return diff || a.name.localeCompare(b.name);
@@ -200,9 +259,9 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 		var elem2 = jQuery(this).children()[1];
 		
 		if (node && elem1) {
-			jQuery(elem1).wrap("<a href=http://www.eol.org/" + node.taxonConceptID + ">");
+			jQuery(elem1).wrap("<a class='head' href=http://www.eol.org/" + node.taxonConceptID + ">");
 			if (elem2) {
-				jQuery(elem2).wrap("<a href=#" + node.id + ">");
+				jQuery(elem2).wrap("<a class='body' href=#" + node.id + ">");
 			}
 		}
 	});
@@ -210,7 +269,8 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 }
 
 EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
-	var node = this.api.hierarchy_entries(nodeId, function (json) {
+	//TODO: this only gets one level of descendants.  Check the level param for how many levels we should be getting. (Find out if it is relative or absolute depth.)
+	this.api.hierarchy_entries(nodeId, function (json) {
 		EOLTreeMap.prepareForTreeMap(json);
 		onComplete.onComplete(nodeId, json);
 	});
@@ -262,7 +322,7 @@ EOLTreeMap.prototype.controller.insertImage = function (image, container, callba
 			callback();
 		});
 	}
-}
+};
 
 /* A minor edit to loadSubtrees to make it merge the entire incoming json node 
  * with the existing node, instead of just tacking on the new child array */
@@ -285,4 +345,6 @@ TreeUtil.loadSubtrees = function(tree, controller){
             }
         });
     }
-}
+};
+
+
