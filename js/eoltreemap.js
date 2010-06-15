@@ -12,7 +12,7 @@ function EOLTreeMap(container) {
 	this.controller.api = this.api;
 	this.nodeSelectHandlers = [];
 	
-	//create a stump tree, so view() has something to graft to.
+	//create a stump tree, so view() has something to graft to.  TODO: put the rest of the roots in (for all classifications).
 	this.tree = { taxonID:"24974884",  scientificName:"Animalia" };
 	EOLTreeMap.prepareForTreeMap(this.tree);
 	
@@ -335,8 +335,10 @@ EOLTreeMap.prototype.controller.insertImage = function (image, container, callba
 	} else {
 		jQuery(image).load(function handler(eventObject) {
 			//have to set these for IE.  (They already exist in other browsers...)
-			image.naturalWidth = image.width;
-			image.naturalHeight = image.height;
+			if (!image.naturalWidth && !image.naturalHeight) {
+				image.naturalWidth = image.width;
+				image.naturalHeight = image.height;
+			}
 			
 			EOLTreeMap.resizeImage(image, container);
 			jQuery(container).html(image);
