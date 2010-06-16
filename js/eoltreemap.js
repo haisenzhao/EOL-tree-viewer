@@ -169,12 +169,21 @@ EOLTreeMap.stump = function () {
 	var col = {
 		id:"COL",  name:"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009", image:{eolMediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/banner.gif"},
 		children: [{taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}, {taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}, {taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}, {taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}, {taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"}]
-		           
 	};
+	
+	var ncbi = {
+		id:"NCBI", name:"NCBI Taxonomy", image:{eolMediaURL:""},
+		children: [{taxonID:"28670753", taxonConceptID:"11660866", scientificName:"cellular organisms"}, {taxonID:"28665715", taxonConceptID:"11655828", scientificName:"other sequences"}, {taxonID:"28665429", taxonConceptID:"11655542", scientificName:"unclassified sequences"}, {taxonID:"28665341", taxonConceptID:"9157757", scientificName:"Viroids"}, {taxonID:"28612987", taxonConceptID:"5006", scientificName:"Viruses"}]
+	};
+	
+//	var ncbi = {
+//			id:"", name:"", image:{eolMediaURL:""},
+//			children: []
+//	};
 	
 	var tree = {
 		id:"Classifications",  name:"Classifications",
-		children: [col]
+		children: [col, ncbi]
 	};
 	
 	TreeUtil.each(tree, function (node) {
