@@ -11,6 +11,7 @@ function EOLTreeMap(container) {
 	this.api = new EolApi();
 	this.controller.api = this.api;
 	this.nodeSelectHandlers = [];
+	this.selectionFrozen = false;
 	
 	this.tree = EOLTreeMap.stump(); //start with a stump tree, so view() has something to graft to.  
 	
@@ -32,6 +33,19 @@ function EOLTreeMap(container) {
 	
 	jQuery(".selectable").live("mouseleave", function() {
 		that.select(null);
+	});
+	
+	jQuery(document).keydown(function (eventObject) {
+		if (eventObject.keyCode === 70) {
+			that.selectionFrozen = true;
+		}
+	});
+	
+	jQuery(document).keyup(function (eventObject) {
+		if (eventObject.keyCode === 70) {
+			that.selectionFrozen = false;
+			//TODO trigger a mouseenter on the currently hovered node to update selection
+		}
 	});
 }
 
@@ -60,10 +74,12 @@ EOLTreeMap.prototype.addNodeSelectHandler = function(handler) {
 };
 
 EOLTreeMap.prototype.select = function(id) {
-	var node = TreeUtil.getSubtree(this.tree, id);
-	jQuery.each(this.nodeSelectHandlers, function(index, handler) {
-		handler(node);
-	});
+	if (!this.selectionFrozen) {
+		var node = TreeUtil.getSubtree(this.tree, id);
+		jQuery.each(this.nodeSelectHandlers, function(index, handler) {
+			handler(node);
+		});
+	}
 };
 
 /*
@@ -77,7 +93,7 @@ EOLTreeMap.prototype.view = function(id) {
 	post = jQuery.extend({}, this.controller);
 	post.onComplete = function() {
 		that.loadTree(id);
-		jQuery("#" + that.config.rootId).focus();
+		//jQuery("#" + that.config.rootId).focus();
 	};
 	
 	var node = TreeUtil.getSubtree(this.tree, id);
@@ -197,7 +213,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 	}
 };
 
-EOLTreeMap.help = "<div id='help'><h2>Instructions</h2><p><ul><li>Hover the mouse over a taxon image to see details about that taxon.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></p></div>";
+EOLTreeMap.help = "<div id='help'><h2>Instructions</h2><p><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></p></div>";
 
 
 /* Overrides TM.createBox to render a leaf with title and image */
