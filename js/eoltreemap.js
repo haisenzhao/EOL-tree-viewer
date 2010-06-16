@@ -12,9 +12,7 @@ function EOLTreeMap(container) {
 	this.controller.api = this.api;
 	this.nodeSelectHandlers = [];
 	
-	//create a stump tree, so view() has something to graft to.  TODO: put the rest of the roots in (for all classifications).
-	this.tree = { taxonID:"24974884",  scientificName:"Animalia" };
-	EOLTreeMap.prepareForTreeMap(this.tree);
+	this.tree = EOLTreeMap.stump(); //start with a stump tree, so view() has something to graft to.  
 	
 	/* Using controller.onBeforeCompute to set this.shownTree before plot is 
 	 * called, where it's needed for leaf calc.  But can't give controller 
@@ -118,23 +116,56 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 			callback(childMatch);
 		} else {
 			//try the next ancestor on json's array
-			var nextAncestorID = jQuery.grep(json.ancestors, function (ancestor) {return ancestor.parentNameUsageID == subtree.taxonID })[0].taxonID;
-			var nextAncestor = jQuery.grep(subtree.children, function (child) {return child.taxonID == nextAncestorID })[0];
+			var nextAncestorID;
+			if (subtree === this.tree) {
+				//we're at the root, so the next ancestor is the classification
+				nextAncestorID = jQuery.grep(this.tree.children, function (classification) { return classification.name == json.nameAccordingTo })[0].id;
+			} else if (subtree.name == json.nameAccordingTo) {
+				//we're at the classification, so the next ancestor is the hierarchy_entry root (e.g. the kingdom)
+				nextAncestorID = json.ancestors[0].taxonID;
+			} else {
+				nextAncestorID = jQuery.grep(json.ancestors, function (ancestor) {return ancestor.parentNameUsageID == subtree.taxonID })[0].taxonID;
+			}
+			
+			var nextAncestor = jQuery.grep(subtree.children, function (child) {return child.id == nextAncestorID })[0];
 			this.graft(nextAncestor, json, callback);
 		}
 	}
 };
 
 EOLTreeMap.prepareForTreeMap = function (apiHierarchy) {
-	//set some fields TM needs
+	//set some fields TM needs, if undefined
 	TreeUtil.each(apiHierarchy, function (node) {
-		node.id = node.taxonID;
-		node.name = node.scientificName;
-		node.data = { $area: 1.0 };
-		if (!node.children) {
-			node.children = [];
-		}
+		node.id = node.id || node.taxonID;
+		node.name = node.name || node.scientificName;
+		node.children = node.children || [];
+		//node.ancestors = node.ancestors || [];
+		node.data = node.data || {};
+		node.data.$area = node.data.$area || 1.0;
 	});
+}
+
+EOLTreeMap.stump = function () {
+	/* 
+	 * TODO: put the rest of the roots in (for all classifications).
+	 * TODO: Do I need to add the classifications to ancestor arrays for all nodes?
+	 */
+	var col = {
+		id:"COL",  name:"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009", image:{eolMediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/banner.gif"},
+		children: [{taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}, {taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}, {taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}, {taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}, {taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"}]
+		           
+	};
+	
+	var tree = {
+		id:"Classifications",  name:"Classifications",
+		children: [col]
+	};
+	
+	TreeUtil.each(tree, function (node) {
+		EOLTreeMap.prepareForTreeMap(node);
+	});
+	
+	return tree;
 }
 
 EOLTreeMap.setAreas = function (tree, computeArea) {
@@ -201,19 +232,34 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
       'width': (coord.width - offst) + "px",
       'left':  offst / 2 + "px"
     };
-    var breadcrumbs = "";
-    jQuery.each(json.ancestors, function (index, ancestor) {
-    	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + ancestor.taxonID + "' id='" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a> > ";
-    	//TODO make these selectable so they are shown in the detail view.  I guess this means I have to make them div.content?  Or make a new class .selectable.  Probably that.
-    });
-    breadcrumbs += "<a class='breadcrumb' href='http://www.eol.org/" + json.taxonConceptID + "'>" + json.name + "</a>";
+    
+    var breadcrumbs ="";
+    
+	//make the classification the first breadcrumb
+    if (json.nameAccordingTo) {
+    	var shortClassificationName = jQuery.grep(this.tree.children, function (classification){return classification.name == json.nameAccordingTo[0]})[0].id;
+    	var breadcrumbs = "<a class='breadcrumb ancestor selectable' href='#" + shortClassificationName + "' id='" + shortClassificationName + "'>" + shortClassificationName + "</a> > ";
+    }
+    
+    //add the ancestors
+    if (json.ancestors) {
+	    jQuery.each(json.ancestors, function (index, ancestor) {
+	    	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + ancestor.taxonID + "' id='" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a> > ";
+	    });
+    }
+    
+    //add the current node as a link out to EOL
+    if (json.taxonConceptID) {
+    	breadcrumbs += "<a class='breadcrumb' href='http://www.eol.org/" + json.taxonConceptID + "'>" + json.name + "</a>";
+    } else {
+    	breadcrumbs += json.name;
+    }
+    
     return "<div class=\"head\" style=\"" + this.toStyle(c) + "\">" + breadcrumbs + "</div>";
 };
 
-/* a node is displayed as a leaf if it is at the max displayable depth or if it is actually a leaf in the current tree */
 EOLTreeMap.prototype.leaf = function (node) {
-	return node.children.length === 0 ||
-			(node.ancestors.length >= this.shownTree.ancestors.length + this.controller.levelsToShow);
+	return this.controller.leaf(node, this.tree, this.shownTree);
 };
 
 /* Minor edit of processChildrenLayout to sort equal-area nodes alphabetically */
@@ -249,7 +295,8 @@ EOLTreeMap.prototype.controller.onDestroyElement = function (content, tree, isLe
 };
 
 EOLTreeMap.prototype.controller.onCreateElement = function (content, node, isLeaf, head, body) {  
-	if (!this.Color.allow && node != null && this.leaf(node)) {
+	isLeaf = jQuery(body).children().length === 0; //overwriting JIT's isLeaf because I gave leaves a head and body 
+	if (!this.Color.allow && node != null && isLeaf) {
 		this.insertBodyContent(node, body);
 	}
 };
@@ -272,11 +319,12 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 		var elem1 = jQuery(this).children()[0];
 		var elem2 = jQuery(this).children()[1];
 		
-		if (node && elem1) {
+		if (node && elem1 && node.taxonConceptID) {
 			jQuery(elem1).wrap("<a class='head' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
-			if (elem2) {
-				jQuery(elem2).wrap("<a class='body' href=#" + node.id + "></a>");
-			}
+		}
+		
+		if (elem2) {
+			jQuery(elem2).wrap("<a class='body' href=#" + node.id + "></a>");
 		}
 	});
 
@@ -293,9 +341,11 @@ EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
 EOLTreeMap.prototype.controller.insertBodyContent = function (node, container) {
 	var that = this;
 	
-	var placeholder = new Image();
-	placeholder.src = "images/ajax-loader.gif";
-	jQuery(container).html(placeholder);
+	if (jQuery(container).children().length === 0) {
+		var placeholder = new Image();
+		placeholder.src = "images/ajax-loader.gif";
+		jQuery(container).html(placeholder);
+	}
 	
 	if (!node.apiContentFetched) {
 		this.api.decorateNode(node, function () {
@@ -306,10 +356,10 @@ EOLTreeMap.prototype.controller.insertBodyContent = function (node, container) {
 	}
 	
 	if (node.image) {
-		if (node.image.image) {
+		if (node.image.image && node.image.image.src) { //for some reason, IE (only) is resetting these images to have no src...
 			this.insertImage(node.image.image, container, function(){});
 		} else {
-			if (!node.image.thumb) {
+			if (!node.image.thumb || !node.image.thumb.src) {
 				node.image.thumb = new Image();
 				node.image.thumb.src = node.image.eolThumbnailURL;
 			}
@@ -328,14 +378,19 @@ EOLTreeMap.prototype.controller.insertBodyContent = function (node, container) {
 };
 
 EOLTreeMap.prototype.controller.insertImage = function (image, container, callback) {
-	if (image.complete) {
+	if (image.complete || image.readyState == "complete") {
+		//have to set these for IE.  (They already exist in other browsers...)
+		if (!image.naturalHeight || !image.naturalWidth) {
+			image.naturalWidth = image.width;
+			image.naturalHeight = image.height;
+		}
+		
 		EOLTreeMap.resizeImage(image, container);
 		jQuery(container).html(image);
 		callback();
 	} else {
 		jQuery(image).load(function handler(eventObject) {
-			//have to set these for IE.  (They already exist in other browsers...)
-			if (!image.naturalWidth && !image.naturalHeight) {
+			if (!image.naturalHeight || !image.naturalWidth) {
 				image.naturalWidth = image.width;
 				image.naturalHeight = image.height;
 			}
@@ -352,11 +407,22 @@ EOLTreeMap.prototype.controller.insertImage = function (image, container, callba
 	}
 };
 
-EOLTreeMap.prototype.controller.leaf = function (node) {
-	//FIXME: this is redundant, but I can't put a reference to this EOLTreeMap in the controller, for the reason given in the constructor.
+/* a node is displayed as a leaf if it is at the max displayable depth or if it is actually a leaf in the current tree */
+EOLTreeMap.prototype.controller.leaf = function (node, tree, shownTree) {
 	return node.children.length === 0 ||
-			(node.ancestors.length >= this.shownTree.ancestors.length + this.levelsToShow);
+			(TreeUtil.depth(node, tree) >= TreeUtil.depth(shownTree, tree) + this.levelsToShow);
 };
+
+TreeUtil.depth = function (node, tree) {
+	//TODO kind of ad-hoc.  Do this in a more robust way.
+	if (node === this.tree) {
+		return 0;
+	} else if (node.ancestors === undefined) {
+		return 1;
+	} else {
+		return node.ancestors.length + 2;
+	}
+}
 
 /* A minor edit to loadSubtrees to make it merge the entire incoming json node 
  * with the existing node, instead of just tacking on the new child array */
