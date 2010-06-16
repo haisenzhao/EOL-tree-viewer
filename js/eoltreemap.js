@@ -197,6 +197,8 @@ EOLTreeMap.resizeImage = function (image, container) {
 	}
 };
 
+EOLTreeMap.help = "<div id='help'><h2>Instructions</h2><p><ul><li>Hover the mouse over a taxon image to see details about that taxon.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></p></div>";
+
 
 /* Overrides TM.createBox to render a leaf with title and image */
 EOLTreeMap.prototype.createBox = function (json, coord, html) {
@@ -328,6 +330,12 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 		}
 	});
 
+	var helpButton = jQuery("<span class='helpButton'>?</span>");
+	helpButton.mouseenter(function (eventObject) {
+		jQuery("#jitdetail .description div").html(EOLTreeMap.help);
+		jQuery("#jitdetail .title").html("Help Text");
+	});
+	jQuery("#" + tree.id + " > div.head").append(helpButton);
 }
 
 EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
