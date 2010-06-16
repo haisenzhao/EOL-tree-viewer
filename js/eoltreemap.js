@@ -360,7 +360,7 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 		jQuery("#jitdetail .description div").html(EOLTreeMap.help);
 		jQuery("#jitdetail .title").html("Help Text");
 	});
-	jQuery("#" + tree.id + " > div.head").append(helpButton);
+	jQuery("#" + tree.id).prepend(helpButton);
 }
 
 EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {

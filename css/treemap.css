@@ -19,6 +19,12 @@
 	font-size:16px;
     color:white;
     background-color:black;
+    white-space:nowrap;
+    direction:rtl;
+}
+
+.treemap-container > div.content > div.head {
+	background-color: gray;
 }
 
 .treemap-container div.body {
@@ -44,6 +50,7 @@
 
 .treemap-container a.breadcrumb.ancestor {
 	text-decoration: none;
+	font-size:70%;
 }
 
 .treemap-container .helpButton {
@@ -56,4 +63,6 @@
 	-moz-border-radius:9px 9px 9px 9px;
 	font-size:13px;
 	font-weight:bolder;
+	position:relative;
+	z-index: 1;
 }
