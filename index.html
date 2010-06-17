@@ -59,7 +59,8 @@ $(document).ready(function() {
 		if (node != null) {
 			jQuery("#jitdetail div.title").html(node.name);
 			if (node.image) {
-				jQuery("#jitdetail figure div.image").html("<img src=" + node.image.eolMediaURL + ">");
+				var url = node.image.eolMediaURL || node.image.mediaURL;
+				jQuery("#jitdetail figure div.image").html("<img src=" + url + ">");
 				//jQuery("#jitdetail figure figcaption").html(node.image.taxonConcepts[0].scientificName); //TODO get the full dataobject and use the taxonConcept for the caption.  also, pick the taxonConcept for the current hierarchy, instead of just using the first one
 				jQuery("#jitdetail figure figcaption").html(node.image.title);
 			}

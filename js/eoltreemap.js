@@ -177,23 +177,28 @@ EOLTreeMap.stump = function () {
 	 * TODO: Do I need to add the classifications to ancestor arrays for all nodes?
 	 */
 	var col = {
-		id:"COL",  name:"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009", image:{eolMediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"},
+		id:"COL",  name:"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009", image:{mediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"},
 		children: [{taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}, {taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}, {taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}, {taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}, {taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"}]
 	};
 	
 	var ncbi = {
-		id:"NCBI", name:"NCBI Taxonomy", image:{eolMediaURL:"http://www.ncbi.nlm.nih.gov/projects/GeneTests/static/img/white_ncbi.png"},
+		id:"NCBI", name:"NCBI Taxonomy", image:{mediaURL:"http://www.ncbi.nlm.nih.gov/projects/GeneTests/static/img/white_ncbi.png"},
 		children: [{taxonID:"28670753", taxonConceptID:"11660866", scientificName:"cellular organisms"}, {taxonID:"28665715", taxonConceptID:"11655828", scientificName:"other sequences"}, {taxonID:"28665429", taxonConceptID:"11655542", scientificName:"unclassified sequences"}, {taxonID:"28665341", taxonConceptID:"9157757", scientificName:"Viroids"}, {taxonID:"28612987", taxonConceptID:"5006", scientificName:"Viruses"}]
 	};
 	
+	var iucn = {
+			id:"IUCN", name:"IUCN Red List (Species Assessed for Global Conservation)", image:{mediaURL:"images/iucn_high_res.jpg"},
+			children: [{taxonID:"24913771", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"24925347", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"24913778", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"24920520", taxonConceptID:"3121393", scientificName:"Protista"}]
+	};
+	
 //	var ncbi = {
-//			id:"", name:"", image:{eolMediaURL:""},
-//			children: []
+//			id:"", name:"", image:{mediaURL:""},
+//			children: [{taxonID:"", taxonConceptID:"", scientificName:""}]
 //	};
 	
 	var tree = {
 		id:"HOME",  name:"Classifications",
-		children: [col, ncbi]
+		children: [col, iucn, ncbi]
 	};
 	
 	//so sure we don't try to do EOL API calls for these dummy nodes
@@ -438,6 +443,10 @@ EOLTreeMap.prototype.controller.insertBodyContent = function (node, container) {
 		} else if (node.image.eolMediaURL) {
 			node.image.image = new Image();
 			node.image.image.src = node.image.eolMediaURL;
+			that.insertImage(node.image.image, container, function(){});
+		} else if (node.image.mediaURL) {
+			node.image.image = new Image();
+			node.image.image.src = node.image.mediaURL;
 			that.insertImage(node.image.image, container, function(){});
 		}
 	} else {
