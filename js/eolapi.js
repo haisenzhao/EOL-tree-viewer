@@ -27,18 +27,25 @@ EolApi.prototype.ping = function (success, error) {
 };
 
 EolApi.prototype.hierarchy_entries = function (taxonID, onSuccess) {
-	var url = "http://www.eol.org/api/hierarchy_entries/" + taxonID + ".json?callback=?";
-	jQuery.getJSON(url, {}, onSuccess);
+	if (taxonID) {
+		var url = "http://www.eol.org/api/hierarchy_entries/" + taxonID + ".json?callback=?";
+		jQuery.getJSON(url, {}, onSuccess);
+	}
 };
 
 EolApi.prototype.pages = function (taxonConceptID, config, onSuccess) {
-	var url = "http://www.eol.org/api/pages/" + taxonConceptID + ".json?callback=?";
-	jQuery.getJSON(url, config, onSuccess);
+	if (taxonConceptID) {
+		var url = "http://www.eol.org/api/pages/" + taxonConceptID + ".json?callback=?";
+		jQuery.getJSON(url, config, onSuccess);
+	}
 };
 
 EolApi.prototype.data_objects = function (objectID, onSuccess) {
-	var url =  "http://www.eol.org/api/data_objects/" + objectID + ".json?callback=?";
-	jQuery.getJSON(url, {}, onSuccess);
+	if (objectID) {
+		var url = "http://www.eol.org/api/data_objects/" + objectID + ".json?callback=?";
+		jQuery.getJSON(url, {}, onSuccess);
+	}
+	
 };
 
 EolApi.prototype.decorateNode = function (node, callback) {

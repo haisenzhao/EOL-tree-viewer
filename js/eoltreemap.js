@@ -11,6 +11,7 @@ function EOLTreeMap(container) {
 	this.api = new EolApi();
 	this.controller.api = this.api;
 	this.nodeSelectHandlers = [];
+	this.viewChangeHandlers = [];
 	this.selectionFrozen = false;
 	
 	this.tree = EOLTreeMap.stump(); //start with a stump tree, so view() has something to graft to.  
@@ -52,19 +53,6 @@ function EOLTreeMap(container) {
 EOLTreeMap.prototype = new TM.Squarified(EOLTreeMap.config);
 EOLTreeMap.prototype.constructor = EOLTreeMap;
 
-EOLTreeMap.prototype.show = function (id) {
-	//TODO: once graft() is working, and there's a stump to start from, I can just call view() instead of show()
-	if (this.tree === null) {
-		var that = this;
-		this.api.hierarchy_entries(id, function (json) {
-			EOLTreeMap.prepareForTreeMap(json);
-			that.loadJSON(json);
-		});
-	} else {
-		this.view(id);
-	}
-};
-
 /* 
  * Calls callback(node) when a node is 'selected' (for display, not navigation). 
  * Calls callback(null) when no node is selected.
@@ -73,11 +61,15 @@ EOLTreeMap.prototype.addNodeSelectHandler = function(handler) {
 	this.nodeSelectHandlers.push(handler);
 };
 
+EOLTreeMap.prototype.addViewChangeHandler = function(handler){
+	this.viewChangeHandlers.push(handler);
+};
+
 EOLTreeMap.prototype.select = function(id) {
 	if (!this.selectionFrozen) {
 		var node = TreeUtil.getSubtree(this.tree, id);
 		
-		if (!node.apiContentFetched) {
+		if (node && !node.apiContentFetched) {
 			//current node and breadcrumb ancestors may not have been fetched yet
 			var that = this;
 			this.api.decorateNode(node, function () {
@@ -100,14 +92,16 @@ EOLTreeMap.prototype.select = function(id) {
  */
 EOLTreeMap.prototype.view = function(id) {
 	var that = this;
+	var node = TreeUtil.getSubtree(this.tree, id);
 
 	post = jQuery.extend({}, this.controller);
 	post.onComplete = function() {
 		that.loadTree(id);
-		//jQuery("#" + that.config.rootId).focus();
+		jQuery.each(that.viewChangeHandlers, function(index, handler) {
+			handler(that.shownTree);
+		});
 	};
-	
-	var node = TreeUtil.getSubtree(this.tree, id);
+
 	if (!node) {
 		this.api.hierarchy_entries(id, function (json) {
 			that.graft(that.tree, json, function (newNode) {
@@ -178,7 +172,7 @@ EOLTreeMap.stump = function () {
 	 * TODO: Do I need to add the classifications to ancestor arrays for all nodes?
 	 */
 	var col = {
-		id:"COL",  name:"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009", image:{eolMediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/banner.gif"},
+		id:"COL",  name:"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009", image:{eolMediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"},
 		children: [{taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}, {taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}, {taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}, {taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}, {taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"}]
 	};
 	
@@ -193,9 +187,13 @@ EOLTreeMap.stump = function () {
 //	};
 	
 	var tree = {
-		id:"Classifications",  name:"Classifications",
+		id:"HOME",  name:"Classifications",
 		children: [col, ncbi]
 	};
+	
+	//so sure we don't try to do EOL API calls for these dummy nodes
+	tree.apiContentFetched = true;
+	jQuery.each(tree.children, function(index, child) {child.apiContentFetched = true;});
 	
 	TreeUtil.each(tree, function (node) {
 		EOLTreeMap.prepareForTreeMap(node);
@@ -233,7 +231,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 	}
 };
 
-EOLTreeMap.help = "<div id='help'><h2>Instructions</h2><div><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></div><p>Learn more about the project, download the source code or leave feedback at the <a href='http://github.com/kurie/EOL-tree-viewer'>GitHub repository</a>. </div>";
+EOLTreeMap.help = "<div id='help'><h2>Instructions</h2><div><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></div><p>Learn more about the project, download the source code, or leave feedback at the <a href='http://github.com/kurie/EOL-tree-viewer'>GitHub repository</a>. </div>";
 
 
 /* Overrides TM.createBox to render a leaf with title and image */
@@ -271,12 +269,13 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
       'left':  offst / 2 + "px"
     };
     
-    var breadcrumbs ="";
+	var breadcrumbs = "<a class='breadcrumb ancestor' href='#HOME' id='HOME'>Home</a>";
+	breadcrumbs += " > ";
     
-	//make the classification the first breadcrumb
+	//make the root node and classification the first breadcrumbs
     if (json.nameAccordingTo) {
     	var shortClassificationName = jQuery.grep(this.tree.children, function (classification){return classification.name == json.nameAccordingTo[0]})[0].id;
-    	breadcrumbs = "<a class='breadcrumb ancestor selectable' href='#" + shortClassificationName + "' id='" + shortClassificationName + "'>" + shortClassificationName + "</a>";
+    	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + shortClassificationName + "' id='" + shortClassificationName + "'>" + shortClassificationName + "</a>";
 		breadcrumbs += " > ";
     }
     
@@ -419,7 +418,7 @@ EOLTreeMap.prototype.controller.insertBodyContent = function (node, container) {
 	if (node.image) {
 		if (node.image.image && node.image.image.src) { //for some reason, IE (only) is resetting these images to have no src...
 			this.insertImage(node.image.image, container, function(){});
-		} else {
+		} else if (node.image.eolThumbnailURL) { 
 			if (!node.image.thumb || !node.image.thumb.src) {
 				node.image.thumb = new Image();
 				node.image.thumb.src = node.image.eolThumbnailURL;
@@ -431,6 +430,10 @@ EOLTreeMap.prototype.controller.insertBodyContent = function (node, container) {
 					that.insertImage(node.image.image, container, function(){});
 				}
 			});
+		} else if (node.image.eolMediaURL) {
+			node.image.image = new Image();
+			node.image.image.src = node.image.eolMediaURL;
+			that.insertImage(node.image.image, container, function(){});
 		}
 	} else {
 		jQuery(container).html("No image available");
@@ -476,7 +479,7 @@ EOLTreeMap.prototype.controller.leaf = function (node, tree, shownTree) {
 
 TreeUtil.depth = function (node, tree) {
 	//TODO kind of ad-hoc.  Do this in a more robust way.
-	if (node === this.tree) {
+	if (node === tree) {
 		return 0;
 	} else if (node.ancestors === undefined) {
 		return 1;
