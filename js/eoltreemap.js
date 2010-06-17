@@ -191,6 +191,11 @@ EOLTreeMap.stump = function () {
 			children: [{taxonID:"24913771", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"24925347", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"24913778", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"24920520", taxonConceptID:"3121393", scientificName:"Protista"}]
 	};
 	
+	var fishbase = {
+			id:"FishBase", name:"FishBase (Fish Species)", image:{mediaURL:"http://bio.slu.edu/mayden/cypriniformes/images/fishbase_logo.jpg"},
+			children: [{taxonID:"24876515", taxonConceptID:"1", scientificName:""}]
+	};
+	
 //	var ncbi = {
 //			id:"", name:"", image:{mediaURL:""},
 //			children: [{taxonID:"", taxonConceptID:"", scientificName:""}]
@@ -198,7 +203,7 @@ EOLTreeMap.stump = function () {
 	
 	var tree = {
 		id:"HOME",  name:"Classifications",
-		children: [col, iucn, ncbi]
+		children: [col, iucn, ncbi, fishbase]
 	};
 	
 	//so sure we don't try to do EOL API calls for these dummy nodes
