@@ -76,6 +76,17 @@ EOLTreeMap.prototype.addNodeSelectHandler = function(handler) {
 EOLTreeMap.prototype.select = function(id) {
 	if (!this.selectionFrozen) {
 		var node = TreeUtil.getSubtree(this.tree, id);
+		
+		if (!node.apiContentFetched) {
+			//current node and breadcrumb ancestors may not have been fetched yet
+			var that = this;
+			this.api.decorateNode(node, function () {
+				node.apiContentFetched = true;
+				that.select(id);
+				//TODO need a way to cancel this if the user has moved the mouse out before the API call completes
+			});
+		}
+		
 		jQuery.each(this.nodeSelectHandlers, function(index, handler) {
 			handler(node);
 		});
@@ -172,7 +183,7 @@ EOLTreeMap.stump = function () {
 	};
 	
 	var ncbi = {
-		id:"NCBI", name:"NCBI Taxonomy", image:{eolMediaURL:""},
+		id:"NCBI", name:"NCBI Taxonomy", image:{eolMediaURL:"http://www.ncbi.nlm.nih.gov/projects/GeneTests/static/img/white_ncbi.png"},
 		children: [{taxonID:"28670753", taxonConceptID:"11660866", scientificName:"cellular organisms"}, {taxonID:"28665715", taxonConceptID:"11655828", scientificName:"other sequences"}, {taxonID:"28665429", taxonConceptID:"11655542", scientificName:"unclassified sequences"}, {taxonID:"28665341", taxonConceptID:"9157757", scientificName:"Viroids"}, {taxonID:"28612987", taxonConceptID:"5006", scientificName:"Viruses"}]
 	};
 	
@@ -222,7 +233,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 	}
 };
 
-EOLTreeMap.help = "<div id='help'><h2>Instructions</h2><p><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></p></div>";
+EOLTreeMap.help = "<div id='help'><h2>Instructions</h2><div><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></div><p>Learn more about the project, download the source code or leave feedback at the <a href='http://github.com/kurie/EOL-tree-viewer'>GitHub repository</a>. </div>";
 
 
 /* Overrides TM.createBox to render a leaf with title and image */
@@ -265,19 +276,23 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
 	//make the classification the first breadcrumb
     if (json.nameAccordingTo) {
     	var shortClassificationName = jQuery.grep(this.tree.children, function (classification){return classification.name == json.nameAccordingTo[0]})[0].id;
-    	var breadcrumbs = "<a class='breadcrumb ancestor selectable' href='#" + shortClassificationName + "' id='" + shortClassificationName + "'>" + shortClassificationName + "</a> > ";
+    	breadcrumbs = "<a class='breadcrumb ancestor selectable' href='#" + shortClassificationName + "' id='" + shortClassificationName + "'>" + shortClassificationName + "</a>";
+		breadcrumbs += " > ";
     }
     
     //add the ancestors
     if (json.ancestors) {
 	    jQuery.each(json.ancestors, function (index, ancestor) {
-	    	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + ancestor.taxonID + "' id='" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a> > ";
+	    	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + ancestor.taxonID + "' id='" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a>";
+			breadcrumbs += " > ";
 	    });
     }
+	
+	breadcrumbs = "<span class='breadcrumb ancestors'>" + breadcrumbs + "</span>";
     
     //add the current node as a link out to EOL
     if (json.taxonConceptID) {
-    	breadcrumbs += "<a class='breadcrumb' href='http://www.eol.org/" + json.taxonConceptID + "'>" + json.name + "</a>";
+    	breadcrumbs += "<a class='breadcrumb current selectable' href='http://www.eol.org/" + json.taxonConceptID + "' id='" + json.id + "'>" + json.name + "</a>";
     } else {
     	breadcrumbs += json.name;
     }
@@ -357,8 +372,21 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 
 	var helpButton = jQuery("<span class='helpButton'>?</span>");
 	helpButton.mouseenter(function (eventObject) {
+		helpButton.addClass("hover");
+		
+		//TODO make a detail empty function somewhere
+		jQuery("#jitdetail div.title").empty();
+		jQuery("#jitdetail figure div.image").empty();
+		jQuery("#jitdetail figure figcaption").empty();
+		jQuery("#jitdetail div.description h2").empty();
+		jQuery("#jitdetail div.description div").empty();
+		
 		jQuery("#jitdetail .description div").html(EOLTreeMap.help);
 		jQuery("#jitdetail .title").html("Help Text");
+	});
+	
+	helpButton.mouseleave(function (eventObject) {
+		helpButton.removeClass("hover");
 	});
 	jQuery("#" + tree.id).prepend(helpButton);
 }

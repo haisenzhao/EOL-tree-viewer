@@ -46,13 +46,13 @@ $(document).ready(function() {
 	$(window).trigger( 'hashchange' );
 	
 	tm.addNodeSelectHandler(function (node) {
-		if (node == null) {
-			jQuery("#jitdetail div.title").empty();
-			jQuery("#jitdetail figure div.image").empty();
-			jQuery("#jitdetail figure figcaption").empty();
-			jQuery("#jitdetail div.description h2").empty();
-			jQuery("#jitdetail div.description div").empty();
-		} else {
+		jQuery("#jitdetail div.title").empty();
+		jQuery("#jitdetail figure div.image").empty();
+		jQuery("#jitdetail figure figcaption").empty();
+		jQuery("#jitdetail div.description h2").empty();
+		jQuery("#jitdetail div.description div").empty();
+		
+		if (node != null) {
 			jQuery("#jitdetail div.title").html(node.name);
 			if (node.image) {
 				jQuery("#jitdetail figure div.image").html("<img src=" + node.image.eolMediaURL + ">");

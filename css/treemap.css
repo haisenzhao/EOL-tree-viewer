@@ -20,11 +20,11 @@
     color:white;
     background-color:black;
     white-space:nowrap;
-    direction:rtl;
 }
 
 .treemap-container > div.content > div.head {
 	background-color: gray;
+	direction:rtl; /* When the breadcrumb list becomes too long, it will scroll off to the left, and the current node name will stay visible on the right */
 }
 
 .treemap-container div.body {
@@ -48,9 +48,12 @@
 	overflow:hidden;
 }
 
-.treemap-container a.breadcrumb.ancestor {
-	text-decoration: none;
+.treemap-container .head .ancestors {
 	font-size:70%;
+}
+
+.treemap-container .head a.ancestor {
+	text-decoration: none;
 }
 
 .treemap-container .helpButton {
@@ -65,4 +68,8 @@
 	font-weight:bolder;
 	position:relative;
 	z-index: 1;
+}
+
+.treemap-container .helpButton.hover {
+	background-color: silver;
 }
