@@ -301,7 +301,7 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
     
     //add the current node as a link out to EOL
     if (json.taxonConceptID) {
-    	breadcrumbs += "<a class='breadcrumb current selectable' href='http://www.eol.org/" + json.taxonConceptID + "' id='" + json.id + "'>" + json.name + "</a>";
+    	breadcrumbs += "<a class='breadcrumb current selectable' target='_blank' href='http://www.eol.org/" + json.taxonConceptID + "' id='" + json.id + "'>" + json.name + "</a>";
     } else {
     	breadcrumbs += json.name;
     }
@@ -371,7 +371,7 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 		var elem2 = jQuery(this).children()[1];
 		
 		if (node && elem1 && node.taxonConceptID) {
-			jQuery(elem1).wrap("<a class='head' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
+			jQuery(elem1).wrap("<a class='head' target='_blank' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
 		}
 		
 		if (elem2) {
