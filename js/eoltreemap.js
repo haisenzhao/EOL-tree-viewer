@@ -396,13 +396,21 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 		jQuery("#jitdetail div.description div").empty();
 		
 		jQuery("#jitdetail .description div").html(EOLTreeMap.help);
-		jQuery("#jitdetail .title").html("Help Text");
+		jQuery("#jitdetail .title").html("About the EOL TreeMap Viewer");
 	});
 	
 	helpButton.mouseleave(function (eventObject) {
 		helpButton.removeClass("hover");
 	});
 	jQuery("#" + tree.id).prepend(helpButton);
+	
+	jQuery(".treemap-container > div.content div.content > a.head > div.head").each(function (index, element) {
+		var fontsize = jQuery(this).css("font-size").replace("px","");
+		while(this.scrollWidth > this.offsetWidth && fontsize >= 6) {
+			fontsize -= 1;
+			jQuery(this).css("font-size", fontsize + "px");
+		}
+	});
 }
 
 EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {

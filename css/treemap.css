@@ -20,6 +20,8 @@
     color:white;
     background-color:black;
     white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
 }
 
 .treemap-container > div.content > div.head {
