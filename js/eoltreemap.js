@@ -89,8 +89,13 @@ EOLTreeMap.prototype.select = function(id) {
  * Override of TM.view.  Fetches nodes (and their lineage) instead of just assuming they're 
  * already in the tree. For example, when the user jumps to a different classification
  * or loads a bookmarked URL.
+ * Also, view(null) will just refresh the current view (recalculates layout for browser resize)
  */
 EOLTreeMap.prototype.view = function(id) {
+	if (id === null) {
+		this.loadTree(this.shownTree.id); //recalculate and refresh
+	}
+	
 	var that = this;
 	var node = TreeUtil.getSubtree(this.tree, id);
 

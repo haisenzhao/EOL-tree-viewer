@@ -29,7 +29,7 @@
 
 <div id='thejit'></div>
 <div id='jitdetail'><div class='title'></div><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
-<!-- TODO: add a classification selector and a search box -->
+<!-- TODO: add a search box -->
 <!-- TODO handle resize -->
 
 <script>
@@ -85,6 +85,10 @@ $(document).ready(function() {
     $("#thejit").mousewheel(function(objEvent, intDelta){
 		jQuery("#jitdetail")[0].scrollTop -= 10*intDelta;
     });
+	
+	$(window).resize(function() {
+		tm.view(null);
+	});
 
 });
 </script>
