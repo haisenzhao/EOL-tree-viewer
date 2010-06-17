@@ -269,10 +269,9 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
       'left':  offst / 2 + "px"
     };
     
+	//make the root node and classification the first breadcrumbs
 	var breadcrumbs = "<a class='breadcrumb ancestor' href='#HOME' id='HOME'>Home</a>";
 	breadcrumbs += " > ";
-    
-	//make the root node and classification the first breadcrumbs
     if (json.nameAccordingTo) {
     	var shortClassificationName = jQuery.grep(this.tree.children, function (classification){return classification.name == json.nameAccordingTo[0]})[0].id;
     	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + shortClassificationName + "' id='" + shortClassificationName + "'>" + shortClassificationName + "</a>";
@@ -287,6 +286,7 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
 	    });
     }
 	
+	//wrap the ancestors and their brackets > in a span so they can be styled as a group
 	breadcrumbs = "<span class='breadcrumb ancestors'>" + breadcrumbs + "</span>";
     
     //add the current node as a link out to EOL
