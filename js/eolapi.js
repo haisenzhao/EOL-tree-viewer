@@ -1,6 +1,7 @@
-/* See http://wiki.eol.org/display/dev/pages */
+/* See http://wiki.eol.org/display/dev/API+Methods */
 
 function EolApiConfig() {
+	/* See http://wiki.eol.org/display/dev/pages */
 	this.images = 1;
 	this.text = 1;
 	//this.subjects = "TaxonBiology|GeneralDescription|Description";
