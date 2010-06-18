@@ -29,8 +29,14 @@
 
 <div id='thejit'></div>
 <div id='right'>
-<ul id='tabs'><li><a class='tab' href='#jitdetail'>Detail</a></li><li><a class='tab' href='#options'>Options</a></li><li><a class='tab' href='#help'>Help</a></li></ul>
+<ul id='tabs'>
+	<li><a class='tab' href='#jitdetail'>Detail</a></li>
+	<li><a class='tab' href='#search'>Search</a></li>
+	<li><a class='tab' href='#options'>Options</a></li>
+	<li><a class='tab' href='#help'>Help</a></li>
+</ul>
 <div id='jitdetail'>Hold the F key to freeze this panel<div class='title'></div><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
+<div id='search'><form>Name: <input type='text' name='name'/></form><ul id='results'></ul></div>
 <div id='options'>[Options page]</div>
 <div id='help'>[Help text]</div>;
 </div>
@@ -44,17 +50,18 @@ $(document).ready(function() {
 	var tm = new EOLTreeMap(jQuery("#thejit")[0]);
 	jQuery("#help").html(EOLTreeMap.help);
 	
-	$(window).bind( 'hashchange', function(){
+	jQuery(window).bind( 'hashchange', function(){
 		if (location.hash) {
 			tm.view(location.hash.slice(1));
 		} else {
 			location.hash = 24974884; //By default redirect to Animalia in the CoL
 		}
 	});
-	$(window).trigger( 'hashchange' );
+	jQuery(window).trigger( 'hashchange' );
 	
 	tm.addViewChangeHandler(function (node) {
 		document.title = tm.shownTree.name;
+		jQuery("#search input[name='name']").keyup(); //trigger a search for the current search term
 	});
 	
 	tm.addNodeSelectHandler(function (node) {
@@ -90,11 +97,30 @@ $(document).ready(function() {
 	});
 	
 	                
-    $("#thejit").mousewheel(function(objEvent, intDelta){
+    jQuery("#thejit").mousewheel(function(objEvent, intDelta){
 		jQuery("#jitdetail")[0].scrollTop -= 10*intDelta;
     });
+
+    jQuery("#search input[name='name']").keyup(function (event) {
+		jQuery(".treemap-container div").removeClass("highlight");
+		jQuery("#results").empty();
+
+		var searchbox = this;
+
+		//selects any head div except the top level one with the breadcrumbs, then filters by name
+		var matches = jQuery(".treemap-container > div.content > div.body div.head").filter(function () {
+			return searchbox.value && this.innerText.toLowerCase().indexOf(searchbox.value.toLowerCase()) === 0;
+		});
+		
+		matches.addClass("highlight");
+		matches.each(function () {
+			jQuery("#results").append("<li><a href=#" + this.parentElement.parentElement.id + ">" + this.innerText + "</a></li>");
+		});
+		//TODO stick a link for each of them in the search panel, so the user doesn't have to go find the highlighted node if they don't want to
+		//TODO wait a half second or so and do an EOL search.  Highlight any nodes that are ancestors of results.
+    });
 	
-	$(window).resize(function() {
+	jQuery(window).resize(function() {
 		tm.view(null);
 		//TODO update right panel div sizes to fit remaining height
 	});

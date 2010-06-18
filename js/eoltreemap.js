@@ -1,7 +1,8 @@
 EOLTreeMap.config = {
-	levelsToShow: 1,
-	titleHeight: 22,
-	offset:2
+	levelsToShow: 1, //number of levels to show at once
+	titleHeight: 22, //taxon name container height
+	offset:2, //controls the thickness of container borders
+	minFontSize:10 //taxon names will shrink to fit until they reach this size
 };
 
 function EOLTreeMap(container) {
@@ -246,7 +247,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 	}
 };
 
-EOLTreeMap.help = "<div id='help'><h2>Instructions</h2><div><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></div><p>Learn more about the project, download the source code, or leave feedback at the <a href='http://github.com/kurie/EOL-tree-viewer'>GitHub repository</a>. </div>";
+EOLTreeMap.help = "<div class='help'><h2>Instructions</h2><div><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></div><p>Learn more about the project, download the source code, or leave feedback at the <a href='http://github.com/kurie/EOL-tree-viewer'>GitHub repository</a>. </div>";
 
 
 /* Overrides TM.createBox to render a leaf with title and image */
@@ -386,7 +387,7 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 	
 	jQuery(".treemap-container > div.content div.content > a.head > div.head").each(function (index, element) {
 		var fontsize = jQuery(this).css("font-size").replace("px","");
-		while(this.scrollWidth > this.offsetWidth && fontsize >= 6) {
+		while(this.scrollWidth > this.offsetWidth && fontsize > that.minFontSize) {
 			fontsize -= 1;
 			jQuery(this).css("font-size", fontsize + "px");
 		}
