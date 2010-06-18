@@ -383,26 +383,6 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 			jQuery(elem2).wrap("<a class='body' href=#" + node.id + "></a>");
 		}
 	});
-
-	var helpButton = jQuery("<span class='helpButton'>?</span>");
-	helpButton.mouseenter(function (eventObject) {
-		helpButton.addClass("hover");
-		
-		//TODO make a detail empty function somewhere
-		jQuery("#jitdetail div.title").empty();
-		jQuery("#jitdetail figure div.image").empty();
-		jQuery("#jitdetail figure figcaption").empty();
-		jQuery("#jitdetail div.description h2").empty();
-		jQuery("#jitdetail div.description div").empty();
-		
-		jQuery("#jitdetail .description div").html(EOLTreeMap.help);
-		jQuery("#jitdetail .title").html("About the EOL TreeMap Viewer");
-	});
-	
-	helpButton.mouseleave(function (eventObject) {
-		helpButton.removeClass("hover");
-	});
-	jQuery("#" + tree.id).prepend(helpButton);
 	
 	jQuery(".treemap-container > div.content div.content > a.head > div.head").each(function (index, element) {
 		var fontsize = jQuery(this).css("font-size").replace("px","");

@@ -18,3 +18,27 @@ a img {
 .loading {
 	background: url(../images/ajax-loader.gif) no-repeat center center;
 }
+
+#right {
+	background-color:gray;
+}
+
+#right > div {
+	color: white;
+    background-color: black;
+	overflow:auto;
+}
+
+#tabs {
+	background-color:black;
+}
+
+.tab {
+	font-size:12px;
+	text-decoration:none;
+	background-color:gray;
+}
+
+.tab.selected, .tab.hover {
+	background-color:silver;
+}

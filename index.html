@@ -28,13 +28,21 @@
 </noscript>
 
 <div id='thejit'></div>
-<div id='jitdetail'><div class='title'></div><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
+<div id='right'>
+<ul id='tabs'><li><a class='tab' href='#jitdetail'>Detail</a></li><li><a class='tab' href='#options'>Options</a></li><li><a class='tab' href='#help'>Help</a></li></ul>
+<div id='jitdetail'>Hold the F key to freeze this panel<div class='title'></div><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
+<div id='options'>[Options page]</div>
+<div id='help'>[Help text]</div>;
+</div>
 <!-- TODO: add a search box -->
 <!-- TODO handle resize -->
 
 <script>
 $(document).ready(function() {
+	//TODO update right panel div sizes to fit remaining height after tabs
+	
 	var tm = new EOLTreeMap(jQuery("#thejit")[0]);
+	jQuery("#help").html(EOLTreeMap.help);
 	
 	$(window).bind( 'hashchange', function(){
 		if (location.hash) {
@@ -88,7 +96,19 @@ $(document).ready(function() {
 	
 	$(window).resize(function() {
 		tm.view(null);
+		//TODO update right panel div sizes to fit remaining height
 	});
+
+	var rightpages = jQuery("#right > div");
+	var tabs = jQuery("#right .tab");
+	
+	tabs.click(function () {
+		tabs.removeClass("selected");
+		jQuery(this).addClass("selected");
+		rightpages.hide().filter(this.hash).show();
+		return false;
+	});
+	tabs.filter(":first").click();
 
 });
 </script>

@@ -57,23 +57,3 @@
 .treemap-container .head a.ancestor {
 	text-decoration: none;
 }
-
-.treemap-container .helpButton {
-	background-color: gray;
-	border: 2px solid white;
-	float: left;
-	height: 16px;
-	width: 16px;
-	margin-left:1px;
-	margin-top:1px;
-	border-radius:9px;
-	-moz-border-radius:9px 9px 9px 9px;
-	font-size:13px;
-	font-weight:bolder;
-	position:relative;
-	z-index: 1;
-}
-
-.treemap-container .helpButton.hover {
-	background-color: silver;
-}
