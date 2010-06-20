@@ -30,7 +30,6 @@
 
 .treemap-container > div.content > div.head {
 	background-color: gray;
-	direction:rtl; /* When the breadcrumb list becomes too long, it will scroll off to the left, and the current node name will stay visible on the right */
 }
 
 .treemap-container div.body {
@@ -60,4 +59,9 @@
 
 .treemap-container .head a.ancestor {
 	text-decoration: none;
+}
+
+.treemap-container span.breadcrumbs {
+	position:absolute; 
+	right:10px;
 }

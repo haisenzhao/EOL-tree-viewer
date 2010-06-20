@@ -4,7 +4,7 @@ function EolApiConfig() {
 	/* See http://wiki.eol.org/display/dev/pages */
 	this.images = 1;
 	this.text = 1;
-	this.subjects = "Wikipedia|TaxonBiology|GeneralDescription|Description"; //TODO: Ask patrick if text is returned in order of this parameter. E.g. If I request one text item will that one item match my first subject, if possible?  (It doesn't appear to be the case.)
+	//this.subjects = "Wikipedia|TaxonBiology|GeneralDescription|Description"; //TODO: Ask patrick if text is returned in order of this parameter. E.g. If I request one text item will that one item match my first subject, if possible?  (It doesn't appear to be the case.)
 	this.details = 1;
 	this.common_names = 0;
 	this.vetted = 0;

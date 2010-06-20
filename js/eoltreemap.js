@@ -287,20 +287,21 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
     
 	//make the root node and classification the first breadcrumbs
 	var breadcrumbs = "<a class='breadcrumb ancestor' href='#HOME' id='HOME'>Home</a>";
-	breadcrumbs += " > ";
+
     if (json.nameAccordingTo) {
     	var shortClassificationName = jQuery.grep(this.tree.children, function (classification){return classification.name == json.nameAccordingTo[0]})[0].id;
+    	breadcrumbs += " > ";
     	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + shortClassificationName + "' id='" + shortClassificationName + "'>" + shortClassificationName + "</a>";
-		breadcrumbs += " > ";
     }
     
     //add the ancestors
     if (json.ancestors) {
 	    jQuery.each(json.ancestors, function (index, ancestor) {
-	    	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + ancestor.taxonID + "' id='" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a>";
 			breadcrumbs += " > ";
+	    	breadcrumbs += "<a class='breadcrumb ancestor selectable' href='#" + ancestor.taxonID + "' id='" + ancestor.taxonID + "'>" + ancestor.scientificName + "</a>";
 	    });
     }
+	breadcrumbs += " > ";
 	
 	//wrap the ancestors and their brackets > in a span so they can be styled as a group
 	breadcrumbs = "<span class='breadcrumb ancestors'>" + breadcrumbs + "</span>";
@@ -308,9 +309,11 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
     //add the current node as a link out to EOL
     if (json.taxonConceptID) {
     	breadcrumbs += "<a class='breadcrumb current selectable' target='_blank' href='http://www.eol.org/" + json.taxonConceptID + "' id='" + json.id + "'>" + json.name + "</a>";
-    } else {
-    	breadcrumbs += json.name;
+    } else if (json.id != "HOME") {
+    	breadcrumbs += "<span class='breadcrumb current'>" + json.name + "</span>";
     }
+    
+    breadcrumbs = "<span class='breadcrumbs'>" + breadcrumbs + "</span>"; //TODO style this position:absolute; right:10px; and get rid of the div.head direction:rtl;
     
     return "<div class=\"head\" style=\"" + this.toStyle(c) + "\">" + breadcrumbs + "</div>";
 };
