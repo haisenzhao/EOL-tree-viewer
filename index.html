@@ -109,12 +109,12 @@ $(document).ready(function() {
 
 		//selects any head div except the top level one with the breadcrumbs, then filters by name
 		var matches = jQuery(".treemap-container > div.content > div.body div.head").filter(function () {
-			return searchbox.value && this.innerText.toLowerCase().indexOf(searchbox.value.toLowerCase()) >= 0;
+			return searchbox.value && jQuery(this).text().toLowerCase().indexOf(searchbox.value.toLowerCase()) >= 0;
 		});
 
 		matches.addClass("highlight");
 		matches.each(function () {
-			jQuery("#current-page-results").append("<li><a href=#" + this.parentElement.parentElement.id + ">" + this.innerText + "</a></li>");
+			jQuery("#current-page-results").append("<li><a href=#" + jQuery(this).closest("div.content").id + ">" + jQuery(this).text() + "</a></li>");
 		});
 		//TODO wait a half second or so after user stops typing and do an EOL search.  Highlight any nodes that are ancestors of results.
 		//TODO before the EOL search, maybe it would be worthwhile to find results in the local portion of the tree, so anything in current browser session is shown as a separate set of results
