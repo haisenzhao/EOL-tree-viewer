@@ -54,7 +54,7 @@ $(document).ready(function() {
 		if (location.hash) {
 			tm.view(location.hash.slice(1));
 		} else {
-			location.hash = 24974884; //By default redirect to Animalia in the CoL
+			location.hash = "COL"; //By default redirect to the CoL
 		}
 	});
 	jQuery(window).trigger( 'hashchange' );
@@ -114,7 +114,7 @@ $(document).ready(function() {
 
 		matches.addClass("highlight");
 		matches.each(function () {
-			jQuery("#current-page-results").append("<li><a href=#" + jQuery(this).closest("div.content").id + ">" + jQuery(this).text() + "</a></li>");
+			jQuery("#current-page-results").append("<li><a href=#" + jQuery(this).closest("div.content")[0].id + ">" + jQuery(this).text() + "</a></li>");
 		});
 		//TODO wait a half second or so after user stops typing and do an EOL search.  Highlight any nodes that are ancestors of results.
 		//TODO before the EOL search, maybe it would be worthwhile to find results in the local portion of the tree, so anything in current browser session is shown as a separate set of results
