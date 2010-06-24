@@ -32,7 +32,7 @@
 <ul id='tabs'>
 	<li><a class='tab' href='#jitdetail'>Detail</a></li>
 	<li><a class='tab' href='#search'>Search</a></li>
-	<li><a class='tab' href='#options'>Options</a></li>
+	<!-- <li><a class='tab' href='#options'>Options</a></li> -->
 	<li><a class='tab' href='#help'>Help</a></li>
 </ul>
 <div id='jitdetail'>Hold the F key to freeze this panel<div class='title'></div><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
@@ -92,6 +92,9 @@ $(document).ready(function() {
 				}
 				var description = node.text.description.replace(/&nbsp;/gm, " "); //remove ugly whitespace (Animal Diversity Web content, for example)
 				jQuery("#jitdetail div.description div").html(description);
+			} else if (node.taxonConceptID) {
+				var addTextURL = "http://www.eol.org/data_objects/new?taxon_concept_id=" + node.taxonConceptID + "&toc_id=290&type=text";
+				jQuery("#jitdetail div.description div").html("No general description is available. <a href='" + addTextURL + "' >Click here</a> to to contribute an overview to this page.");
 			}
 		}
 	});

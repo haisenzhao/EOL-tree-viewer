@@ -6,7 +6,8 @@
 }
 
 #jitdetail figure div.image img {
-	width:100%;
+	max-height: 50%;
+	max-width: 100%;	
 }
 
 #jitdetail .title {
