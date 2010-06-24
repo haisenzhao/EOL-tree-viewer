@@ -93,8 +93,12 @@ EOLTreeMap.prototype.select = function(id) {
 			//current node and breadcrumb ancestors may not have been fetched yet
 			this.api.decorateNode(this.selectedNode, function () {
 				that.selectedNode.apiContentFetched = true;
-				that.select(id);
-				//TODO need a way to cancel this if the user has moved the mouse out before the API call completes
+				
+				//if user is still hovering that node, go ahead and select it again now that the api content is available
+				var hoverId = jQuery(".selectable:hover").last().attr("id");
+				if (id === hoverId) {
+					that.select(id);
+				}
 			});
 		}
 		
