@@ -93,8 +93,8 @@ $(document).ready(function() {
 				var description = node.text.description.replace(/&nbsp;/gm, " "); //remove ugly whitespace (Animal Diversity Web content, for example)
 				jQuery("#jitdetail div.description div").html(description);
 			} else if (node.taxonConceptID && node.apiContentFetched) {
-				var addTextURL = "http://www.eol.org/data_objects/new?taxon_concept_id=" + node.taxonConceptID + "&toc_id=290&type=text";
-				jQuery("#jitdetail div.description div").html("No general description is available. <a href='" + addTextURL + "' target='_blank' >Click here</a> to to contribute an overview to this page.");
+				var addTextURL = "http://www.eol.org/pages/" + node.taxonConceptID;
+				jQuery("#jitdetail div.description div").html("No general description is available. <a href='" + addTextURL + "' target='_blank' >Click here</a> to visit this page on the EOL and then click \"Add New Content\" to contribute an overview to this page.");
 			}
 		}
 	});
