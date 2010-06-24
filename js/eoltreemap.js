@@ -121,6 +121,7 @@ EOLTreeMap.prototype.view = function(id) {
 	post = jQuery.extend({}, this.controller);
 	post.onComplete = function() {
 		that.loadTree(id);
+		jQuery("<img class='freeze-indicator' src='images/Snowflake-black.png'>").appendTo("#" + that.rootId).hide();
 		jQuery.each(that.viewChangeHandlers, function(index, handler) {
 			handler(that.shownTree);
 		});
@@ -136,7 +137,7 @@ EOLTreeMap.prototype.view = function(id) {
 		TreeUtil.loadSubtrees(node, post);
 	}
 	
-	jQuery("<img class='freeze-indicator' src='images/Snowflake-black.png'>").appendTo("#" + this.rootId).hide();
+	
 };
 
 /* 
