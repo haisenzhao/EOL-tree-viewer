@@ -65,3 +65,9 @@
 	position:absolute; 
 	right:10px;
 }
+
+.treemap-container img.freeze-indicator {
+	position: absolute;
+	width: 32px;	
+}
+

@@ -40,14 +40,32 @@ function EOLTreeMap(container) {
 	jQuery(document).keydown(function (eventObject) {
 		if (eventObject.keyCode === 70) {
 			that.selectionFrozen = true;
+			jQuery("img.freeze-indicator").show();
 		}
 	});
 	
 	jQuery(document).keyup(function (eventObject) {
 		if (eventObject.keyCode === 70) {
 			that.selectionFrozen = false;
-			//TODO trigger a mouseenter on the currently hovered node to update selection
+			jQuery("img.freeze-indicator").hide();
+			
+			//update the selection to the currently hovered node
+			var hoverId = jQuery(".selectable:hover").last().attr("id");
+			if (hoverId) {
+				that.select(hoverId);
+			}
 		}
+	});
+	
+	this.addNodeSelectHandler(function (node) {
+		//update freeze indicator position
+		var newParent;
+		if (node != null) {
+			newParent = jQuery("#" + node.id);
+		} else {
+			newParent = jQuery(".treemap-container");
+		}
+		jQuery("img.freeze-indicator").detach().appendTo(newParent);
 	});
 }
 
@@ -68,20 +86,20 @@ EOLTreeMap.prototype.addViewChangeHandler = function(handler){
 
 EOLTreeMap.prototype.select = function(id) {
 	if (!this.selectionFrozen) {
-		var node = TreeUtil.getSubtree(this.tree, id);
+		this.selectedNode = TreeUtil.getSubtree(this.tree, id);
+		var that = this;
 		
-		if (node && !node.apiContentFetched) {
+		if (this.selectedNode && !this.selectedNode.apiContentFetched) {
 			//current node and breadcrumb ancestors may not have been fetched yet
-			var that = this;
-			this.api.decorateNode(node, function () {
-				node.apiContentFetched = true;
+			this.api.decorateNode(this.selectedNode, function () {
+				that.selectedNode.apiContentFetched = true;
 				that.select(id);
 				//TODO need a way to cancel this if the user has moved the mouse out before the API call completes
 			});
 		}
 		
 		jQuery.each(this.nodeSelectHandlers, function(index, handler) {
-			handler(node);
+			handler(that.selectedNode);
 		});
 	}
 };
@@ -117,6 +135,8 @@ EOLTreeMap.prototype.view = function(id) {
 	} else {
 		TreeUtil.loadSubtrees(node, post);
 	}
+	
+	jQuery("<img class='freeze-indicator' src='images/Snowflake-black.png'>").appendTo("#" + this.rootId).hide();
 };
 
 /* 
