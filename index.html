@@ -79,8 +79,11 @@ $(document).ready(function() {
 			if(node.vernacularNames) {
 				var commonName = jQuery.grep(node.vernacularNames, function (element) {
 					return element.language === language;
-				})[0].vernacularName;
-				jQuery("#detail-subtitle").html(commonName);
+				})[0];
+				
+				if (commonName) {
+					jQuery("#detail-subtitle").html(commonName.vernacularName);
+				}
 			}	
 
 			if (node.image) {
