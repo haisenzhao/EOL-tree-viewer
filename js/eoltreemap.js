@@ -525,25 +525,40 @@ TreeUtil.depth = function (node, tree) {
 	}
 }
 
-/* A minor edit to loadSubtrees to make it merge the entire incoming json node 
- * with the existing node, instead of just tacking on the new child array */
-TreeUtil.loadSubtrees = function(tree, controller){
-    var maxLevel = controller.request && controller.levelsToShow;
-    var leaves = this.getLeaves(tree, maxLevel), len = leaves.length, selectedNode = {};
-    if (len == 0) 
-        controller.onComplete();
-    for (var i = 0, counter = 0; i < len; i++) {
-        var leaf = leaves[i], id = leaf.node.id;
-        selectedNode[id] = leaf.node;
-        controller.request(id, leaf.level, {
-            onComplete: function(nodeId, tree){
-				jQuery.extend(true, selectedNode[nodeId], tree);
-                if (++counter == len) {
-                    controller.onComplete();
-                }
-            }
-        });
-    }
+/*
+ * Override of JIT TreeUtil.loadSubtrees.  
+ * Finds leaves in the subtree and loads their descendants to depth controller.levelsToShow 
+ */
+TreeUtil.loadSubtrees = function (subtree, controller, depth, onComplete) {
+	onComplete = onComplete || controller.onComplete;
+	if (depth === 0) {
+		onComplete();
+		return;
+	} else if (depth === undefined) {
+		depth = controller.levelsToShow;	
+	} 
+	
+	if (!subtree.children || subtree.children.length === 0) {
+		
+		//this node has not loaded children - do controller.request() to fetch the subtree
+		controller.request(subtree.id, depth, {onComplete: function(nodeId, fetchedSubtree){
+			jQuery.extend(true, subtree, fetchedSubtree);
+			onComplete();
+		}});
+
+	} else {
+		
+		//this node has children.  recurse and call onComplete once we've heard back from all of them
+		var childrenToCallback = subtree.children.length;
+		jQuery(subtree.children).each(function(i, child) {
+			TreeUtil.loadSubtrees(child, controller, depth - 1, function () {
+				childrenToCallback -= 1;
+				if (childrenToCallback === 0) {
+					onComplete();
+				}
+			});
+		});
+	}
 };
 
 
