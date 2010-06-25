@@ -198,10 +198,7 @@ EOLTreeMap.prepareForTreeMap = function (apiHierarchy) {
 }
 
 EOLTreeMap.stump = function () {
-	/* 
-	 * TODO: put the rest of the roots in (for all classifications).
-	 * TODO: Do I need to add the classifications to ancestor arrays for all nodes?
-	 */
+	/* TODO: put the rest of the roots in (for all classifications).*/
 	var col = {
 		id:"COL",  name:"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009", image:{mediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"},
 		text:{description:"<p><b>CoL</b> <a href='http://www.catalogueoflife.org/'>http://www.catalogueoflife.org/</a><br>The Catalogue of Life Partnership (CoLP) is an informal partnership dedicated to creating an index of the world’s organisms, called the Catalogue of Life (CoL). The CoL provides different forms of access to an integrated, quality, maintained, comprehensive consensus species checklist and taxonomic hierarchy, presently covering more than one million species, and intended to cover all know species in the near future. The Annual Checklist EOL uses contains substantial contributions of taxonomic expertise from more than fifty organizations around the world, integrated into a single work by the ongoing work of the CoLP partners. EOL currently uses the CoL Annual Checklist as its taxonomic backbone.</p>"},
@@ -343,7 +340,7 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
     	breadcrumbs += "<span class='breadcrumb current'>" + json.name + "</span>";
     }
     
-    breadcrumbs = "<span class='breadcrumbs'>" + breadcrumbs + "</span>"; //TODO style this position:absolute; right:10px; and get rid of the div.head direction:rtl;
+    breadcrumbs = "<span class='breadcrumbs'>" + breadcrumbs + "</span>";
     
     return "<div class=\"head\" style=\"" + this.toStyle(c) + "\">" + breadcrumbs + "</div>";
 };
@@ -428,9 +425,9 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 }
 
 EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
-	//TODO: this only gets one level of descendants.  Check the level param for how many levels we should be getting. (Find out if it is relative or absolute depth.)
 	this.api.hierarchy_entries(nodeId, function (json) {
 		EOLTreeMap.prepareForTreeMap(json);
+		//TODO request children to level - 1
 		onComplete.onComplete(nodeId, json);
 	});
 };
@@ -519,7 +516,6 @@ EOLTreeMap.prototype.controller.leaf = function (node, tree, shownTree) {
 };
 
 TreeUtil.depth = function (node, tree) {
-	//TODO kind of ad-hoc.  Do this in a more robust way.
 	if (node === tree) {
 		return 0;
 	} else if (node.ancestors === undefined) {
@@ -541,8 +537,6 @@ TreeUtil.loadSubtrees = function(tree, controller){
         selectedNode[id] = leaf.node;
         controller.request(id, leaf.level, {
             onComplete: function(nodeId, tree){
-                //var ch = tree.children;
-                //selectedNode[nodeId].children = ch;
 				jQuery.extend(true, selectedNode[nodeId], tree);
                 if (++counter == len) {
                     controller.onComplete();
