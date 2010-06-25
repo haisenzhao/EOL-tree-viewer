@@ -30,12 +30,12 @@
 <div id='thejit'></div>
 <div id='right'>
 <ul id='tabs'>
-	<li><a class='tab' href='#jitdetail'>Detail</a></li>
+	<li><a class='tab' href='#detail'>Detail</a></li>
 	<li><a class='tab' href='#search'>Search</a></li>
 	<!-- <li><a class='tab' href='#options'>Options</a></li> -->
 	<li><a class='tab' href='#help'>Help</a></li>
 </ul>
-<div id='jitdetail'>Hold the F key to freeze this panel<div class='title'></div><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
+<div id='detail'>Hold the F key to freeze this panel<h1 id="detail-title"></h1><h2 id="detail-subtitle"></h2><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
 <div id='search'><form onsubmit="return false;">Name: <input type='text' name='name'/></form>Matches on current page:<ul id='current-page-results'></ul></div>
 <div id='options'>[Not yet implemented]</div>
 <div id='help'>[Help text]</div>;
@@ -64,19 +64,30 @@ $(document).ready(function() {
 	});
 	
 	tm.addNodeSelectHandler(function (node) {
-		jQuery("#jitdetail div.title").empty();
-		jQuery("#jitdetail figure div.image").empty();
-		jQuery("#jitdetail figure figcaption").empty();
-		jQuery("#jitdetail div.description h2").empty();
-		jQuery("#jitdetail div.description div").empty();
+		var language = "en";
+		
+		jQuery("#detail-title").empty();
+		jQuery("#detail-subtitle").empty();
+		jQuery("#detail figure div.image").empty();
+		jQuery("#detail figure figcaption").empty();
+		jQuery("#detail div.description h2").empty();
+		jQuery("#detail div.description div").empty();
 		
 		if (node != null) {
-			jQuery("#jitdetail div.title").html(node.name);
+			jQuery("#detail-title").html(node.name);
+
+			if(node.vernacularNames) {
+				var commonName = jQuery.grep(node.vernacularNames, function (element) {
+					return element.language === language;
+				})[0].vernacularName;
+				jQuery("#detail-subtitle").html(commonName);
+			}	
+
 			if (node.image) {
 				var url = node.image.eolMediaURL || node.image.mediaURL;
-				jQuery("#jitdetail figure div.image").html("<img src=" + url + ">");
-				//jQuery("#jitdetail figure figcaption").html(node.image.taxonConcepts[0].scientificName); //TODO get the full dataobject and use the taxonConcept for the caption.  also, pick the taxonConcept for the current hierarchy, instead of just using the first one
-				jQuery("#jitdetail figure figcaption").html(node.image.title);
+				jQuery("#detail figure div.image").html("<img src=" + url + ">");
+				//jQuery("#detail figure figcaption").html(node.image.taxonConcepts[0].scientificName); //TODO get the full dataobject and use the taxonConcept for the caption.  also, pick the taxonConcept for the current hierarchy, instead of just using the first one
+				jQuery("#detail figure figcaption").html(node.image.title);
 			}
 			
 			if (node.text) {
@@ -85,22 +96,22 @@ $(document).ready(function() {
 						return agent.role === "provider";
 					});
 					if (providers[0]) {
-						jQuery("#jitdetail div.description h2").html("From " + providers[0].full_name + ":");
+						jQuery("#detail div.description h2").html("From " + providers[0].full_name + ":");
 					}
 					
 				}
 				var description = node.text.description.replace(/&nbsp;/gm, " "); //remove ugly whitespace (Animal Diversity Web content, for example)
-				jQuery("#jitdetail div.description div").html(description);
+				jQuery("#detail div.description div").html(description);
 			} else if (node.taxonConceptID && node.apiContentFetched) {
 				var addTextURL = "http://www.eol.org/pages/" + node.taxonConceptID;
-				jQuery("#jitdetail div.description div").html("No general description is available. <a href='" + addTextURL + "' target='_blank' >Click here</a> to visit this page on the EOL and then click \"Add New Content\" to contribute an overview to this page.");
+				jQuery("#detail div.description div").html("No general description is available. <a href='" + addTextURL + "' target='_blank' >Click here</a> to visit this page on the EOL and then click \"Add New Content\" to contribute an overview to this page.");
 			}
 		}
 	});
 	
 	                
     jQuery("#thejit").mousewheel(function(objEvent, intDelta){
-		jQuery("#jitdetail")[0].scrollTop -= 10*intDelta;
+		jQuery("#detail")[0].scrollTop -= 10*intDelta;
     });
 
     jQuery("#search input[name='name']").keyup(function (event) {

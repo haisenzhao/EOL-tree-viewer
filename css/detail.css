@@ -1,26 +1,44 @@
-#jitdetail {
+#detail {
 	color: white;
     background-color: black;
 	overflow:auto;
 	line-height:normal;
 }
 
-#jitdetail figure div.image img {
+#detail figure {
+	display:block;
+	padding:1em;
+}
+
+#detail figure div.image img {
 	max-height: 50%;
 	max-width: 100%;	
 }
 
-#jitdetail .title {
-	font-size:20px;
+#detail h1 {
+	font-size:250%;
+	margin-top:0.25em;
+	margin-bottom:0.25em;
 }
 
-#jitdetail figcaption {
+#detail h2 {
+	font-size:150%;
+	font-weight:normal;
+	margin-top:0.25em;
+	margin-bottom:0.25em;
+}
+
+#detail-subtitle {
+	text-transform: capitalize;
+}
+
+#detail figcaption {
 	color:gray;
 }
 
-#jitdetail figcaption a:link {
+#detail figcaption a:link {
 	color:gray;
 }
-#jitdetail figcaption a:visited {
+#detail figcaption a:visited {
 	color:gray;
 }
