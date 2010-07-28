@@ -429,14 +429,14 @@ EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
 	this.api.hierarchy_entries(nodeId, function (json) {
 		EOLTreeMap.prepareForTreeMap(json);
 		
-		if (level > 1 && json.children && json.children.length > 0) {
+		if (level > 0 && json.children && json.children.length > 0) {
 			var childrenToCallBack = json.children.length;
 			
 			jQuery(json.children).each(function (i, child) {
 				controller.request(child.id, level - 1, {onComplete: function (nodeId, childJSON){
-					jQuery.extend(true, json, childJSON);
-					childrenToCallback =- 1;
-					if (childrenToCallback === 0) {
+					jQuery.extend(true, child, childJSON);
+					childrenToCallBack -= 1;
+					if (childrenToCallBack === 0) {
 						onComplete.onComplete(nodeId, json);
 					}
 				}});
