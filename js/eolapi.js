@@ -13,7 +13,8 @@ function EolApiConfig() {
 
 function EolApi() {
 	this.defaultConfig = new EolApiConfig();
-	this.apiHost = "www.eol.org";
+	this.apiHost = "labs1.eol.org";
+	//this.apiHost = "www.eol.org";
 	this.apiVersion = "1.0";
 	
 }

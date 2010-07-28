@@ -193,7 +193,7 @@ EOLTreeMap.prepareForTreeMap = function (apiHierarchy) {
 		node.children = node.children || [];
 		//node.ancestors = node.ancestors || [];
 		node.data = node.data || {};
-		node.data.$area = node.data.$area || 1.0;
+		node.data.$area = node.data.$area || Math.sqrt(node.total_descendants) || 1.0;
 	});
 }
 
@@ -234,7 +234,7 @@ EOLTreeMap.stump = function () {
 		children: [col, iucn, ncbi, fishbase]
 	};
 	
-	//so sure we don't try to do EOL API calls for these dummy nodes
+	//make sure we don't try to do EOL API calls for these dummy nodes
 	tree.apiContentFetched = true;
 	jQuery.each(tree.children, function(index, child) {child.apiContentFetched = true;});
 	
