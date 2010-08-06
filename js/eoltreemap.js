@@ -234,7 +234,7 @@ EOLTreeMap.stump = function () {
 		children: [col, iucn, ncbi, fishbase]
 	};
 	
-	//so sure we don't try to do EOL API calls for these dummy nodes
+	//make sure we don't try to do EOL API calls for these dummy nodes
 	tree.apiContentFetched = true;
 	jQuery.each(tree.children, function(index, child) {child.apiContentFetched = true;});
 	
