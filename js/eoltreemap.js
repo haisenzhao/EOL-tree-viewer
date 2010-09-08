@@ -13,14 +13,12 @@ function EOLTreeMap(container) {
 	this.controller.api = this.api;
 	
 	/** 
-	 * A little wrapper around EolApi.hierarchy_entries() that calls prepareForTreeMap on everything coming in
-	 * @param {Object} taxonID
-	 * @param {Object} onSuccess
+	 * returns new custom taxon objects instead of hierarchy_entries objects
 	 */
 	this.api.fetchNode = function (taxonID, onSuccess) {
 		this.hierarchy_entries(taxonID, function (json) {
-			EOLTreeMap.prepareForTreeMap(json);
-			onSuccess(json);
+			var taxon = new EOLTreeMap.Taxon(json);
+			onSuccess(taxon);
 		});
 	};
 
@@ -173,12 +171,6 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 			jQuery.extend(true, subtree, fullNode);
 			that.graft(subtree, json, callback);
 		});
-//		this.controller.request(subtree.taxonID, 1, {
-//			onComplete: function(nodeId, fetchedSubtree){
-//				jQuery.extend(true, subtree, fetchedSubtree);
-//				that.graft(subtree, json, callback);
-//			}
-//		});
 	} else {
 		var childMatch = jQuery.grep(subtree.children, function (child) {return child.taxonID == json.taxonID })[0];
 		if (childMatch) {
@@ -204,70 +196,102 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 	}
 };
 
-EOLTreeMap.prepareForTreeMap = function (apiHierarchy) {
-	//set some fields TM needs, if undefined
-	TreeUtil.each(apiHierarchy, function (node) {
-		node.id = node.id || node.taxonID;
-		node.name = node.name || node.scientificName;
-		node.children = node.children || [];
-		//node.ancestors = node.ancestors || [];
-		node.data = node.data || {};
-		node.data.$area = node.data.$area || Math.sqrt(node.total_descendants) || 1.0;
-	});
-}
+//EOLTreeMap.prepareForTreeMap = function (apiHierarchy) {
+//	//set some fields TM needs, if undefined
+//	TreeUtil.each(apiHierarchy, function (node) {
+//		node.prototype = new EOLTreeMap.Taxon();
+//		
+//		node.id = node.id || node.taxonID;
+//		node.name = node.name || node.scientificName;
+//	});
+//}
 
 EOLTreeMap.stump = function () {
 	/* TODO: put the rest of the roots in (for all classifications).*/
-	var col = {
-		id:"COL",  name:"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009", image:{mediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"},
-		text:{description:"<p><b>CoL</b> <a href='http://www.catalogueoflife.org/'>http://www.catalogueoflife.org/</a><br>The Catalogue of Life Partnership (CoLP) is an informal partnership dedicated to creating an index of the world’s organisms, called the Catalogue of Life (CoL). The CoL provides different forms of access to an integrated, quality, maintained, comprehensive consensus species checklist and taxonomic hierarchy, presently covering more than one million species, and intended to cover all know species in the near future. The Annual Checklist EOL uses contains substantial contributions of taxonomic expertise from more than fifty organizations around the world, integrated into a single work by the ongoing work of the CoLP partners. EOL currently uses the CoL Annual Checklist as its taxonomic backbone.</p>"},
-		children: [{taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}, {taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}, {taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}, {taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}, {taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"}]
-	};
+	var col = new EOLTreeMap.Taxon(null, "COL", "Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009");
+	col.image = {mediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"};
+	col.text = {description:"<p><b>CoL</b> <a href='http://www.catalogueoflife.org/'>http://www.catalogueoflife.org/</a><br>The Catalogue of Life Partnership (CoLP) is an informal partnership dedicated to creating an index of the world’s organisms, called the Catalogue of Life (CoL). The CoL provides different forms of access to an integrated, quality, maintained, comprehensive consensus species checklist and taxonomic hierarchy, presently covering more than one million species, and intended to cover all know species in the near future. The Annual Checklist EOL uses contains substantial contributions of taxonomic expertise from more than fifty organizations around the world, integrated into a single work by the ongoing work of the CoLP partners. EOL currently uses the CoL Annual Checklist as its taxonomic backbone.</p>"};
 	
-	var ncbi = {
-		id:"NCBI", name:"NCBI Taxonomy", image:{mediaURL:"http://www.ncbi.nlm.nih.gov/projects/GeneTests/static/img/white_ncbi.png"},
-		text:{description:"<p><b>NCBI</b> <a href='http://www.ncbi.nlm.nih.gov/'>http://www.ncbi.nlm.nih.gov</a><br>As a U.S. national resource for molecular biology information, NCBI's mission is to develop new information technologies to aid in the understanding of fundamental molecular and genetic processes that control health and disease. The NCBI taxonomy database contains the names of all organisms that are represented in the genetic databases with at least one nucleotide or protein sequence.</p>"},
-		children: [{taxonID:"28670753", taxonConceptID:"11660866", scientificName:"cellular organisms"}, {taxonID:"28665715", taxonConceptID:"11655828", scientificName:"other sequences"}, {taxonID:"28665429", taxonConceptID:"11655542", scientificName:"unclassified sequences"}, {taxonID:"28665341", taxonConceptID:"9157757", scientificName:"Viroids"}, {taxonID:"28612987", taxonConceptID:"5006", scientificName:"Viruses"}]
-	};
+	col.children = [
+	    new EOLTreeMap.Taxon({taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}),
+	    new EOLTreeMap.Taxon({taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}),
+	    new EOLTreeMap.Taxon({taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}),
+	    new EOLTreeMap.Taxon({taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}),
+	    new EOLTreeMap.Taxon({taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}),
+	    new EOLTreeMap.Taxon({taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}),
+	    new EOLTreeMap.Taxon({taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}),
+	    new EOLTreeMap.Taxon({taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"})
+	];
 	
-	var iucn = {
-		id:"IUCN", name:"IUCN Red List (Species Assessed for Global Conservation)", image:{mediaURL:"images/iucn_high_res.jpg"},
-		text:{description:"<p><b>IUCN</b> <a href='http://www.iucn.org//'>http://www.iucn.org/</a><br>International Union for Conservation of Nature (IUCN) helps the world find pragmatic solutions to our most pressing environment and development challenges. IUCN supports scientific research; manages field projects all over the world; and brings governments, non-government organizations, United Nations agencies, companies and local communities together to develop and implement policy, laws and best practice. EOL partnered with the IUCN to indicate status of each species according to the Red List of Threatened Species.</p>"},
-		children: [{taxonID:"24913771", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"24925347", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"24913778", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"24920520", taxonConceptID:"3121393", scientificName:"Protista"}]
-	};
-	
-	var fishbase = {
-		id:"FishBase", name:"FishBase (Fish Species)", image:{mediaURL:"http://bio.slu.edu/mayden/cypriniformes/images/fishbase_logo.jpg"},
-		text:{description:"<p><b>FishBase</b> <a href='http://www.fishbase.org/'>http://www.fishbase.org/</a><br>FishBase is a global information system with all you ever wanted to know about fishes. FishBase is a relational database with information to cater to different professionals such as research scientists, fisheries managers, zoologists and many more. The FishBase Website contains data on practically every fish species known to science. The project was developed at the WorldFish Center in collaboration with the Food and Agriculture Organization of the United Nations and many other partners, and with support from the European Commission. FishBase is serving information on more than 30,000 fish species through EOL.</p>"},
-		children: [{taxonID:"24876515", taxonConceptID:"1", scientificName:""}]
-	};
-	
-//	var ncbi = {
-//		id:"", name:"", image:{mediaURL:""},
-//		text:{description:""},
-//		children: [{taxonID:"", taxonConceptID:"", scientificName:""}]
+//	var col = {
+//		id:"COL",  name:"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009", image:{mediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"},
+//		text:{description:"<p><b>CoL</b> <a href='http://www.catalogueoflife.org/'>http://www.catalogueoflife.org/</a><br>The Catalogue of Life Partnership (CoLP) is an informal partnership dedicated to creating an index of the world’s organisms, called the Catalogue of Life (CoL). The CoL provides different forms of access to an integrated, quality, maintained, comprehensive consensus species checklist and taxonomic hierarchy, presently covering more than one million species, and intended to cover all know species in the near future. The Annual Checklist EOL uses contains substantial contributions of taxonomic expertise from more than fifty organizations around the world, integrated into a single work by the ongoing work of the CoLP partners. EOL currently uses the CoL Annual Checklist as its taxonomic backbone.</p>"},
+//		children: [{taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}, {taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}, {taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}, {taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}, {taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"}]
 //	};
 	
-	var tree = {
-		id:"HOME",  name:"Classifications",
-		children: [col, iucn, ncbi, fishbase]
-	};
+	var ncbi = new EOLTreeMap.Taxon(null, "NCBI", "NCBI Taxonomy");
+	ncbi.image = {mediaURL:"http://www.ncbi.nlm.nih.gov/projects/GeneTests/static/img/white_ncbi.png"};
+	ncbi.text = {description:"<p><b>NCBI</b> <a href='http://www.ncbi.nlm.nih.gov/'>http://www.ncbi.nlm.nih.gov</a><br>As a U.S. national resource for molecular biology information, NCBI's mission is to develop new information technologies to aid in the understanding of fundamental molecular and genetic processes that control health and disease. The NCBI taxonomy database contains the names of all organisms that are represented in the genetic databases with at least one nucleotide or protein sequence.</p>"};
+	
+	ncbi.children = [
+	    new EOLTreeMap.Taxon({taxonID:"28670753", taxonConceptID:"11660866", scientificName:"cellular organisms"}),
+	    new EOLTreeMap.Taxon({taxonID:"28665715", taxonConceptID:"11655828", scientificName:"other sequences"}),
+	    new EOLTreeMap.Taxon({taxonID:"28665429", taxonConceptID:"11655542", scientificName:"unclassified sequences"}),
+	    new EOLTreeMap.Taxon({taxonID:"28665341", taxonConceptID:"9157757", scientificName:"Viroids"}), 
+	    new EOLTreeMap.Taxon({taxonID:"28612987", taxonConceptID:"5006", scientificName:"Viruses"})
+	];
+	                 
+//	var ncbi = {
+//		id:"NCBI", name:"NCBI Taxonomy", image:{mediaURL:"http://www.ncbi.nlm.nih.gov/projects/GeneTests/static/img/white_ncbi.png"},
+//		text:{description:"<p><b>NCBI</b> <a href='http://www.ncbi.nlm.nih.gov/'>http://www.ncbi.nlm.nih.gov</a><br>As a U.S. national resource for molecular biology information, NCBI's mission is to develop new information technologies to aid in the understanding of fundamental molecular and genetic processes that control health and disease. The NCBI taxonomy database contains the names of all organisms that are represented in the genetic databases with at least one nucleotide or protein sequence.</p>"},
+//		children: [{taxonID:"28670753", taxonConceptID:"11660866", scientificName:"cellular organisms"}, {taxonID:"28665715", taxonConceptID:"11655828", scientificName:"other sequences"}, {taxonID:"28665429", taxonConceptID:"11655542", scientificName:"unclassified sequences"}, {taxonID:"28665341", taxonConceptID:"9157757", scientificName:"Viroids"}, {taxonID:"28612987", taxonConceptID:"5006", scientificName:"Viruses"}]
+//	};
+	
+	var iucn = new EOLTreeMap.Taxon(null, "IUCN", "IUCN Red List (Species Assessed for Global Conservation)");
+	iucn.image = {mediaURL:"images/iucn_high_res.jpg"};
+	iucn.text = {description:"<p><b>IUCN</b> <a href='http://www.iucn.org//'>http://www.iucn.org/</a><br>International Union for Conservation of Nature (IUCN) helps the world find pragmatic solutions to our most pressing environment and development challenges. IUCN supports scientific research; manages field projects all over the world; and brings governments, non-government organizations, United Nations agencies, companies and local communities together to develop and implement policy, laws and best practice. EOL partnered with the IUCN to indicate status of each species according to the Red List of Threatened Species.</p>"};
+	
+	iucn.children = [
+	    new EOLTreeMap.Taxon({taxonID:"24913771", taxonConceptID:"1", scientificName:"Animalia"}), 
+        new EOLTreeMap.Taxon({taxonID:"24925347", taxonConceptID:"5559", scientificName:"Fungi"}), 
+        new EOLTreeMap.Taxon({taxonID:"24913778", taxonConceptID:"281", scientificName:"Plantae"}), 
+        new EOLTreeMap.Taxon({taxonID:"24920520", taxonConceptID:"3121393", scientificName:"Protista"})
+	];
+	
+//	var iucn = {
+//		id:"IUCN", name:"IUCN Red List (Species Assessed for Global Conservation)", image:{mediaURL:"images/iucn_high_res.jpg"},
+//		text:{description:"<p><b>IUCN</b> <a href='http://www.iucn.org//'>http://www.iucn.org/</a><br>International Union for Conservation of Nature (IUCN) helps the world find pragmatic solutions to our most pressing environment and development challenges. IUCN supports scientific research; manages field projects all over the world; and brings governments, non-government organizations, United Nations agencies, companies and local communities together to develop and implement policy, laws and best practice. EOL partnered with the IUCN to indicate status of each species according to the Red List of Threatened Species.</p>"},
+//		children: [{taxonID:"24913771", taxonConceptID:"1", scientificName:"Animalia"}, {taxonID:"24925347", taxonConceptID:"5559", scientificName:"Fungi"}, {taxonID:"24913778", taxonConceptID:"281", scientificName:"Plantae"}, {taxonID:"24920520", taxonConceptID:"3121393", scientificName:"Protista"}]
+//	};
+	
+	var fishbase = new EOLTreeMap.Taxon(null, "FishBase", "FishBase (Fish Species)");
+	fishbase.image = {mediaURL:"http://bio.slu.edu/mayden/cypriniformes/images/fishbase_logo.jpg"};
+	fishbase.text = {description:"<p><b>FishBase</b> <a href='http://www.fishbase.org/'>http://www.fishbase.org/</a><br>FishBase is a global information system with all you ever wanted to know about fishes. FishBase is a relational database with information to cater to different professionals such as research scientists, fisheries managers, zoologists and many more. The FishBase Website contains data on practically every fish species known to science. The project was developed at the WorldFish Center in collaboration with the Food and Agriculture Organization of the United Nations and many other partners, and with support from the European Commission. FishBase is serving information on more than 30,000 fish species through EOL.</p>"};
+	
+	fishbase.children = [
+	    new EOLTreeMap.Taxon({taxonID:"24876515", taxonConceptID:"1", scientificName:""})
+	];
+	
+//	var fishbase = {
+//		id:"FishBase", name:"FishBase (Fish Species)", image:{mediaURL:"http://bio.slu.edu/mayden/cypriniformes/images/fishbase_logo.jpg"},
+//		text:{description:"<p><b>FishBase</b> <a href='http://www.fishbase.org/'>http://www.fishbase.org/</a><br>FishBase is a global information system with all you ever wanted to know about fishes. FishBase is a relational database with information to cater to different professionals such as research scientists, fisheries managers, zoologists and many more. The FishBase Website contains data on practically every fish species known to science. The project was developed at the WorldFish Center in collaboration with the Food and Agriculture Organization of the United Nations and many other partners, and with support from the European Commission. FishBase is serving information on more than 30,000 fish species through EOL.</p>"},
+//		children: [{taxonID:"24876515", taxonConceptID:"1", scientificName:""}]
+//	};
+	
+	var tree = new EOLTreeMap.Taxon(null, "HOME", "Classifications");
+	tree.children = [col, iucn, ncbi, fishbase]
+	
+//	var tree = {
+//		id:"HOME",  name:"Classifications",
+//		children: [col, iucn, ncbi, fishbase]
+//	};
 	
 	//make sure we don't try to do EOL API calls for these dummy nodes
 	tree.apiContentFetched = true;
 	jQuery.each(tree.children, function(index, child) {child.apiContentFetched = true;});
 	
-	EOLTreeMap.prepareForTreeMap(tree);
-	
 	return tree;
 }
-
-EOLTreeMap.setAreas = function (tree, computeArea) {
-	//go over the whole tree and apply computeArea to nodes
-	TreeUtil.each(tree, function (node) {
-		node.data.$area = computeArea(node);
-	});
-};
 
 EOLTreeMap.resizeImage = function (image, container) {
 	container = jQuery(container);
@@ -372,7 +396,7 @@ EOLTreeMap.prototype.processChildrenLayout = function (par, ch, coord) {
 	var parentArea = coord.width * coord.height;
 	var i, totalChArea = 0, chArea = [];
 	for (i = 0; i < ch.length; i++) {
-		chArea[i] = parseFloat(ch[i].data.$area);
+		chArea[i] = parseFloat(ch[i].getArea());
 		totalChArea += chArea[i];
 	}
 	for (i = 0; i < chArea.length; i++) {
@@ -380,7 +404,7 @@ EOLTreeMap.prototype.processChildrenLayout = function (par, ch, coord) {
 	}
 	var minimumSideValue = (this.layout.horizontal())? coord.height : coord.width;
 	
-	//kgu: sorting by area (required for treemap), then name.  Most of the time areas are all going to be the same.
+	//kgu: sorting by area (required for treemap), then name, in case all of the areas are the same, we might as well have alpha order
 	ch.sort(function (a, b) {
 		var diff = a._area - b._area;
 		return diff || a.name.localeCompare(b.name);
@@ -449,7 +473,7 @@ EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
 			var childrenToCallBack = json.children.length;
 			
 			jQuery(json.children).each(function (i, child) {
-				controller.request(child.id, level - 1, {onComplete: function (id, childJSON){
+				controller.request(child.taxonID, level - 1, {onComplete: function (id, childJSON){
 					jQuery.extend(true, child, childJSON);
 					childrenToCallBack -= 1;
 					if (childrenToCallBack === 0) {
@@ -545,6 +569,29 @@ EOLTreeMap.prototype.controller.leaf = function (node, tree, shownTree) {
 	return node.children.length === 0 ||
 			(TreeUtil.depth(node, tree) >= TreeUtil.depth(shownTree, tree) + this.levelsToShow);
 };
+
+EOLTreeMap.Taxon = function(hierarchy_entry, id, name) {
+	this.data = {};
+	this.id = id || hierarchy_entry.taxonID;
+	this.name = name || hierarchy_entry.scientificName;
+
+	jQuery.extend(this, hierarchy_entry);
+
+	//make all of the children a EOLTreeMap.Taxon too
+	this.children = [];
+	var that = this;
+	if (hierarchy_entry && hierarchy_entry.children) {
+		jQuery.each(hierarchy_entry.children, function(index, child) { 
+			that.children.push(new EOLTreeMap.Taxon(child));
+		});
+	}
+	
+	//TODO do I still need to copy children's taxonID over to id?
+}
+
+EOLTreeMap.Taxon.prototype.getArea = function() {
+	return this.data.$area || Math.sqrt(this.total_descendants) || 1.0;
+}
 
 TreeUtil.depth = function (node, tree) {
 	if (node === tree) {
