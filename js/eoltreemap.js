@@ -11,6 +11,21 @@ function EOLTreeMap(container) {
 	jQuery(container).addClass("treemap-container");
 	this.api = new EolApi();
 	this.controller.api = this.api;
+	
+	/** 
+	 * A little wrapper around EolApi.hierarchy_entries() that calls prepareForTreeMap on everything coming in
+	 * @param {Object} taxonID
+	 * @param {Object} onSuccess
+	 */
+	this.api.fetchNode = function (taxonID, onSuccess) {
+		this.hierarchy_entries(taxonID, function (json) {
+			EOLTreeMap.prepareForTreeMap(json);
+			onSuccess(json);
+		});
+	};
+
+	
+	
 	this.nodeSelectHandlers = [];
 	this.viewChangeHandlers = [];
 	this.selectionFrozen = false;
@@ -132,13 +147,13 @@ EOLTreeMap.prototype.view = function(id) {
 	};
 
 	if (!node) {
-		this.api.hierarchy_entries(id, function (json) {
+		this.api.fetchNode(id, function (json) {
 			that.graft(that.tree, json, function (newNode) {
-				TreeUtil.loadSubtrees(newNode, post);
+				TreeUtil.loadSubtrees(newNode, post, that.controller.levelsToShow + 1);
 			});
 		});
 	} else {
-		TreeUtil.loadSubtrees(node, post);
+		TreeUtil.loadSubtrees(node, post, this.controller.levelsToShow + 1);
 	}
 	
 	
@@ -154,16 +169,20 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 	var that = this;
 	if(!subtree.children || subtree.children.length === 0) {
 		//the ancestor's full node hasn't been fetched yet.  Get it, then try again.
-		this.api.hierarchy_entries(subtree.taxonID, function (fullNode) {
-			EOLTreeMap.prepareForTreeMap(fullNode);
+		this.api.fetchNode(subtree.taxonID, function (fullNode) {
 			jQuery.extend(true, subtree, fullNode);
 			that.graft(subtree, json, callback);
 		});
+//		this.controller.request(subtree.taxonID, 1, {
+//			onComplete: function(nodeId, fetchedSubtree){
+//				jQuery.extend(true, subtree, fetchedSubtree);
+//				that.graft(subtree, json, callback);
+//			}
+//		});
 	} else {
 		var childMatch = jQuery.grep(subtree.children, function (child) {return child.taxonID == json.taxonID })[0];
 		if (childMatch) {
 			//found the location of the hierarchy entry
-			EOLTreeMap.prepareForTreeMap(json);
 			jQuery.extend(true, childMatch, json);
 			callback(childMatch);
 		} else {
@@ -238,15 +257,13 @@ EOLTreeMap.stump = function () {
 	tree.apiContentFetched = true;
 	jQuery.each(tree.children, function(index, child) {child.apiContentFetched = true;});
 	
-	TreeUtil.each(tree, function (node) {
-		EOLTreeMap.prepareForTreeMap(node);
-	});
+	EOLTreeMap.prepareForTreeMap(tree);
 	
 	return tree;
 }
 
 EOLTreeMap.setAreas = function (tree, computeArea) {
-	//go over the whole tree and apply compteArea to nodes
+	//go over the whole tree and apply computeArea to nodes
 	TreeUtil.each(tree, function (node) {
 		node.data.$area = computeArea(node);
 	});
@@ -426,14 +443,13 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 
 EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
 	var controller = this;
-	this.api.hierarchy_entries(nodeId, function (json) {
-		EOLTreeMap.prepareForTreeMap(json);
+	this.api.fetchNode(nodeId, function (json) {
 		
 		if (level > 0 && json.children && json.children.length > 0) {
 			var childrenToCallBack = json.children.length;
 			
 			jQuery(json.children).each(function (i, child) {
-				controller.request(child.id, level - 1, {onComplete: function (nodeId, childJSON){
+				controller.request(child.id, level - 1, {onComplete: function (id, childJSON){
 					jQuery.extend(true, child, childJSON);
 					childrenToCallBack -= 1;
 					if (childrenToCallBack === 0) {
