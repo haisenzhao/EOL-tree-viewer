@@ -17,7 +17,6 @@ function EOLTreeMap(container) {
 	 */
 	this.api.fetchNode = function (taxonID, onSuccess) {
 		this.hierarchy_entries(taxonID, function (json) {
-			console.log("receiving node " + json.scientificName);
 			var taxon = new EOLTreeMap.Taxon(json);
 			onSuccess(taxon);
 		});
