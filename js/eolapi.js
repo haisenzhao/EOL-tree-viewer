@@ -1,6 +1,6 @@
 /* See http://www.eol.org/api */
 
-function EolApiConfig() {
+function PagesConfig() {
 	/* See http://www.eol.org/api/docs/pages */
 	this.images = 1;
 	this.text = 1;
@@ -11,8 +11,16 @@ function EolApiConfig() {
 	this.format = "html";
 }
 
+function HierarchyConfig() {
+	//not-yet-documented hierarchy entries options.  They will eventually be listed at http://www.eol.org/api/docs/hierarchy_entries.
+	this.synonyms = 0;
+	this.common_names = 0;
+}
+
 function EolApi() {
-	this.defaultConfig = new EolApiConfig();
+	this.pagesConfig = new PagesConfig();
+	this.hierarchyConfig = new HierarchyConfig();
+//	this.apiHost = "labs1.eol.org";
 	this.apiHost = "www.eol.org";
 	this.apiVersion = "1.0";
 	
@@ -33,7 +41,7 @@ EolApi.prototype.ping = function (success, error) {
 EolApi.prototype.hierarchy_entries = function (taxonID, onSuccess) {
 	if (taxonID) {
 		var url = "http://" + this.apiHost + "/api/hierarchy_entries/" + this.apiVersion + "/" + taxonID + ".json?callback=?";
-		jQuery.getJSON(url, {}, onSuccess);
+		jQuery.getJSON(url, this.hierarchyConfig, onSuccess);
 	}
 };
 
@@ -53,7 +61,7 @@ EolApi.prototype.data_objects = function (objectID, onSuccess) {
 };
 
 EolApi.prototype.decorateNode = function (node, callback) {
-	this.pages(node.taxonConceptID, this.defaultConfig, function (json) {
+	this.pages(node.taxonConceptID, this.pagesConfig, function (json) {
 		//just appending the whole dataObject to the node
 		node.image = jQuery.grep(json.dataObjects, function (item) {
 			return item.dataType === "http://purl.org/dc/dcmitype/StillImage";
