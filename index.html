@@ -33,13 +33,13 @@
 	<li><a class='tab' href='#detail'>Detail</a></li>
 	<li><a class='tab' href='#statistics'>Stats</a></li>
 	<li><a class='tab' href='#search'>Search</a></li>
-	<!-- <li><a class='tab' href='#options'>Options</a></li> -->
+	<li><a class='tab' href='#options'>Options</a></li>
 	<li><a class='tab' href='#help'>Help</a></li>
 </ul>
 <div id='detail'>Hold the F key to freeze this panel<h1 id="detail-title"></h1><h2 id="detail-subtitle"></h2><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
 <div id='statistics'><ul><li>descendants:<span id='total_descendants'></span></li><ul><li>descendants with text:<span id='total_descendants_with_text'></span></li><li>descendants with images:<span id='total_descendants_with_images'></span></li></ul><li>text</li><ul><li>trusted text:<span id='total_trusted_text'></span></li><li>unreviewed text:<span id='total_unreviewed_text'></span></li></ul><li>images</li><ul><li>trusted images:<span id='total_trusted_images'></span></li><li>unreviewed images:<span id='total_unreviewed_images'></span></li></ul></ul></div>
 <div id='search'><form onsubmit="return false;">Name: <input type='text' name='name'/></form>Matches on current page:<ul id='current-page-results'></ul></div>
-<div id='options'>[Not yet implemented]</div>
+<div id='options'></div>
 <div id='help'>[Help text]</div>;
 </div>
 
@@ -49,6 +49,7 @@ $(document).ready(function() {
 	
 	var tm = new EOLTreeMap(jQuery("#thejit")[0]);
 	jQuery("#help").html(EOLTreeMap.help);
+	jQuery("#options").append(tm.optionsForm());
 	
 	jQuery(window).bind( 'hashchange', function(){
 		if (location.hash) {
