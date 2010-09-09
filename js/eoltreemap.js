@@ -2,7 +2,15 @@ EOLTreeMap.config = {
 	levelsToShow: 1, //number of levels to show at once
 	titleHeight: 22, //taxon name container height
 	offset:2, //controls the thickness of container borders
-	minFontSize:10 //taxon names will shrink to fit until they reach this size
+	minFontSize:10, //taxon names will shrink to fit until they reach this size
+	
+	Color: {
+		allow: true,
+		minValue: 0,
+		maxValue: 1,
+		minColorValue: [255, 0, 50],
+		maxColorValue: [0, 255, 50]
+	}
 };
 
 function EOLTreeMap(container) {
@@ -196,6 +204,11 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 	}
 };
 
+EOLTreeMap.prototype.showColor = function(b) {
+	this.controller.Color.allow = !!b;
+	this.view(null);
+}
+
 EOLTreeMap.stump = function () {
 	/* TODO: put the rest of the roots in (for all classifications).*/
 	var col = new EOLTreeMap.Taxon(null, "COL", "Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009");
@@ -365,7 +378,7 @@ EOLTreeMap.prototype.processChildrenLayout = function (par, ch, coord) {
 	}
 	var minimumSideValue = (this.layout.horizontal())? coord.height : coord.width;
 	
-	//kgu: sorting by area (required for treemap), then name, in case all of the areas are the same, we might as well have alpha order
+	//kgu: sorting by area (required for treemap), then name. In case all of the areas are the same, we might as well have alpha order
 	ch.sort(function (a, b) {
 		var diff = a._area - b._area;
 		return diff || a.name.localeCompare(b.name);
@@ -374,6 +387,36 @@ EOLTreeMap.prototype.processChildrenLayout = function (par, ch, coord) {
 	var initElem = [ch[0]];
 	var tail = ch.slice(1);
 	this.squarify(tail, initElem, minimumSideValue, coord);
+};
+
+/**
+ * overriding setColor to use EOLTreeMap.Taxon.getColor()
+ */
+EOLTreeMap.prototype.setColor = function(taxon) {
+    var c = this.config.Color,
+    maxcv = c.maxColorValue,
+    mincv = c.minColorValue,
+    maxv = c.maxValue,
+    minv = c.minValue,
+    diff = maxv - minv,
+    x = (taxon.getColor() - 0);
+    //linear interpolation    
+    var comp = function(i, x) { 
+      return Math.round((((maxcv[i] - mincv[i]) / diff) * (x - minv) + mincv[i])); 
+    };
+    
+    return EOLTreeMap.$rgbToHex([ comp(0, x), comp(1, x), comp(2, x) ]);
+};
+
+EOLTreeMap.$rgbToHex = function(srcArray, array){
+    if (srcArray.length < 3) return null;
+    if (srcArray.length == 4 && srcArray[3] == 0 && !array) return 'transparent';
+    var hex = [];
+    for (var i = 0; i < 3; i++){
+        var bit = (srcArray[i] - 0).toString(16);
+        hex.push((bit.length == 1) ? '0' + bit : bit);
+    }
+    return (array) ? hex : '#' + hex.join('');
 };
 
 EOLTreeMap.prototype.controller.onDestroyElement = function (content, tree, isLeaf, leaf) {
@@ -385,9 +428,28 @@ EOLTreeMap.prototype.controller.onDestroyElement = function (content, tree, isLe
 
 EOLTreeMap.prototype.controller.onCreateElement = function (content, node, isLeaf, head, body) {  
 	isLeaf = jQuery(body).children().length === 0; //overwriting JIT's isLeaf because I gave leaves a head and body 
-	if (!this.Color.allow && node != null && isLeaf) {
-		this.insertBodyContent(node, body);
+	var that = this;
+	
+	if (!node.apiContentFetched) {
+		
+		this.api.decorateNode(node, function () {
+			node.apiContentFetched = true;
+			
+			if (!that.Color.allow && node != null && isLeaf) {
+				that.insertBodyContent(node, body);
+			}
+
+		});
+		
+		if (!that.Color.allow && isLeaf) {
+			var placeholder = new Image();
+			placeholder.src = "images/ajax-loader.gif";
+			jQuery(body).html(placeholder);
+		}
 	}
+	
+	
+
 };
 
 EOLTreeMap.prototype.controller.onBeforeCompute = function(tree){
@@ -405,15 +467,26 @@ EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
 	var that = this;
 	jQuery("#" + tree.id).find("div .content").each(function (index, element) {
 		var node = TreeUtil.getSubtree(tree, this.id);
-		var elem1 = jQuery(this).children()[0];
-		var elem2 = jQuery(this).children()[1];
 		
-		if (node && elem1 && node.taxonConceptID) {
-			jQuery(elem1).wrap("<a class='head' target='_blank' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
-		}
-		
-		if (elem2) {
-			jQuery(elem2).wrap("<a class='body' href=#" + node.id + "></a>");
+		if (node) {
+			var body = jQuery(this).children()[1];
+			var head = null;
+			
+			if (body) {
+				head = jQuery(this).children()[0];
+			} else {
+				body = jQuery(this).children()[0];
+				head = jQuery(body).contents()[0];
+			}
+			
+			if (head && node.taxonConceptID) {
+				jQuery(head).wrap("<a class='head' target='_blank' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
+			}
+			
+			if (body) {
+				jQuery(body).wrap("<a class='body' href=#" + node.id + "></a>");
+			}
+
 		}
 	});
 	
@@ -552,6 +625,10 @@ EOLTreeMap.Taxon = function(hierarchy_entry, id, name) {
 
 EOLTreeMap.Taxon.prototype.getArea = function() {
 	return this.data.$area || Math.sqrt(this.total_descendants) || 1.0;
+}
+
+EOLTreeMap.Taxon.prototype.getColor = function(){
+	return this.data.$color || this.total_descendants_with_text / (this.total_descendants + 1);
 }
 
 TreeUtil.depth = function (node, tree) {
