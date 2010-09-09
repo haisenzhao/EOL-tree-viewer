@@ -114,18 +114,23 @@ $(document).ready(function() {
 	});
 	
 	tm.addNodeSelectHandler(function (node) {
+		//note: adding 1 to node.total_descendants everywhere because node.total_descendants_with_text and total_descendants_with_images include the node itself.
 		if (node != null) {
 			if (node.total_descendants) {
-				jQuery('#total_descendants').text(node.total_descendants);
+				jQuery('#total_descendants').text(node.total_descendants + 1);
 				
-				node.total_descendants_with_text && jQuery('#total_descendants_with_text').text(node.total_descendants_with_text).append(" (" + Math.round(100 * node.total_descendants_with_text / node.total_descendants) + "%)");
-				node.total_descendants_with_images && jQuery('#total_descendants_with_images').text(node.total_descendants_with_images).append(" (" + Math.round(100 * node.total_descendants_with_images / node.total_descendants) + "%)");
+				node.total_descendants_with_text && jQuery('#total_descendants_with_text').text(node.total_descendants_with_text).append(" (" + Math.round(100 * node.total_descendants_with_text / (node.total_descendants + 1)) + "%)");
+				node.total_descendants_with_images && jQuery('#total_descendants_with_images').text(node.total_descendants_with_images).append(" (" + Math.round(100 * node.total_descendants_with_images / (node.total_descendants + 1)) + "%)");
+			} else {
+				jQuery('#total_descendants').empty();
+				jQuery('#total_descendants_with_text').empty();
+				jQuery('#total_descendants_with_images').empty();
 			}
 			
-			node.total_trusted_text && jQuery('#total_trusted_text').text(node.total_trusted_text);
-			node.total_unreviewed_text && jQuery('#total_unreviewed_text').text(node.total_unreviewed_text);
-			node.total_trusted_images && jQuery('#total_trusted_images').text(node.total_trusted_images);
-			node.total_unreviewed_images && jQuery('#total_unreviewed_images').text(node.total_unreviewed_images);
+			(node.total_trusted_text && jQuery('#total_trusted_text').text(node.total_trusted_text)) || jQuery('#total_trusted_text').empty();
+			(node.total_unreviewed_text && jQuery('#total_unreviewed_text').text(node.total_unreviewed_text)) || jQuery('#total_unreviewed_text').empty();
+			(node.total_trusted_images && jQuery('#total_trusted_images').text(node.total_trusted_images)) || jQuery('#total_trusted_images').empty();
+			(node.total_unreviewed_images && jQuery('#total_unreviewed_images').text(node.total_unreviewed_images)) || jQuery('#total_unreviewed_images').empty();
 		}
 	});
 	

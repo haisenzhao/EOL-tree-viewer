@@ -17,6 +17,7 @@ function EOLTreeMap(container) {
 	 */
 	this.api.fetchNode = function (taxonID, onSuccess) {
 		this.hierarchy_entries(taxonID, function (json) {
+			console.log("receiving node " + json.scientificName);
 			var taxon = new EOLTreeMap.Taxon(json);
 			onSuccess(taxon);
 		});
@@ -147,11 +148,11 @@ EOLTreeMap.prototype.view = function(id) {
 	if (!node) {
 		this.api.fetchNode(id, function (json) {
 			that.graft(that.tree, json, function (newNode) {
-				TreeUtil.loadSubtrees(newNode, post, that.controller.levelsToShow + 1);
+				TreeUtil.loadSubtrees(newNode, post, that.controller.levelsToShow);
 			});
 		});
 	} else {
-		TreeUtil.loadSubtrees(node, post, this.controller.levelsToShow + 1);
+		TreeUtil.loadSubtrees(node, post, this.controller.levelsToShow);
 	}
 	
 	
@@ -195,16 +196,6 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 		}
 	}
 };
-
-//EOLTreeMap.prepareForTreeMap = function (apiHierarchy) {
-//	//set some fields TM needs, if undefined
-//	TreeUtil.each(apiHierarchy, function (node) {
-//		node.prototype = new EOLTreeMap.Taxon();
-//		
-//		node.id = node.id || node.taxonID;
-//		node.name = node.name || node.scientificName;
-//	});
-//}
 
 EOLTreeMap.stump = function () {
 	/* TODO: put the rest of the roots in (for all classifications).*/
@@ -605,11 +596,12 @@ TreeUtil.depth = function (node, tree) {
 
 /*
  * Override of JIT TreeUtil.loadSubtrees.  
- * Finds leaves in the subtree and loads their descendants to depth controller.levelsToShow 
+ * Loads missing nodes in a subtree to a given depth.  
+ * Nodes at depth will be fetched from the api, but their children will be id-only placeholders (will not have children or data)
  */
 TreeUtil.loadSubtrees = function (subtree, controller, depth, onComplete) {
 	onComplete = onComplete || controller.onComplete;
-	if (depth === 0) {
+	if (depth < 0) {
 		onComplete();
 		return;
 	} else if (depth === undefined) {
