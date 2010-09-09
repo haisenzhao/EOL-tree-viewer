@@ -20,13 +20,14 @@ a img {
 }
 
 #right {
-	background-color:gray;
+	background-color:black;
 }
 
 #right > div {
 	color: white;
     background-color: black;
 	overflow:auto;
+	border: 1px solid gray;
 }
 
 #tabs {
@@ -37,6 +38,9 @@ a img {
 	font-size:12px;
 	text-decoration:none;
 	background-color:gray;
+	border: 1px solid black;
+	-moz-border-radius: 5px 10px 0px 0px;
+	-webkit-border-radius: 5px 10px 0px 0px;
 }
 
 .tab.selected, .tab.hover {
