@@ -8,8 +8,8 @@ EOLTreeMap.config = {
 		allow: false,
 		minValue: 0,
 		maxValue: 1,
-		minColorValue: [255, 0, 50],
-		maxColorValue: [0, 255, 50]
+		minColorValue: [0, 0, 0],
+		maxColorValue: [192, 192, 192]
 	}
 };
 
@@ -25,7 +25,7 @@ function EOLTreeMap(container) {
 	 */
 	this.api.fetchNode = function (taxonID, onSuccess) {
 		this.hierarchy_entries(taxonID, function (json) {
-			var taxon = new EOLTreeMap.Taxon(json);
+			var taxon = new Taxon(json);
 			onSuccess(taxon);
 		});
 	};
@@ -213,57 +213,57 @@ EOLTreeMap.stump = function () {
 	};
 	
 	/* TODO: put the rest of the roots in (for all classifications).*/
-	var col = new EOLTreeMap.Taxon(null, "COL", "Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009");
+	var col = new Taxon(null, "COL", "Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009");
 	col.image = {mediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"};
 	col.text = {description:"<p><b>CoL</b> <a href='http://www.catalogueoflife.org/'>http://www.catalogueoflife.org/</a><br>The Catalogue of Life Partnership (CoLP) is an informal partnership dedicated to creating an index of the world’s organisms, called the Catalogue of Life (CoL). The CoL provides different forms of access to an integrated, quality, maintained, comprehensive consensus species checklist and taxonomic hierarchy, presently covering more than one million species, and intended to cover all know species in the near future. The Annual Checklist EOL uses contains substantial contributions of taxonomic expertise from more than fifty organizations around the world, integrated into a single work by the ongoing work of the CoLP partners. EOL currently uses the CoL Annual Checklist as its taxonomic backbone.</p>"};
 	
 	col.children = [
-	    new EOLTreeMap.Taxon({taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}),
-	    new EOLTreeMap.Taxon({taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}),
-	    new EOLTreeMap.Taxon({taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}),
-	    new EOLTreeMap.Taxon({taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}),
-	    new EOLTreeMap.Taxon({taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}),
-	    new EOLTreeMap.Taxon({taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}),
-	    new EOLTreeMap.Taxon({taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}),
-	    new EOLTreeMap.Taxon({taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"})
+	    new Taxon({taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}),
+	    new Taxon({taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}),
+	    new Taxon({taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}),
+	    new Taxon({taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}),
+	    new Taxon({taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}),
+	    new Taxon({taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}),
+	    new Taxon({taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}),
+	    new Taxon({taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"})
 	];
 	setChildren(col);
 	
-	var ncbi = new EOLTreeMap.Taxon(null, "NCBI", "NCBI Taxonomy");
+	var ncbi = new Taxon(null, "NCBI", "NCBI Taxonomy");
 	ncbi.image = {mediaURL:"http://www.ncbi.nlm.nih.gov/projects/GeneTests/static/img/white_ncbi.png"};
 	ncbi.text = {description:"<p><b>NCBI</b> <a href='http://www.ncbi.nlm.nih.gov/'>http://www.ncbi.nlm.nih.gov</a><br>As a U.S. national resource for molecular biology information, NCBI's mission is to develop new information technologies to aid in the understanding of fundamental molecular and genetic processes that control health and disease. The NCBI taxonomy database contains the names of all organisms that are represented in the genetic databases with at least one nucleotide or protein sequence.</p>"};
 	
 	ncbi.children = [
-	    new EOLTreeMap.Taxon({taxonID:"28670753", taxonConceptID:"11660866", scientificName:"cellular organisms"}),
-	    new EOLTreeMap.Taxon({taxonID:"28665715", taxonConceptID:"11655828", scientificName:"other sequences"}),
-	    new EOLTreeMap.Taxon({taxonID:"28665429", taxonConceptID:"11655542", scientificName:"unclassified sequences"}),
-	    new EOLTreeMap.Taxon({taxonID:"28665341", taxonConceptID:"9157757", scientificName:"Viroids"}), 
-	    new EOLTreeMap.Taxon({taxonID:"28612987", taxonConceptID:"5006", scientificName:"Viruses"})
+	    new Taxon({taxonID:"28670753", taxonConceptID:"11660866", scientificName:"cellular organisms"}),
+	    new Taxon({taxonID:"28665715", taxonConceptID:"11655828", scientificName:"other sequences"}),
+	    new Taxon({taxonID:"28665429", taxonConceptID:"11655542", scientificName:"unclassified sequences"}),
+	    new Taxon({taxonID:"28665341", taxonConceptID:"9157757", scientificName:"Viroids"}), 
+	    new Taxon({taxonID:"28612987", taxonConceptID:"5006", scientificName:"Viruses"})
 	];
 	setChildren(ncbi);
 	
-	var iucn = new EOLTreeMap.Taxon(null, "IUCN", "IUCN Red List (Species Assessed for Global Conservation)");
+	var iucn = new Taxon(null, "IUCN", "IUCN Red List (Species Assessed for Global Conservation)");
 	iucn.image = {mediaURL:"images/iucn_high_res.jpg"};
 	iucn.text = {description:"<p><b>IUCN</b> <a href='http://www.iucn.org//'>http://www.iucn.org/</a><br>International Union for Conservation of Nature (IUCN) helps the world find pragmatic solutions to our most pressing environment and development challenges. IUCN supports scientific research; manages field projects all over the world; and brings governments, non-government organizations, United Nations agencies, companies and local communities together to develop and implement policy, laws and best practice. EOL partnered with the IUCN to indicate status of each species according to the Red List of Threatened Species.</p>"};
 	
 	iucn.children = [
-	    new EOLTreeMap.Taxon({taxonID:"24913771", taxonConceptID:"1", scientificName:"Animalia"}), 
-        new EOLTreeMap.Taxon({taxonID:"24925347", taxonConceptID:"5559", scientificName:"Fungi"}), 
-        new EOLTreeMap.Taxon({taxonID:"24913778", taxonConceptID:"281", scientificName:"Plantae"}), 
-        new EOLTreeMap.Taxon({taxonID:"24920520", taxonConceptID:"3121393", scientificName:"Protista"})
+	    new Taxon({taxonID:"24913771", taxonConceptID:"1", scientificName:"Animalia"}), 
+        new Taxon({taxonID:"24925347", taxonConceptID:"5559", scientificName:"Fungi"}), 
+        new Taxon({taxonID:"24913778", taxonConceptID:"281", scientificName:"Plantae"}), 
+        new Taxon({taxonID:"24920520", taxonConceptID:"3121393", scientificName:"Protista"})
 	];
 	setChildren(iucn);
 	
-	var fishbase = new EOLTreeMap.Taxon(null, "FishBase", "FishBase (Fish Species)");
+	var fishbase = new Taxon(null, "FishBase", "FishBase (Fish Species)");
 	fishbase.image = {mediaURL:"http://bio.slu.edu/mayden/cypriniformes/images/fishbase_logo.jpg"};
 	fishbase.text = {description:"<p><b>FishBase</b> <a href='http://www.fishbase.org/'>http://www.fishbase.org/</a><br>FishBase is a global information system with all you ever wanted to know about fishes. FishBase is a relational database with information to cater to different professionals such as research scientists, fisheries managers, zoologists and many more. The FishBase Website contains data on practically every fish species known to science. The project was developed at the WorldFish Center in collaboration with the Food and Agriculture Organization of the United Nations and many other partners, and with support from the European Commission. FishBase is serving information on more than 30,000 fish species through EOL.</p>"};
 	
 	fishbase.children = [
-	    new EOLTreeMap.Taxon({taxonID:"24876515", taxonConceptID:"1", scientificName:""})
+	    new Taxon({taxonID:"24876515", taxonConceptID:"1", scientificName:""})
 	];
 	setChildren(fishbase);
 	
-	var tree = new EOLTreeMap.Taxon(null, "HOME", "Classifications");
+	var tree = new Taxon(null, "HOME", "Classifications");
 	tree.children = [col, iucn, ncbi, fishbase];
 	setChildren(tree);
 
@@ -397,7 +397,7 @@ EOLTreeMap.prototype.processChildrenLayout = function (par, ch, coord) {
 };
 
 /**
- * overriding setColor to use EOLTreeMap.Taxon.getColor()
+ * overriding setColor to use Taxon.getColor()
  */
 EOLTreeMap.prototype.setColor = function(taxon) {
     var c = this.config.Color,
@@ -407,9 +407,14 @@ EOLTreeMap.prototype.setColor = function(taxon) {
     minv = c.minValue,
     diff = maxv - minv,
     x = (taxon.getColor() - 0);
+	
+	//clamp x to range [minv,maxv]
+	x = Math.max(x, minv);
+	x = Math.min(x, maxv);
+	
     //linear interpolation    
     var comp = function(i, x) { 
-      return Math.round((((maxcv[i] - mincv[i]) / diff) * (x - minv) + mincv[i])); 
+      return colorValue = Math.round((((maxcv[i] - mincv[i]) / diff) * (x - minv) + mincv[i])); 
     };
     
     return EOLTreeMap.$rgbToHex([ comp(0, x), comp(1, x), comp(2, x) ]);
@@ -431,23 +436,62 @@ EOLTreeMap.prototype.optionsForm = function () {
 	
 	var depth = jQuery("<input type='text' name='depth' size=3>");
 	depth.val(this.controller.levelsToShow);
-	form.append("<span>Maximum depth:</span>").append(depth);
+	jQuery("<div>").append("Maximum depth: ").append(depth).appendTo(form);
 	
 	var showImages = jQuery("<input type='checkbox' name='images'>");
 	showImages[0].checked = !this.controller.Color.allow;
-	form.append("<span>Display images:</span>").append(showImages);
-	//TODO set default values in inputs
+	jQuery("<div>").append("Display images: ").append(showImages).appendTo(form);
+	
+	var colorRange = jQuery("<fieldset>").append("<legend>Color mapping</legend>");
+	
+	var variableList = jQuery("<select name='variable'>").appendTo(colorRange);
+	variableList.append("<option value='total_descendants'>Descendants</option>");
+	variableList.append("<option value='total_descendants_with_text'>Descendants w/text</option>");
+	variableList.append("<option value='total_descendants_with_images'>Descendants w/images</option>");
+	variableList.append("<option value='total_trusted_text'>Text (trusted)</option>");
+	variableList.append("<option value='total_unreviewed_text'>Text (unreviewed)</option>");
+	variableList.append("<option value='total_trusted_images'>Images (trusted)</option>");
+	variableList.append("<option value='total_unreviewed_images'>Images (unreviewed)</option>");
+	
+	var minValue = jQuery("<input type='text' name='minValue' size=4>");
+	var maxValue = jQuery("<input type='text' name='maxValue' size=4>");
+	var minColor = jQuery("<input class='color' size=6>");
+	var maxColor = jQuery("<input class='color' size=6>");
+	minValue.val(this.config.Color.minValue);
+	maxValue.val(this.config.Color.maxValue);
+	minColor.val(EOLTreeMap.$rgbToHex(this.config.Color.minColorValue));
+	maxColor.val(EOLTreeMap.$rgbToHex(this.config.Color.maxColorValue));
+	jQuery("<div>").append("Variable value min: ").append(minValue).append("max: ").append(maxValue).appendTo(colorRange);
+	jQuery("<div>").append("Color min: ").append(minColor).append("max: ").append(maxColor).appendTo(colorRange);
+	
+	form.append(colorRange);
+	
+	/** maps a color value from [0,1] to [0,255] */
+	var mapTo255 = function(colorValue) {
+		return colorValue * 255;
+	};
 	
 	var that = this;
 	var changeHandler = function () {
 		//TODO validate
 		that.controller.Color.allow = !showImages[0].checked;
-		that.controller.levelsToShow = parseInt(depth.val()); //TODO check for NaN
+		that.controller.levelsToShow = parseInt(depth.val()); 
+		
+		that.config.Color.minValue = minValue.val();
+		that.config.Color.maxValue = maxValue.val();
+		that.config.Color.minColorValue = jQuery.map(minColor[0].color.rgb, mapTo255);
+		that.config.Color.maxColorValue = jQuery.map(maxColor[0].color.rgb, mapTo255);
+
+		Taxon.prototype.getColor = function(){
+			return this[variableList.val()] || 0;
+		}
+
 		that.view(null);
 		return false;
 	};
 	
 	jQuery("input", form).change(changeHandler);
+	jQuery("select", form).change(changeHandler);
 	jQuery(form).submit(changeHandler);
 	
 	return form;
@@ -640,19 +684,19 @@ EOLTreeMap.prototype.controller.leaf = function (node, tree) {
 	return node.children.length === 0 || node.getDepth() - tree.getDepth() >= this.levelsToShow;
 };
 
-EOLTreeMap.Taxon = function(hierarchy_entry, id, name) {
+function Taxon(hierarchy_entry, id, name) {
 	this.data = {};
 	this.id = id || hierarchy_entry.taxonID;
 	this.name = name || hierarchy_entry.scientificName;
 	
 	this.merge(hierarchy_entry);
 
-	//make all of the children a EOLTreeMap.Taxon too
+	//make all of the children a Taxon too
 	this.children = [];
 	var that = this;
 	if (hierarchy_entry && hierarchy_entry.children) {
 		jQuery.each(hierarchy_entry.children, function(index, child) { 
-			var childTaxon = new EOLTreeMap.Taxon(child);
+			var childTaxon = new Taxon(child);
 			that.children.push(childTaxon);
 			child.parent = that;
 		});
@@ -663,20 +707,26 @@ EOLTreeMap.Taxon = function(hierarchy_entry, id, name) {
 	//TODO do I still need to copy children's taxonID over to id?
 }
 
-EOLTreeMap.Taxon.prototype.getArea = function() {
+Taxon.prototype.getArea = function() {
 	return this.data.$area || Math.sqrt(this.total_descendants) || 1.0;
 };
 
-EOLTreeMap.Taxon.prototype.getColor = function(){
+Taxon.prototype.getColor = function(){
 	return this.data.$color || this.total_descendants_with_text / (this.total_descendants + 1);
 };
 
-EOLTreeMap.Taxon.prototype.getDepth = function() {
+Taxon.prototype.getDepth = function() {
 	return this.parent && this.parent.getDepth() + 1 || 0;
 };
 
-EOLTreeMap.Taxon.prototype.merge = function(other) {
-	jQuery.extend(this, other);
+Taxon.prototype.merge = function(other) {
+//	jQuery.extend(this, other); //extend appears to be copying prototype functions to the target object, along with data, which is not what I wanted
+
+	for (prop in other){
+		if (other.hasOwnProperty(prop) && !(other[prop] instanceof Function)) {
+			this[prop] = other[prop];
+		}
+    }
 	
 	if (this.children) {
 		var that = this;
