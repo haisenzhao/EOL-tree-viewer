@@ -16,6 +16,8 @@
 <script src="js/lib/jquery.ba-hashchange.js"></script>
 <script src="js/lib/jQuery_mousewheel_plugin.js"></script>
 <script src="js/lib/jscolor/jscolor.js"></script>
+<script src="js/taxon.js"></script>
+<script src="js/controller.js"></script>
 <script src="js/eolapi.js"></script>
 <script src="js/eoltreemap.js"></script>
 
@@ -50,7 +52,7 @@ $(document).ready(function() {
 	
 	var tm = new EOLTreeMap(jQuery("#thejit")[0]);
 	jQuery("#help").html(EOLTreeMap.help);
-	jQuery("#options").append(tm.optionsForm());
+	jQuery("#options").append(tm.getOptionsForm());
 	
 	jQuery(window).bind( 'hashchange', function(){
 		if (location.hash) {

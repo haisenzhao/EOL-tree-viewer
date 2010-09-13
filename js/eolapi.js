@@ -39,6 +39,7 @@ EolApi.prototype.ping = function (success, error) {
 };
 
 EolApi.prototype.hierarchy_entries = function (taxonID, onSuccess) {
+	//TODO handle unknown taxonIDs.  API response is like <response><error><message>Unknown identifier taxonID</message></error></response> 
 	if (taxonID) {
 		var url = "http://" + this.apiHost + "/api/hierarchy_entries/" + this.apiVersion + "/" + taxonID + ".json?callback=?";
 		jQuery.getJSON(url, this.hierarchyConfig, onSuccess);

@@ -1,22 +1,9 @@
-EOLTreeMap.config = {
-	levelsToShow: 1, //number of levels to show at once
-	titleHeight: 22, //taxon name container height
-	offset:2, //controls the thickness of container borders
-	minFontSize:10, //taxon names will shrink to fit until they reach this size
-	
-	Color: {
-		allow: false,
-		minValue: 0,
-		maxValue: 1,
-		minColorValue: [0, 0, 0],
-		maxColorValue: [192, 192, 192]
-	}
-};
-
 function EOLTreeMap(container) {
-
 	this.rootId = container.id;
 	jQuery(container).addClass("treemap-container");
+	
+	this.controller = jQuery.extend(this.controller, new EOLTreeMapController());
+	
 	this.api = new EolApi();
 	this.controller.api = this.api;
 	
@@ -30,7 +17,7 @@ function EOLTreeMap(container) {
 		});
 	};
 
-	
+	TreeUtil.loadSubtrees = EOLTreeMap.loadSubtrees; //override TreeUtil.loadSubtrees with mine
 	
 	this.nodeSelectHandlers = [];
 	this.viewChangeHandlers = [];
@@ -38,17 +25,8 @@ function EOLTreeMap(container) {
 	
 	this.tree = EOLTreeMap.stump(); //start with a stump tree, so view() has something to graft to.  
 	
-	/* Using controller.onBeforeCompute to set this.shownTree before plot is 
-	 * called, where it's needed for leaf calc.  But can't give controller 
-	 * a field referring back to this EOLTreeMap because the reference cycle appears 
-	 * to break Nicolas' JIT class system (it causes an infinite recursion in 
-	 * $unlink())
-	 */
+	/* Add mouse and keyboard event handlers */
 	var that = this;
-	this.controller.setShownTree = function(json) {
-		this.shownTree = json;
-		that.shownTree = json;
-	}
 	
 	jQuery(".selectable").live("mouseenter", function() {
 		that.select(this.id);
@@ -90,8 +68,19 @@ function EOLTreeMap(container) {
 	});
 }
 
-EOLTreeMap.prototype = new TM.Squarified(EOLTreeMap.config);
+EOLTreeMap.prototype = new TM.Squarified();
 EOLTreeMap.prototype.constructor = EOLTreeMap;
+
+EOLTreeMap.prototype.getOptionsForm = function () {
+	var form = this.controller.optionsForm;
+	var that = this;
+	form.change(function() {
+		that.view(null);
+		return false;
+	});
+	
+	return form;
+};
 
 /* 
  * Calls callback(node) when a node is 'selected' (for display, not navigation). 
@@ -141,10 +130,10 @@ EOLTreeMap.prototype.view = function(id) {
 	}
 	
 	var that = this;
-	var node = TreeUtil.getSubtree(this.tree, id);
 
 	post = jQuery.extend({}, this.controller);
 	post.onComplete = function() {
+		that.shownTree = TreeUtil.getSubtree(that.tree, id);
 		that.loadTree(id);
 		jQuery("<img class='freeze-indicator' src='images/Snowflake-black.png'>").appendTo("#" + that.rootId).hide();
 		jQuery.each(that.viewChangeHandlers, function(index, handler) {
@@ -152,14 +141,15 @@ EOLTreeMap.prototype.view = function(id) {
 		});
 	};
 
-	if (!node) {
+	var node = TreeUtil.getSubtree(this.tree, id);
+	if (node) {
+		TreeUtil.loadSubtrees(node, post, this.controller.levelsToShow);
+	} else {
 		this.api.fetchNode(id, function (json) {
 			that.graft(that.tree, json, function (newNode) {
 				TreeUtil.loadSubtrees(newNode, post, that.controller.levelsToShow);
 			});
 		});
-	} else {
-		TreeUtil.loadSubtrees(node, post, this.controller.levelsToShow);
 	}
 	
 	
@@ -206,12 +196,6 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 
 EOLTreeMap.stump = function () {
 	
-	var setChildren = function(taxon) {
-		jQuery.each(taxon.children, function(index, child) {
-			child.parent = taxon;
-		});
-	};
-	
 	/* TODO: put the rest of the roots in (for all classifications).*/
 	var col = new Taxon(null, "COL", "Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009");
 	col.image = {mediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"};
@@ -227,7 +211,7 @@ EOLTreeMap.stump = function () {
 	    new Taxon({taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}),
 	    new Taxon({taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"})
 	];
-	setChildren(col);
+	col.setAsParent();
 	
 	var ncbi = new Taxon(null, "NCBI", "NCBI Taxonomy");
 	ncbi.image = {mediaURL:"http://www.ncbi.nlm.nih.gov/projects/GeneTests/static/img/white_ncbi.png"};
@@ -240,7 +224,7 @@ EOLTreeMap.stump = function () {
 	    new Taxon({taxonID:"28665341", taxonConceptID:"9157757", scientificName:"Viroids"}), 
 	    new Taxon({taxonID:"28612987", taxonConceptID:"5006", scientificName:"Viruses"})
 	];
-	setChildren(ncbi);
+	ncbi.setAsParent();
 	
 	var iucn = new Taxon(null, "IUCN", "IUCN Red List (Species Assessed for Global Conservation)");
 	iucn.image = {mediaURL:"images/iucn_high_res.jpg"};
@@ -252,7 +236,7 @@ EOLTreeMap.stump = function () {
         new Taxon({taxonID:"24913778", taxonConceptID:"281", scientificName:"Plantae"}), 
         new Taxon({taxonID:"24920520", taxonConceptID:"3121393", scientificName:"Protista"})
 	];
-	setChildren(iucn);
+	iucn.setAsParent();
 	
 	var fishbase = new Taxon(null, "FishBase", "FishBase (Fish Species)");
 	fishbase.image = {mediaURL:"http://bio.slu.edu/mayden/cypriniformes/images/fishbase_logo.jpg"};
@@ -261,11 +245,11 @@ EOLTreeMap.stump = function () {
 	fishbase.children = [
 	    new Taxon({taxonID:"24876515", taxonConceptID:"1", scientificName:""})
 	];
-	setChildren(fishbase);
+	fishbase.setAsParent();
 	
 	var tree = new Taxon(null, "HOME", "Classifications");
 	tree.children = [col, iucn, ncbi, fishbase];
-	setChildren(tree);
+	tree.setAsParent();
 
 	//make sure we don't try to do EOL API calls for these dummy nodes
 	tree.apiContentFetched = true;
@@ -298,11 +282,27 @@ EOLTreeMap.resizeImage = function (image, container) {
 
 EOLTreeMap.help = "<div class='help'><h2>Instructions</h2><div><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></div><p>Learn more about the project, download the source code, or leave feedback at the <a href='http://github.com/kurie/EOL-tree-viewer'>GitHub repository</a>. </div>";
 
+/* Overrides TM.plot */
+EOLTreeMap.prototype.plot = function(json) {
+    var coord = json.coord, html = "";
+    
+    if(this.isDisplayLeaf(json)) 
+      return this.createBox(json, coord, null);
+    
+    for(var i=0, ch=json.children; i<ch.length; i++) {
+    	var chi = ch[i], chcoord = chi.coord;
+    	//skip tiny nodes
+    	if(chcoord.width * chcoord.height > 1) {
+    		html+= this.plot(chi);	
+    	}
+    } 
+    return this.createBox(json, coord, html);
+  }
 
 /* Overrides TM.createBox to render a leaf with title and image */
 EOLTreeMap.prototype.createBox = function (json, coord, html) {
 	var box;
-	if (this.leaf(json)) {
+	if (this.isDisplayLeaf(json)) {
 		if (this.config.Color.allow) {
 			box = this.leafBox(json, coord);
 		} else {
@@ -367,8 +367,12 @@ EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
     return "<div class=\"head\" style=\"" + this.toStyle(c) + "\">" + breadcrumbs + "</div>";
 };
 
-EOLTreeMap.prototype.leaf = function (node) {
-	return this.controller.leaf(node, this.shownTree);
+EOLTreeMap.prototype.isDisplayLeaf = function (taxon) {
+	return taxon.leaf() || this.atMaxDisplayDepth(taxon);
+};
+
+EOLTreeMap.prototype.atMaxDisplayDepth = function (taxon) {
+	return taxon.getDepth() - this.shownTree.getDepth() >= this.controller.levelsToShow;
 };
 
 /* Minor edit of processChildrenLayout to sort equal-area nodes alphabetically */
@@ -417,331 +421,14 @@ EOLTreeMap.prototype.setColor = function(taxon) {
       return colorValue = Math.round((((maxcv[i] - mincv[i]) / diff) * (x - minv) + mincv[i])); 
     };
     
-    return EOLTreeMap.$rgbToHex([ comp(0, x), comp(1, x), comp(2, x) ]);
-};
-
-EOLTreeMap.$rgbToHex = function(srcArray, array){
-    if (srcArray.length < 3) return null;
-    if (srcArray.length == 4 && srcArray[3] == 0 && !array) return 'transparent';
-    var hex = [];
-    for (var i = 0; i < 3; i++){
-        var bit = (srcArray[i] - 0).toString(16);
-        hex.push((bit.length == 1) ? '0' + bit : bit);
-    }
-    return (array) ? hex : '#' + hex.join('');
-};
-
-EOLTreeMap.prototype.optionsForm = function () {
-	var form = jQuery("<form name='treemap' onsubmit='return false;'>");
-	
-	var depth = jQuery("<input type='text' name='depth' size=3>");
-	depth.val(this.controller.levelsToShow);
-	jQuery("<div>").append("Maximum depth: ").append(depth).appendTo(form);
-	
-	var showImages = jQuery("<input type='checkbox' name='images'>");
-	showImages[0].checked = !this.controller.Color.allow;
-	jQuery("<div>").append("Display images: ").append(showImages).appendTo(form);
-	
-	var colorRange = jQuery("<fieldset>").append("<legend>Color mapping</legend>");
-	
-	var variableList = jQuery("<select name='variable'>").appendTo(colorRange);
-	variableList.append("<option value='total_descendants'>Descendants</option>");
-	variableList.append("<option value='total_descendants_with_text'>Descendants w/text</option>");
-	variableList.append("<option value='total_descendants_with_images'>Descendants w/images</option>");
-	variableList.append("<option value='total_trusted_text'>Text (trusted)</option>");
-	variableList.append("<option value='total_unreviewed_text'>Text (unreviewed)</option>");
-	variableList.append("<option value='total_trusted_images'>Images (trusted)</option>");
-	variableList.append("<option value='total_unreviewed_images'>Images (unreviewed)</option>");
-	
-	var minValue = jQuery("<input type='text' name='minValue' size=4>");
-	var maxValue = jQuery("<input type='text' name='maxValue' size=4>");
-	var minColor = jQuery("<input class='color' size=6>");
-	var maxColor = jQuery("<input class='color' size=6>");
-	minValue.val(this.config.Color.minValue);
-	maxValue.val(this.config.Color.maxValue);
-	minColor.val(EOLTreeMap.$rgbToHex(this.config.Color.minColorValue));
-	maxColor.val(EOLTreeMap.$rgbToHex(this.config.Color.maxColorValue));
-	jQuery("<div>").append("Variable value min: ").append(minValue).append("max: ").append(maxValue).appendTo(colorRange);
-	jQuery("<div>").append("Color min: ").append(minColor).append("max: ").append(maxColor).appendTo(colorRange);
-	
-	form.append(colorRange);
-	
-	/** maps a color value from [0,1] to [0,255] */
-	var mapTo255 = function(colorValue) {
-		return colorValue * 255;
-	};
-	
-	var that = this;
-	var changeHandler = function () {
-		//TODO validate
-		that.controller.Color.allow = !showImages[0].checked;
-		that.controller.levelsToShow = parseInt(depth.val()); 
-		
-		that.config.Color.minValue = minValue.val();
-		that.config.Color.maxValue = maxValue.val();
-		that.config.Color.minColorValue = jQuery.map(minColor[0].color.rgb, mapTo255);
-		that.config.Color.maxColorValue = jQuery.map(maxColor[0].color.rgb, mapTo255);
-
-		Taxon.prototype.getColor = function(){
-			return this[variableList.val()] || 0;
-		}
-
-		that.view(null);
-		return false;
-	};
-	
-	jQuery("input", form).change(changeHandler);
-	jQuery("select", form).change(changeHandler);
-	jQuery(form).submit(changeHandler);
-	
-	return form;
-};
-
-EOLTreeMap.prototype.controller.onDestroyElement = function (content, tree, isLeaf, leaf) {
-	if (leaf.clearAttributes) { 
-		//Remove all element events before destroying it.
-		leaf.clearAttributes(); 
-	}
-};
-
-EOLTreeMap.prototype.controller.onCreateElement = function (content, node, isLeaf, head, body) {  
-	if (!node) {
-		return;
-	}
-	
-	//if page API content not loaded, get that first and then call this method again
-	var that = this;
-	if (!node.apiContentFetched) {
-		this.api.decorateNode(node, function () {
-			node.apiContentFetched = true;
-			that.onCreateElement(content, node, isLeaf, head, body);
-		});
-	}
-	
-	//if not displaying colors, display images
-//	isLeaf = jQuery(body).children().length === 0; //overwriting JIT's isLeaf because I gave leaves a head and body 
-	isLeaf = this.leaf(node, this.shownTree);
-	if (!this.Color.allow && isLeaf) {
-		if (node.apiContentFetched) {
-			this.insertBodyContent(node, body);
-		} else {
-			var placeholder = new Image();
-			placeholder.src = "images/ajax-loader.gif";
-			jQuery(body).html(placeholder);
-		}
-	}
-};
-
-EOLTreeMap.prototype.controller.onBeforeCompute = function(tree){
-	this.setShownTree(tree);
-};
-
-EOLTreeMap.prototype.controller.onAfterCompute = function (tree) {
-	/*
-	 * Adding these elements to the tree in the plotting (createBox, etc...) 
-	 * functions or in onCreateElement breaks the tree traversal in 
-	 * initializeElements, so I have to add them here
-	 */
-	
-	//Wrap an EOL link around all head divs and a navigation hash link around all of the body divs
-	var that = this;
-	jQuery("#" + tree.id).find("div .content").each(function (index, element) {
-		var node = TreeUtil.getSubtree(tree, this.id);
-		
-		if (node) {
-			var body = jQuery(this).children()[1];
-			var head = null;
-			
-			if (body) {
-				head = jQuery(this).children()[0];
-			} else {
-				body = jQuery(this).children()[0];
-				head = jQuery(body).contents()[0];
-			}
-			
-			if (head && node.taxonConceptID) {
-				jQuery(head).wrap("<a class='head' target='_blank' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
-			}
-			
-			if (body) {
-				jQuery(body).wrap("<a class='body' href=#" + node.id + "></a>");
-			}
-
-		}
-	});
-	
-	jQuery(".treemap-container > div.content div.content > a.head > div.head").each(function (index, element) {
-		var fontsize = jQuery(this).css("font-size").replace("px","");
-		while(this.scrollWidth > this.offsetWidth && fontsize > that.minFontSize) {
-			fontsize -= 1;
-			jQuery(this).css("font-size", fontsize + "px");
-		}
-	});
-}
-
-EOLTreeMap.prototype.controller.request = function (nodeId, level, onComplete) {
-	var controller = this;
-	this.api.fetchNode(nodeId, function (json) {
-		
-		if (level > 0 && json.children && json.children.length > 0) {
-			var childrenToCallBack = json.children.length;
-			
-			jQuery(json.children).each(function (i, child) {
-				controller.request(child.taxonID, level - 1, {onComplete: function (id, childJSON){
-					child.merge(childJSON);
-					childrenToCallBack -= 1;
-					if (childrenToCallBack === 0) {
-						onComplete.onComplete(nodeId, json);
-					}
-				}});
-			});
-		} else {
-			onComplete.onComplete(nodeId, json);
-		}
-	});
-};
-
-EOLTreeMap.prototype.controller.insertBodyContent = function (node, container) {
-	var that = this;
-	
-	if (jQuery(container).children().length === 0) {
-		var placeholder = new Image();
-		placeholder.src = "images/ajax-loader.gif";
-		jQuery(container).html(placeholder);
-	}
-	
-	if (!node.apiContentFetched) {
-		this.api.decorateNode(node, function () {
-			node.apiContentFetched = true;
-			that.insertBodyContent(node, container);
-		});
-		return;
-	}
-	
-	if (node.image) {
-		if (node.image.image && node.image.image.src) { //for some reason, IE (only) is resetting these images to have no src...
-			this.insertImage(node.image.image, container, function(){});
-		} else if (node.image.eolThumbnailURL) { 
-			if (!node.image.thumb || !node.image.thumb.src) {
-				node.image.thumb = new Image();
-				node.image.thumb.src = node.image.eolThumbnailURL;
-			}
-			this.insertImage(node.image.thumb, container, function(){
-				if (node.image.thumb.naturalWidth < jQuery(container).innerWidth()) {
-					node.image.image = new Image();
-					node.image.image.src = node.image.eolMediaURL;
-					that.insertImage(node.image.image, container, function(){});
-				}
-			});
-		} else if (node.image.eolMediaURL) {
-			node.image.image = new Image();
-			node.image.image.src = node.image.eolMediaURL;
-			that.insertImage(node.image.image, container, function(){});
-		} else if (node.image.mediaURL) {
-			node.image.image = new Image();
-			node.image.image.src = node.image.mediaURL;
-			that.insertImage(node.image.image, container, function(){});
-		}
-	} else {
-		jQuery(container).html("No image available.<p><a href='http://www.eol.org/content/page/help_build_eol' target='_blank'>Click here to help EOL find one.</a></p>");
-	}
-
-};
-
-EOLTreeMap.prototype.controller.insertImage = function (image, container, callback) {
-	if (image.complete || image.readyState == "complete") {
-		//have to set these for IE.  (They already exist in other browsers...)
-		if (!image.naturalHeight || !image.naturalWidth) {
-			image.naturalWidth = image.width;
-			image.naturalHeight = image.height;
-		}
-		
-		EOLTreeMap.resizeImage(image, container);
-		jQuery(container).html(image);
-		callback();
-	} else {
-		jQuery(image).load(function handler(eventObject) {
-			if (!image.naturalHeight || !image.naturalWidth) {
-				image.naturalWidth = image.width;
-				image.naturalHeight = image.height;
-			}
-			
-			EOLTreeMap.resizeImage(image, container);
-			jQuery(container).html(image);
-			callback();
-		});
-		
-		jQuery(image).error(function handler(eventObject) {
-			jQuery(container).html("There was an error loading this image.");
-			callback();
-		});
-	}
-};
-
-/* a node is displayed as a leaf if it is at the max displayable depth or if it is actually a leaf in the current tree */
-EOLTreeMap.prototype.controller.leaf = function (node, tree) {
-	tree = tree || this.shownTree;
-	return node.children.length === 0 || node.getDepth() - tree.getDepth() >= this.levelsToShow;
-};
-
-function Taxon(hierarchy_entry, id, name) {
-	this.data = {};
-	this.id = id || hierarchy_entry.taxonID;
-	this.name = name || hierarchy_entry.scientificName;
-	
-	this.merge(hierarchy_entry);
-
-	//make all of the children a Taxon too
-	this.children = [];
-	var that = this;
-	if (hierarchy_entry && hierarchy_entry.children) {
-		jQuery.each(hierarchy_entry.children, function(index, child) { 
-			var childTaxon = new Taxon(child);
-			that.children.push(childTaxon);
-			child.parent = that;
-		});
-	}
-	
-	
-	
-	//TODO do I still need to copy children's taxonID over to id?
-}
-
-Taxon.prototype.getArea = function() {
-	return this.data.$area || Math.sqrt(this.total_descendants) || 1.0;
-};
-
-Taxon.prototype.getColor = function(){
-	return this.data.$color || this.total_descendants_with_text / (this.total_descendants + 1);
-};
-
-Taxon.prototype.getDepth = function() {
-	return this.parent && this.parent.getDepth() + 1 || 0;
-};
-
-Taxon.prototype.merge = function(other) {
-//	jQuery.extend(this, other); //extend appears to be copying prototype functions to the target object, along with data, which is not what I wanted
-
-	for (prop in other){
-		if (other.hasOwnProperty(prop) && !(other[prop] instanceof Function)) {
-			this[prop] = other[prop];
-		}
-    }
-	
-	if (this.children) {
-		var that = this;
-		jQuery.each(this.children, function(index, child){
-			child.parent = that;
-		});
-	}
+    return EOLTreeMapController.$rgbToHex([ comp(0, x), comp(1, x), comp(2, x) ]);
 };
 
 /*
- * Override of JIT TreeUtil.loadSubtrees.  
  * Loads missing nodes in a subtree to a given depth.  
  * Nodes at depth will be fetched from the api, but their children will be id-only placeholders (will not have children or data)
  */
-TreeUtil.loadSubtrees = function (subtree, controller, depth, onComplete) {
+EOLTreeMap.loadSubtrees = function (subtree, controller, depth, onComplete) {
 	onComplete = onComplete || controller.onComplete;
 	if (depth < 0) {
 		onComplete();
