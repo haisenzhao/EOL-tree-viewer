@@ -52,3 +52,33 @@ html,body {
 	height:100%;
 	padding-right:5;
 }
+
+#options form div.row {
+	clear: both;
+}
+
+#options form .col {
+	display: inline-block;
+	margin-right: 1em;
+	vertical-align: baseline;
+}
+
+#options form .col1 {
+	text-align: right;
+	width: 11em;
+}
+
+#options form .col2 {
+	font-size:12px;
+	width: 5em;
+}
+
+#options form .col3 {
+	text-align: right;
+	width: 3em;
+}
+
+#options form .col4 {
+	font-size:12px;
+	width: 5em;
+}

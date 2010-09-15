@@ -18,7 +18,7 @@ function EOLTreeMapController(rootId) {
 		offsetX: 20,
 		offsetY: 20,
 		onShow: function(tooltip, node, isLeaf, domElement) {
-			var statsDisplay = jQuery("<ul><li>descendants:<span id='tip_total_descendants'></span></li><ul><li>descendants with text:<span id='tip_total_descendants_with_text'></span></li><li>descendants with images:<span id='tip_total_descendants_with_images'></span></li></ul><li>text</li><ul><li>trusted text:<span id='tip_total_trusted_text'></span></li><li>unreviewed text:<span id='tip_total_unreviewed_text'></span></li></ul><li>images</li><ul><li>trusted images:<span id='tip_total_trusted_images'></span></li><li>unreviewed images:<span id='tip_total_unreviewed_images'></span></li></ul></ul></div>");
+			var statsDisplay = jQuery("<ul><li>descendants:<span id='tip_total_descendants'></span></li><ul><li>descendants with text:<span id='tip_total_descendants_with_text'></span></li><li>descendants with images:<span id='tip_total_descendants_with_images'></span></li></ul><li>text</li><ul><li>trusted text:<span id='tip_total_trusted_text'></span></li><li>unreviewed text:<span id='tip_total_unreviewed_text'></span></li></ul><li>images</li><ul><li>trusted images:<span id='tip_total_trusted_images'></span></li><li>unreviewed images:<span id='tip_total_unreviewed_images'></span></li></ul></ul>");
 			
 			jQuery('#tip_total_descendants', statsDisplay).text(node.total_descendants + 1);
 				
@@ -29,7 +29,7 @@ function EOLTreeMapController(rootId) {
 			node.total_trusted_images && jQuery('#tip_total_trusted_images', statsDisplay).text(node.total_trusted_images);
 			node.total_unreviewed_images && jQuery('#tip_total_unreviewed_images', statsDisplay).text(node.total_unreviewed_images);
 		
-			tooltip.innerHTML = statsDisplay.html();
+			jQuery(tooltip).html(statsDisplay);
 		}
 	};
 	
@@ -409,8 +409,8 @@ EOLTreeMapController.optionsForm = "<form name='treemap' onsubmit='return false;
 	"<div>Size mapping: <select id='sizeVariable' name='colorVariable'></select></div>" + 
 	"<fieldset><legend>Color mapping</legend>" +
 	"<select id='colorVariable' name='colorVariable'></select>" + 
-	"<div>Variable value min: <input id='colorVariableMinValue' type='text' name='minValue' size='4' /> max: <input id='colorVariableMaxValue' type='text' name='maxValue' size='4' /></div>" + 
-	"<div>Color min: <input id='minColor' class='color' size='6' /> max: <input id='maxColor' class='color' size='6' /></div>" + 
+	"<div class='row'><label class='col col1'>Variable value min:</label><input class='col col2' id='colorVariableMinValue' type='text' name='minValue' size='6' /><label class='col col3'>max:</label><input class='col col4' id='colorVariableMaxValue' type='text' name='maxValue' size='6' /></div>" + 
+	"<div class='row'><label class='col col1'>Color min:</label><input id='minColor' class='color col col2' size='6' /><label class='col col3'>max:</label><input id='maxColor' class='color col col4' size='6' /></div>" + 
 	"</fieldset>" +
 	"</form>";
 
