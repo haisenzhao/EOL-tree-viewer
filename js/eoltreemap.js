@@ -2,7 +2,7 @@ function EOLTreeMap(container) {
 	this.rootId = container.id;
 	jQuery(container).addClass("treemap-container");
 	
-	this.controller = jQuery.extend(this.controller, new EOLTreeMapController());
+	this.controller = this.config = new EOLTreeMapController();
 	
 	this.api = new EolApi();
 	this.controller.api = this.api;
@@ -125,6 +125,14 @@ EOLTreeMap.prototype.select = function(id) {
  * Also, view(null) will just refresh the current view (recalculates layout for browser resize)
  */
 EOLTreeMap.prototype.view = function(id) {
+	
+    /* JIT leaves the layout orientation set to whatever it was at the
+     * end of the last draw, which sometimes makes the layout alternate between 
+     * horizontal and vertical on successive refreshes of the same node, so I'm
+     * resetting it here.
+     */ 	
+	this.layout.orientation = this.config.orientation;
+	 
 	if (id === null) {
 		this.loadTree(this.shownTree.id); //recalculate and refresh
 	}

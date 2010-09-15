@@ -12,8 +12,80 @@ function EOLTreeMapController() {
 		maxColorValue: [192, 192, 192]
 	};
 	
+	//note: adding 1 to node.total_descendants everywhere because node.total_descendants_with_text and total_descendants_with_images include the node itself.
+	this.stats = {
+		total_descendants: {
+			name: "Descendants",
+			func: function (taxon) {
+				return taxon.total_descendants + 1;
+			}
+		},
+		total_descendants_with_text: {
+			name: "Descendants w/text",
+			func: function (taxon) {
+				return taxon.total_descendants_with_text;
+			}
+		},
+		pct_descendants_with_text: {
+			name: "% descendants w/text",
+			func: function (taxon) {
+				return 100 * taxon.total_descendants_with_text / (taxon.total_descendants + 1);
+			}
+		},
+		total_descendants_with_images: {
+			name: "Descendants w/images",
+			func: function (taxon) {
+				return taxon.total_descendants_with_images;
+			}
+		},
+		pct_descendants_with_images: {
+			name: "% descendants w/images",
+			func: function (taxon) {
+				return 100 * taxon.total_descendants_with_images / (taxon.total_descendants + 1);
+			}
+		},
+		total_trusted_text: {
+			name: "Text (trusted)",
+			func: function (taxon) {
+				return taxon.total_trusted_text;
+			}
+		},
+		total_unreviewed_text: {
+			name: "Text (unreviewed)",
+			func: function (taxon) {
+				return taxon.total_unreviewed_text;
+			}
+		},
+		pct_trusted_text: {
+			name: "% Text trusted",
+			func: function (taxon) {
+				return 100 * taxon.total_trusted_text / (taxon.total_trusted_text + taxon.total_unreviewed_text);
+			}
+		},
+		total_trusted_images: {
+			name: "Images (trusted)",
+			func: function (taxon) {
+				return taxon.total_trusted_images;
+			}
+		},
+		total_unreviewed_images: {
+			name: "Images (unreviewed)",
+			func: function (taxon) {
+				return taxon.total_unreviewed_images;
+			}
+		},
+		pct_trusted_images: {
+			name: "% Images trusted",
+			func: function (taxon) {
+				return 100 * taxon.total_trusted_images / (taxon.total_trusted_images + taxon.total_unreviewed_images);
+			}
+		}
+	}
+	
 	this.optionsForm = EOLTreeMapController.bindOptionsForm(this);
 }
+
+EOLTreeMapController.prototype = jQuery.extend(true, {}, TM.innerController, TM.config);
 
 EOLTreeMapController.prototype.onDestroyElement = function (content, tree, isLeaf, leaf) {
 	if (leaf.clearAttributes) { 
@@ -45,6 +117,34 @@ EOLTreeMapController.prototype.onCreateElement = function (content, node, isLeaf
 			placeholder.src = "images/ajax-loader.gif";
 			jQuery(body).html(placeholder);
 		}
+	}
+};
+
+EOLTreeMapController.prototype.onBeforeCompute = function(tree){
+	var that = this;
+	
+	//collect extremes of stats for the current view
+	jQuery.each(this.stats, function (key, stat) {
+		stat.min = Number.MAX_VALUE;
+		stat.max = -Number.MAX_VALUE;
+	});
+
+	TreeUtil.eachLevel(tree, 0, this.levelsToShow, function(node) {
+      	jQuery.each(that.stats, function (key, stat) {
+			var value = stat.func(node);
+			if (value != undefined && !isNaN(value)) {
+				stat.min = Math.min(stat.min, value);
+				stat.max = Math.max(stat.max, value);
+			}
+		});
+	});
+	
+	if (jQuery("#colorVariableMinValue").val().length === 0) {
+		this.Color.minValue = this.stats[jQuery("#colorVariable").val()].min;
+	}
+	
+	if (jQuery("#colorVariableMaxValue").val().length === 0) {
+		this.Color.maxValue = this.stats[jQuery("#colorVariable").val()].max;
 	}
 };
 
@@ -195,67 +295,6 @@ EOLTreeMapController.prototype.isLeafElement = function(element) {
 	return jqElement.children('div').length <= 1 || jqElement.children('div').length === 2 && jqElement.children('div')[1].children.length === 0;
 }
 
-//EOLTreeMapController.prototype.getOptionsForm = function () {
-//	var form = jQuery("<form name='treemap' onsubmit='return false;'>");
-//	
-//	var depth = jQuery("<input type='text' name='depth' size=3>");
-//	depth.val(this.controller.levelsToShow);
-//	jQuery("<div>").append("Maximum depth: ").append(depth).appendTo(form);
-//	
-//	var showImages = jQuery("<input type='checkbox' name='images'>");
-//	showImages[0].checked = !this.controller.Color.allow;
-//	jQuery("<div>").append("Display images: ").append(showImages).appendTo(form);
-//	
-//	var colorRange = jQuery("<fieldset>").append("<legend>Color mapping</legend>");
-//	
-//	var variableList = jQuery("<select name='variable'>").appendTo(colorRange);
-//	variableList.append("<option value='total_descendants'>Descendants</option>");
-//	variableList.append("<option value='total_descendants_with_text'>Descendants w/text</option>");
-//	variableList.append("<option value='total_descendants_with_images'>Descendants w/images</option>");
-//	variableList.append("<option value='total_trusted_text'>Text (trusted)</option>");
-//	variableList.append("<option value='total_unreviewed_text'>Text (unreviewed)</option>");
-//	variableList.append("<option value='total_trusted_images'>Images (trusted)</option>");
-//	variableList.append("<option value='total_unreviewed_images'>Images (unreviewed)</option>");
-//	
-//	var minValue = jQuery("<input type='text' name='minValue' size=4>");
-//	var maxValue = jQuery("<input type='text' name='maxValue' size=4>");
-//	var minColor = jQuery("<input class='color' size=6>");
-//	var maxColor = jQuery("<input class='color' size=6>");
-//	minValue.val(this.config.Color.minValue);
-//	maxValue.val(this.config.Color.maxValue);
-//	minColor.val(EOLTreeMap.$rgbToHex(this.config.Color.minColorValue));
-//	maxColor.val(EOLTreeMap.$rgbToHex(this.config.Color.maxColorValue));
-//	jQuery("<div>").append("Variable value min: ").append(minValue).append("max: ").append(maxValue).appendTo(colorRange);
-//	jQuery("<div>").append("Color min: ").append(minColor).append("max: ").append(maxColor).appendTo(colorRange);
-//	
-//	form.append(colorRange);
-//	
-//	var that = this;
-//	var changeHandler = function () {
-//		//TODO validate
-//		that.controller.Color.allow = !showImages[0].checked;
-//		that.controller.levelsToShow = parseInt(depth.val()); 
-//		
-//		that.config.Color.minValue = minValue.val();
-//		that.config.Color.maxValue = maxValue.val();
-//		that.config.Color.minColorValue = jQuery.map(minColor[0].color.rgb, mapTo255);
-//		that.config.Color.maxColorValue = jQuery.map(maxColor[0].color.rgb, mapTo255);
-//
-//		Taxon.prototype.getColor = function(){
-//			return this[variableList.val()] || 0;
-//		}
-//
-//		that.view(null);
-//		return false;
-//	};
-//	
-//	jQuery("input", form).change(changeHandler);
-//	jQuery("select", form).change(changeHandler);
-//	jQuery(form).submit(changeHandler);
-//	
-//	return form;
-//};
-
 EOLTreeMapController.bindOptionsForm = function (controller) {
 	var form = jQuery(EOLTreeMapController.optionsForm);
 	
@@ -264,15 +303,14 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 		return colorValue * 255;
 	};
 	
-	//add some colorable variables to the select list
-	var variableList = jQuery("#colorVariable", form);
-	variableList.append("<option value='total_descendants'>Descendants</option>")
-		.append("<option value='total_descendants_with_text'>Descendants w/text</option>")
-		.append("<option value='total_descendants_with_images'>Descendants w/images</option>")
-		.append("<option value='total_trusted_text'>Text (trusted)</option>")
-		.append("<option value='total_unreviewed_text'>Text (unreviewed)</option>")
-		.append("<option value='total_trusted_images'>Images (trusted)</option>")
-		.append("<option value='total_unreviewed_images'>Images (unreviewed)</option>");
+	//add stats to the select lists
+	var colorVariableList = jQuery("#colorVariable", form);
+	var sizeVariableList = jQuery("#sizeVariable", form);
+	jQuery.each(controller.stats, function (key, stat) {
+		var option = jQuery("<option>").val(key).text(stat.name);
+		colorVariableList.append(option);
+		sizeVariableList.append(option.clone());
+	});
 	
 	//init values and handle changes 
 	jQuery("#depth", form).val(controller.levelsToShow);
@@ -285,14 +323,23 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 		controller.Color.allow = !this.checked;
 	});
 	
-	jQuery("#colorVariableMinValue", form).val(controller.Color.minValue);
+	jQuery("#colorVariableMinValue", form).val("");
 	jQuery("#colorVariableMinValue", form).change(function() {
-		controller.Color.minValue = this.value;
+		if (this.value.length === 0) {
+			controller.Color.minValue = controller.stats[colorVariableList.val()].min;
+		} else {
+			controller.Color.minValue = parseInt(this.value);
+		}
+		
 	});
 	
-	jQuery("#colorVariableMaxValue", form).val(controller.Color.maxValue);
+	jQuery("#colorVariableMaxValue", form).val("");
 	jQuery("#colorVariableMaxValue", form).change(function() {
-		controller.Color.maxValue = this.value;
+		if (this.value.length === 0) {
+			controller.Color.maxValue = controller.stats[colorVariableList.val()].max;
+		} else {
+			controller.Color.maxValue = parseInt(this.value);
+		}
 	});
 	
 	jQuery("#minColor", form).val(EOLTreeMapController.$rgbToHex(controller.Color.minColorValue));
@@ -305,10 +352,26 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 		controller.Color.maxColorValue = jQuery.map(this.color.rgb, mapTo255);
 	});
 	
-	variableList.change(function() {
-		Taxon.prototype.getColor = function(){
-			return this[variableList.val()] || 0;
+	colorVariableList.change(function() {
+		//update range to current [min,max] if the fields are empty
+		if (jQuery("#colorVariableMinValue", form).val().length === 0) {
+			controller.Color.minValue = controller.stats[colorVariableList.val()].min;
 		}
+		
+		if (jQuery("#colorVariableMaxValue", form).val().length === 0) {
+			controller.Color.maxValue = controller.stats[colorVariableList.val()].max;
+		}
+		
+		//update the taxon color value calculation
+		Taxon.prototype.getColor = function(){
+			return controller.stats[colorVariableList.val()].func(this) || 0;
+		};
+	});
+	
+	sizeVariableList.change(function () {
+		Taxon.prototype.getArea = function() {
+			return Math.sqrt(controller.stats[sizeVariableList.val()].func(this)) || 1.0;
+		};
 	});
 	
 	return form;
@@ -317,6 +380,7 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 EOLTreeMapController.optionsForm = "<form name='treemap' onsubmit='return false;'>" +
 	"<div>Maximum depth: <input id='depth' type='text' name='depth' size='3' /></div>" +
 	"<div>Display images: <input id='displayImages' type='checkbox' name='displayImages' /></div>" +
+	"<div>Size mapping: <select id='sizeVariable' name='colorVariable'></select></div>" + 
 	"<fieldset><legend>Color mapping</legend>" +
 	"<select id='colorVariable' name='colorVariable'></select>" + 
 	"<div>Variable value min: <input id='colorVariableMinValue' type='text' name='minValue' size='4' /> max: <input id='colorVariableMaxValue' type='text' name='maxValue' size='4' /></div>" + 
