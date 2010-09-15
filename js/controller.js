@@ -1,4 +1,5 @@
-function EOLTreeMapController() {
+function EOLTreeMapController(rootId) {
+	this.rootId = rootId;
 	this.levelsToShow = 1; //number of levels to show at once
 	this.titleHeight = 22; //taxon name container height
 	this.offset = 2; //controls the thickness of container borders
@@ -10,6 +11,26 @@ function EOLTreeMapController() {
 		maxValue: 1,
 		minColorValue: [0, 0, 0],
 		maxColorValue: [192, 192, 192]
+	};
+	
+	this.Tips = {
+		allow: true,
+		offsetX: 20,
+		offsetY: 20,
+		onShow: function(tooltip, node, isLeaf, domElement) {
+			var statsDisplay = jQuery("<ul><li>descendants:<span id='tip_total_descendants'></span></li><ul><li>descendants with text:<span id='tip_total_descendants_with_text'></span></li><li>descendants with images:<span id='tip_total_descendants_with_images'></span></li></ul><li>text</li><ul><li>trusted text:<span id='tip_total_trusted_text'></span></li><li>unreviewed text:<span id='tip_total_unreviewed_text'></span></li></ul><li>images</li><ul><li>trusted images:<span id='tip_total_trusted_images'></span></li><li>unreviewed images:<span id='tip_total_unreviewed_images'></span></li></ul></ul></div>");
+			
+			jQuery('#tip_total_descendants', statsDisplay).text(node.total_descendants + 1);
+				
+			node.total_descendants_with_text && jQuery('#tip_total_descendants_with_text', statsDisplay).text(node.total_descendants_with_text).append(" (" + Math.round(100 * node.total_descendants_with_text / (node.total_descendants + 1)) + "%)");
+			node.total_descendants_with_images && jQuery('#tip_total_descendants_with_images', statsDisplay).text(node.total_descendants_with_images).append(" (" + Math.round(100 * node.total_descendants_with_images / (node.total_descendants + 1)) + "%)");
+			node.total_trusted_text && jQuery('#tip_total_trusted_text', statsDisplay).text(node.total_trusted_text);
+			node.total_unreviewed_text && jQuery('#tip_total_unreviewed_text', statsDisplay).text(node.total_unreviewed_text);
+			node.total_trusted_images && jQuery('#tip_total_trusted_images', statsDisplay).text(node.total_trusted_images);
+			node.total_unreviewed_images && jQuery('#tip_total_unreviewed_images', statsDisplay).text(node.total_unreviewed_images);
+		
+			tooltip.innerHTML = statsDisplay.html();
+		}
 	};
 	
 	//note: adding 1 to node.total_descendants everywhere because node.total_descendants_with_text and total_descendants_with_images include the node itself.

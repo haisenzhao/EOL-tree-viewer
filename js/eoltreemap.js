@@ -2,7 +2,9 @@ function EOLTreeMap(container) {
 	this.rootId = container.id;
 	jQuery(container).addClass("treemap-container");
 	
-	this.controller = this.config = new EOLTreeMapController();
+	var controller = new EOLTreeMapController(container.id);
+	this.initialize(controller);
+	this.controller = this.config = controller; //JIT's TM.initialize() uses $merge() which breaks my controller's binding to its options form
 	
 	this.api = new EolApi();
 	this.controller.api = this.api;
