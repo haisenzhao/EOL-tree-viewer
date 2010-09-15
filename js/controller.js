@@ -332,8 +332,35 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 		colorVariableList.append(option);
 		sizeVariableList.append(option.clone());
 	});
+	sizeVariableList.val("total_descendants");
+	colorVariableList.val("pct_descendants_with_text");
 	
-	//init values and handle changes 
+	//add change handlers to the select lists
+	colorVariableList.change(function() {
+		//update range to current [min,max] if the fields are empty
+		if (jQuery("#colorVariableMinValue", form).val().length === 0) {
+			controller.Color.minValue = controller.stats[colorVariableList.val()].min;
+		}
+		
+		if (jQuery("#colorVariableMaxValue", form).val().length === 0) {
+			controller.Color.maxValue = controller.stats[colorVariableList.val()].max;
+		}
+		
+		//update the taxon color value calculation
+		Taxon.prototype.getColor = function(){
+			return controller.stats[colorVariableList.val()].func(this) || 0;
+		};
+	});
+	
+	sizeVariableList.change(function () {
+		Taxon.prototype.getArea = function() {
+			return Math.sqrt(controller.stats[sizeVariableList.val()].func(this)) || 1.0;
+		};
+	});
+	
+	colorVariableList.change();
+	
+	//init values and handle changes for other controls
 	jQuery("#depth", form).val(controller.levelsToShow);
 	jQuery("#depth", form).change(function() {
 		controller.levelsToShow = parseInt(this.value);
@@ -371,28 +398,6 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 	jQuery("#maxColor", form).val(EOLTreeMapController.$rgbToHex(controller.Color.maxColorValue));
 	jQuery("#maxColor", form).change(function() {
 		controller.Color.maxColorValue = jQuery.map(this.color.rgb, mapTo255);
-	});
-	
-	colorVariableList.change(function() {
-		//update range to current [min,max] if the fields are empty
-		if (jQuery("#colorVariableMinValue", form).val().length === 0) {
-			controller.Color.minValue = controller.stats[colorVariableList.val()].min;
-		}
-		
-		if (jQuery("#colorVariableMaxValue", form).val().length === 0) {
-			controller.Color.maxValue = controller.stats[colorVariableList.val()].max;
-		}
-		
-		//update the taxon color value calculation
-		Taxon.prototype.getColor = function(){
-			return controller.stats[colorVariableList.val()].func(this) || 0;
-		};
-	});
-	
-	sizeVariableList.change(function () {
-		Taxon.prototype.getArea = function() {
-			return Math.sqrt(controller.stats[sizeVariableList.val()].func(this)) || 1.0;
-		};
 	});
 	
 	return form;
