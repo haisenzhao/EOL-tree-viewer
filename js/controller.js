@@ -209,7 +209,7 @@ EOLTreeMapController.prototype.onAfterCompute = function (tree) {
 		}
 	});
 	
-	jQuery(".treemap-container > div.content div.content > a.head > div.head").each(function (index, element) {
+	jQuery(".treemap-container > div.content div.content > div.head").each(function (index, element) {
 		var fontsize = jQuery(this).css("font-size").replace("px","");
 		while(this.scrollWidth > this.offsetWidth && fontsize > that.minFontSize) {
 			fontsize -= 1;
