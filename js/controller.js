@@ -3,7 +3,7 @@ function EOLTreeMapController(rootId) {
 	this.levelsToShow = 1; //number of levels to show at once
 	this.titleHeight = 22; //taxon name container height
 	this.offset = 6; //node body padding 
-	this.borderWidth = 1; //makes layout account for treemap.css border width
+	this.borderWidth = 1; //makes layout account for treemap.css border width //TODO make this change in one place.
 	this.minFontSize = 10; //taxon names will shrink to fit until they reach this size
 			
 	this.Color = {
@@ -200,13 +200,12 @@ EOLTreeMapController.prototype.onAfterCompute = function (tree) {
 			}
 			
 			if (head && node.taxonConceptID) {
-				jQuery(head).wrap("<a class='head' target='_blank' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
+				jQuery(head).wrapInner("<a class='head' target='_blank' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
 			}
 			
-			if (body) {
-				jQuery(body).wrap("<a class='body' href=#" + node.id + "></a>");
-			}
-
+//			if (body) {
+//				jQuery(body).wrap("<a class='body' href=#" + node.id + "></a>");
+//			}
 		}
 	});
 	
@@ -320,7 +319,7 @@ EOLTreeMapController.prototype.insertImage = function (image, container, callbac
 
 EOLTreeMapController.prototype.isLeafElement = function(element) {
 	var jqElement = jQuery(element);
-	return jqElement.children('div').length <= 1 || jqElement.children('div').length === 2 && jqElement.children('div')[1].children.length === 0;
+	return jqElement.children('div').length <= 1 || jqElement.children('div').length === 2 && jqElement.children('div').children('div').length === 0;
 }
 
 EOLTreeMapController.bindOptionsForm = function (controller) {

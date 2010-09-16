@@ -38,6 +38,10 @@ function EOLTreeMap(container) {
 		that.select(null);
 	});
 	
+	jQuery("div.content").live("click", function() {
+		window.location.hash = this.id;
+	});
+	
 	jQuery(document).keydown(function (eventObject) {
 		if (eventObject.keyCode === 70) {
 			that.selectionFrozen = true;
