@@ -295,47 +295,49 @@ EOLTreeMap.resizeImage = function (image, container) {
 EOLTreeMap.help = "<div class='help'><h2>Instructions</h2><div><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></div><p>Learn more about the project, download the source code, or leave feedback at the <a href='http://github.com/kurie/EOL-tree-viewer'>GitHub repository</a>. </div>";
 
 /* Overrides TM.plot */
-EOLTreeMap.prototype.plot = function(json) {
-    var coord = json.coord, html = "";
-    
-    if(this.isDisplayLeaf(json)) 
-      return this.createBox(json, coord, null);
-    
-    for(var i=0, ch=json.children; i<ch.length; i++) {
-    	var chi = ch[i], chcoord = chi.coord;
-    	//skip tiny nodes
-    	if(chcoord.width * chcoord.height > 1) {
-    		html+= this.plot(chi);	
-    	}
-    } 
-    return this.createBox(json, coord, html);
-  }
-
-/* Overrides TM.createBox to render a leaf with title and image */
-EOLTreeMap.prototype.createBox = function (json, coord, html) {
-	var box;
-	if (this.isDisplayLeaf(json)) {
-		if (this.config.Color.allow) {
-			box = this.leafBox(json, coord);
-		} else {
-			box = this.headBox(json, coord) + this.bodyBox("", coord);
-		}
-	} else {
-		if (json.id === this.shownTree.id) {
-			box = this.breadcrumbBox(json, coord) + this.bodyBox(html, coord);
-		} else {
-			box = this.headBox(json, coord) + this.bodyBox(html, coord);
+EOLTreeMap.prototype.plot = function(taxon){
+	var coord = taxon.coord, html = "";
+	
+	if (!this.isDisplayLeaf(taxon)) {
+		for (var i = 0, ch = taxon.children; i < ch.length; i++) {
+			var chi = ch[i], chcoord = chi.coord;
+			//skip tiny nodes
+			if (chcoord.width * chcoord.height > 1) {
+				html += this.plot(chi);
+			}
 		}
 	}
+	
+    return this.createBox(taxon, coord, html);
+  }
 
-	return this.contentBox(json, coord, box);
+/* Overrides TM.createBox to render a leaf with head and body */
+EOLTreeMap.prototype.createBox = function (taxon, coord, html) {
+	var box;
+	
+	coord.width -= 2 * this.config.borderWidth;
+	coord.height -= 2 * this.config.borderWidth;
+	
+	if (taxon.id === this.shownTree.id) {
+		//viewed subtree root, show breadcrumbs in place of usual header
+		box = this.breadcrumbBox(taxon, coord) + this.bodyBox(html, coord);
+	} else {
+		box = this.headBox(taxon, coord) + this.bodyBox(html, coord);
+	}
+
+	return this.contentBox(taxon, coord, box);
 };
 
-EOLTreeMap.prototype.contentBox = function(json, coord, html) {
+EOLTreeMap.prototype.contentBox = function(taxon, coord, html) {
     var c = {};
     for(var i in coord) c[i] = coord[i] + "px";
+	
+	//add taxon background color to outermost content box
+	var backgroundColor = this.config.Color.allow && this.setColor(taxon);
+	if(backgroundColor) c['background-color'] = backgroundColor;
+	
     return "<div class=\"content selectable\" style=\"" + this.toStyle(c) 
-       + "\" id=\"" + json.id + "\">" + html + "</div>";
+       + "\" id=\"" + taxon.id + "\">" + html + "</div>";
 };
 
 EOLTreeMap.prototype.breadcrumbBox = function(json, coord) {
@@ -434,6 +436,32 @@ EOLTreeMap.prototype.setColor = function(taxon) {
     };
     
     return EOLTreeMapController.$rgbToHex([ comp(0, x), comp(1, x), comp(2, x) ]);
+};
+
+///** Overriding TM.Squarified.compute to account for border width when sizing children*/
+EOLTreeMap.prototype.compute = function(json, coord) {
+  	coord.width -= 2 * this.controller.borderWidth;
+	coord.height -= 2 * this.controller.borderWidth;
+	
+    if (!(coord.width >= coord.height && this.layout.horizontal())) 
+      this.layout.change();
+    var ch = json.children, config = this.config;
+    if(ch.length > 0) {
+      this.processChildrenLayout(json, ch, coord);
+      for(var i=0; i<ch.length; i++) {
+        var chcoord = ch[i].coord,
+        offst = config.offset,
+        height = chcoord.height - (config.titleHeight + offst),
+        width = chcoord.width - offst;
+        coord = {
+          'width':width,
+          'height':height,
+          'top':0,
+          'left':0
+        };
+        this.compute(ch[i], coord);
+      }
+    }
 };
 
 /*

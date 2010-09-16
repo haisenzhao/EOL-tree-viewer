@@ -2,11 +2,12 @@ function EOLTreeMapController(rootId) {
 	this.rootId = rootId;
 	this.levelsToShow = 1; //number of levels to show at once
 	this.titleHeight = 22; //taxon name container height
-	this.offset = 2; //controls the thickness of container borders
+	this.offset = 6; //node body padding 
+	this.borderWidth = 1; //makes layout account for treemap.css border width
 	this.minFontSize = 10; //taxon names will shrink to fit until they reach this size
 			
 	this.Color = {
-		allow: false,
+		allow: true,
 		minValue: 0,
 		maxValue: 1,
 		minColorValue: [0, 0, 0],
@@ -35,6 +36,12 @@ function EOLTreeMapController(rootId) {
 	
 	//note: adding 1 to node.total_descendants everywhere because node.total_descendants_with_text and total_descendants_with_images include the node itself.
 	this.stats = {
+		none: {
+			name: "None",
+			func: function (taxon) {
+				return 1.0;
+			}
+		},
 		total_descendants: {
 			name: "Descendants",
 			func: function (taxon) {
@@ -130,7 +137,7 @@ EOLTreeMapController.prototype.onCreateElement = function (content, node, isLeaf
 	}
 	
 	//ignore isLeaf parameter, JIT.each is wrong about this.  Use this.isLeafElement(content)
-	if (!this.Color.allow && this.isLeafElement(content)) {
+	if (this.isLeafElement(content)) {
 		if (node.apiContentFetched) {
 			this.insertBodyContent(node, body);
 		} else {
@@ -366,9 +373,14 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 		controller.levelsToShow = parseInt(this.value);
 	});
 	
-	jQuery("#displayImages", form)[0].checked = !controller.Color.allow;
+	jQuery("#displayImages", form)[0].checked = true;
 	jQuery("#displayImages", form).change(function() {
-		controller.Color.allow = !this.checked;
+//		controller.Color.allow = !this.checked;
+		if (this.checked) {
+			jQuery("#" + controller.rootId).removeClass("hide-images");
+		} else {
+			jQuery("#" + controller.rootId).addClass("hide-images");
+		}
 	});
 	
 	jQuery("#colorVariableMinValue", form).val("");
