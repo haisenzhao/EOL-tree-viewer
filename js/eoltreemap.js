@@ -279,6 +279,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 		var calcWidth = (container.innerHeight() / image.naturalHeight) * image.naturalWidth;
 		image.height = container.innerHeight();
 		image.width = calcWidth; //force IE to maintain aspect ratio
+		jQuery(image).css("marginTop", 0);
 		jQuery(image).css("marginLeft",  (container.innerWidth() - calcWidth) / 2);
 	}
 	else {
@@ -287,6 +288,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 		image.width = container.innerWidth();
 		image.height = calcHeight; //force IE to maintain aspect ratio
 		jQuery(image).css("marginTop",  (container.innerHeight() - calcHeight) / 2);
+		jQuery(image).css("marginLeft", 0);
 	}
 };
 
