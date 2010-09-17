@@ -167,13 +167,7 @@ EOLTreeMapController.prototype.onBeforeCompute = function(tree){
 		});
 	});
 	
-	if (jQuery("#colorVariableMinValue").val().length === 0) {
-		this.Color.minValue = this.stats[jQuery("#colorVariable").val()].min;
-	}
-	
-	if (jQuery("#colorVariableMaxValue").val().length === 0) {
-		this.Color.maxValue = this.stats[jQuery("#colorVariable").val()].max;
-	}
+	this.updateVariableRange();
 };
 
 EOLTreeMapController.prototype.onAfterCompute = function (tree) {
@@ -200,12 +194,8 @@ EOLTreeMapController.prototype.onAfterCompute = function (tree) {
 			}
 			
 			if (head && node.taxonConceptID) {
-				jQuery(head).wrapInner("<a class='head' target='_blank' href=http://www.eol.org/" + node.taxonConceptID + "></a>");
+				jQuery(head).wrapInner("<a class='head' target='_blank' href=http://www.eol.org/" + node.taxonConceptID + " onclick='window.event.stopPropagation();'></a>");
 			}
-			
-//			if (body) {
-//				jQuery(body).wrap("<a class='body' href=#" + node.id + "></a>");
-//			}
 		}
 	});
 	
@@ -282,7 +272,7 @@ EOLTreeMapController.prototype.insertBodyContent = function (node, container) {
 			that.insertImage(node.image.image, container, function(){});
 		}
 	} else {
-		jQuery(container).html("No image available.<p><a href='http://www.eol.org/content/page/help_build_eol' target='_blank'>Click here to help EOL find one.</a></p>");
+		jQuery(container).html("No image available.<p><a href='http://www.eol.org/content/page/help_build_eol#images' target='_blank'>Click here to help EOL find one.</a></p>");
 	}
 
 };
@@ -322,6 +312,21 @@ EOLTreeMapController.prototype.isLeafElement = function(element) {
 	return jqElement.children('div').length <= 1 || jqElement.children('div').length === 2 && jqElement.children('div').children('div').length === 0;
 }
 
+EOLTreeMapController.prototype.updateVariableRange = function(){
+	//update range to current [min,max] if the fields are empty
+	if (this.optionsForm) {
+		var colorVariableList = jQuery("#colorVariable", this.optionsForm);
+		
+		if (jQuery("#colorVariableMinValue", this.optionsForm).val().length === 0) {
+			this.Color.minValue = this.stats[colorVariableList.val()].min;
+		}
+		
+		if (jQuery("#colorVariableMaxValue", this.optionsForm).val().length === 0) {
+			this.Color.maxValue = this.stats[colorVariableList.val()].max;
+		}
+	}
+}
+
 EOLTreeMapController.bindOptionsForm = function (controller) {
 	var form = jQuery(EOLTreeMapController.optionsForm);
 	
@@ -343,14 +348,8 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 	
 	//add change handlers to the select lists
 	colorVariableList.change(function() {
-		//update range to current [min,max] if the fields are empty
-		if (jQuery("#colorVariableMinValue", form).val().length === 0) {
-			controller.Color.minValue = controller.stats[colorVariableList.val()].min;
-		}
 		
-		if (jQuery("#colorVariableMaxValue", form).val().length === 0) {
-			controller.Color.maxValue = controller.stats[colorVariableList.val()].max;
-		}
+		controller.updateVariableRange();
 		
 		//update the taxon color value calculation
 		Taxon.prototype.getColor = function(){

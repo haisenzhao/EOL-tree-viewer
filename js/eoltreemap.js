@@ -42,6 +42,16 @@ function EOLTreeMap(container) {
 		window.location.hash = this.id;
 	});
 	
+	//show EOL logo when hovering a link out to EOL
+	jQuery("a.head").live("mouseenter", function () {
+		jQuery("#_tooltip").html("<img src='images/eol_logo.gif' />");
+	});
+	
+	//force body element to trigger mouseovers on its parent (div.content)
+	jQuery("div.body").live("mouseover", function () {
+		this.parent().mouseover();
+	});
+	
 	jQuery(document).keydown(function (eventObject) {
 		if (eventObject.keyCode === 70) {
 			that.selectionFrozen = true;
@@ -132,6 +142,9 @@ EOLTreeMap.prototype.select = function(id) {
  */
 EOLTreeMap.prototype.view = function(id) {
 	
+	//show a progress pointer
+	jQuery("#" + this.rootId).css("cursor", "progress");
+	
     /* JIT leaves the layout orientation set to whatever it was at the
      * end of the last draw, which sometimes makes the layout alternate between 
      * horizontal and vertical on successive refreshes of the same node, so I'm
@@ -153,6 +166,8 @@ EOLTreeMap.prototype.view = function(id) {
 		jQuery.each(that.viewChangeHandlers, function(index, handler) {
 			handler(that.shownTree);
 		});
+		
+		jQuery("#" + that.rootId).css("cursor", "auto");
 	};
 
 	var node = TreeUtil.getSubtree(this.tree, id);
