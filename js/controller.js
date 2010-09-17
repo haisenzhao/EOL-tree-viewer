@@ -11,7 +11,7 @@ function EOLTreeMapController(rootId) {
 		minValue: 0,
 		maxValue: 1,
 		minColorValue: [0, 0, 0],
-		maxColorValue: [192, 192, 192]
+		maxColorValue: [128, 128, 128]
 	};
 	
 	this.Tips = {
@@ -344,7 +344,7 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 		sizeVariableList.append(option.clone());
 	});
 	sizeVariableList.val("total_descendants");
-	colorVariableList.val("pct_descendants_with_text");
+	colorVariableList.val("none");
 	
 	//add change handlers to the select lists
 	colorVariableList.change(function() {
@@ -429,7 +429,7 @@ EOLTreeMapController.$rgbToHex = function(srcArray, array){
     if (srcArray.length == 4 && srcArray[3] == 0 && !array) return 'transparent';
     var hex = [];
     for (var i = 0; i < 3; i++){
-        var bit = (srcArray[i] - 0).toString(16);
+        var bit = (Math.round(srcArray[i]) - 0).toString(16);
         hex.push((bit.length == 1) ? '0' + bit : bit);
     }
     return (array) ? hex : '#' + hex.join('');

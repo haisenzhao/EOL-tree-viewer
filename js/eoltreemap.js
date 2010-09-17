@@ -49,7 +49,7 @@ function EOLTreeMap(container) {
 	
 	//force body element to trigger mouseovers on its parent (div.content)
 	jQuery("div.body").live("mouseover", function () {
-		this.parent().mouseover();
+		jQuery(this).parent().mouseover();
 	});
 	
 	jQuery(document).keydown(function (eventObject) {
@@ -444,6 +444,11 @@ EOLTreeMap.prototype.setColor = function(taxon) {
     minv = c.minValue,
     diff = maxv - minv,
     x = (taxon.getColor() - 0);
+	
+	//if the value range has just one value, return the max color
+	if (diff === 0) {
+		return EOLTreeMapController.$rgbToHex(c.maxColorValue);
+	}
 	
 	//clamp x to range [minv,maxv]
 	x = Math.max(x, minv);
