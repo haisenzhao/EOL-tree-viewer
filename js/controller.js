@@ -428,11 +428,11 @@ EOLTreeMapController.optionsForm = "<form name='treemap' onsubmit='return false;
 	"<div>Maximum depth: <input id='depth' type='text' name='depth' size='3' /></div>" +
 	"<div>Display images: <input id='displayImages' type='checkbox' name='displayImages' /></div>" +
 	"<fieldset><legend>Size mapping</legend>" +
-	"<div>Variable:<select id='sizeVariable' name='sizeVariable'></select></div>" + 
-	"<div>Scaling: <select id='sizeScaling' name='sizeScaling'></select></div>" +
+	"<div><label class='col col1'>Variable:</label><select id='sizeVariable' name='sizeVariable'></select></div>" + 
+	"<div><label class='col col1'>Scaling:</label><select id='sizeScaling' name='sizeScaling'></select></div>" +
 	"</fieldset>" +
 	"<fieldset><legend>Color mapping</legend>" +
-	"<div>Variable:<select id='colorVariable' name='colorVariable'></select></div>" + 
+	"<div class='row'><label class='col col1'>Variable:</label><select id='colorVariable' name='colorVariable'></select></div>" + 
 	"<div class='row'><label class='col col1'>Variable min:</label><input class='col col2' id='colorVariableMinValue' type='text' name='minValue' size='6' /><label class='col col3'>max:</label><input class='col col4' id='colorVariableMaxValue' type='text' name='maxValue' size='6' /></div>" + 
 	"<div class='row'><label class='col col1'>Color min:</label><input id='minColor' class='color col col2' size='6' /><label class='col col3'>max:</label><input id='maxColor' class='color col col4' size='6' /></div>" + 
 	"</fieldset>" +

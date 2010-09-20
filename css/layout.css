@@ -65,11 +65,10 @@ html,body {
 
 #options form .col1 {
 	text-align: right;
-	width: 11em;
+	width: 8em;
 }
 
 #options form .col2 {
-	font-size:12px;
 	width: 5em;
 }
 
@@ -79,8 +78,11 @@ html,body {
 }
 
 #options form .col4 {
-	font-size:12px;
 	width: 5em;
+}
+
+#options form input {
+	font-size:12px;
 }
 
 fieldset {
