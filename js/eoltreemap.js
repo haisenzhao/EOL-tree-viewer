@@ -90,10 +90,27 @@ EOLTreeMap.prototype.constructor = EOLTreeMap;
 EOLTreeMap.prototype.getOptionsForm = function () {
 	var form = this.controller.optionsForm;
 	var that = this;
+	
+	// any form element change triggers a refresh
 	form.change(function() {
 		that.view(null);
 		return false;
 	});
+	
+	// size/scale binding to taxon
+	var sizeVariableList = jQuery("#sizeVariable", form);
+	var scaleVariableList = jQuery("#sizeScaling", form);
+	Taxon.prototype.getArea = function() {
+		var scaleFunc = that.controller.scale[scaleVariableList.val()].func;
+		var value = that.controller.stats[sizeVariableList.val()].func(this) || 1.0;
+		return scaleFunc(value);
+	};
+	
+	// color binding to taxon
+	var colorVariableList = jQuery("#colorVariable", form);
+	Taxon.prototype.getColor = function(){
+		return that.controller.stats[colorVariableList.val()].func(this) || 0;
+	};
 	
 	return form;
 };

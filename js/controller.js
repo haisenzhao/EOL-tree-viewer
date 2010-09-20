@@ -108,7 +108,24 @@ function EOLTreeMapController(rootId) {
 				return 100 * taxon.total_trusted_images / (taxon.total_trusted_images + taxon.total_unreviewed_images);
 			}
 		}
-	}
+	};
+	
+	this.scale = {
+		indentity: {
+			name: "No scaling",
+			func: function (value) {
+				return value;
+			}
+		},
+		log: {
+			name: "Log",
+			func: Math.log
+		},
+		sqrt: {
+			name: "Square root",
+			func: Math.sqrt
+		}
+	};
 	
 	this.optionsForm = EOLTreeMapController.bindOptionsForm(this);
 }
@@ -346,25 +363,19 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 	sizeVariableList.val("total_descendants");
 	colorVariableList.val("none");
 	
-	//add change handlers to the select lists
+	var scaleVariableList = jQuery("#sizeScaling", form);
+	jQuery.each(controller.scale, function (key, func) {
+		var option = jQuery("<option>").val(key).text(func.name);
+		scaleVariableList.append(option);
+	});
+	scaleVariableList.val("sqrt");
+	
+	//on change, update Color.minValue and Color.maxValue
 	colorVariableList.change(function() {
-		
 		controller.updateVariableRange();
-		
-		//update the taxon color value calculation
-		Taxon.prototype.getColor = function(){
-			return controller.stats[colorVariableList.val()].func(this) || 0;
-		};
 	});
-	
-	sizeVariableList.change(function () {
-		Taxon.prototype.getArea = function() {
-			return Math.sqrt(controller.stats[sizeVariableList.val()].func(this)) || 1.0;
-		};
-	});
-	
 	colorVariableList.change();
-	
+
 	//init values and handle changes for other controls
 	jQuery("#depth", form).val(controller.levelsToShow);
 	jQuery("#depth", form).change(function() {
@@ -373,7 +384,6 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 	
 	jQuery("#displayImages", form)[0].checked = true;
 	jQuery("#displayImages", form).change(function() {
-//		controller.Color.allow = !this.checked;
 		if (this.checked) {
 			jQuery("#" + controller.rootId).removeClass("hide-images");
 		} else {
@@ -414,13 +424,18 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 }
 
 EOLTreeMapController.optionsForm = "<form name='treemap' onsubmit='return false;'>" +
+	"<fieldset><legend>Treemap options</legend>" +
 	"<div>Maximum depth: <input id='depth' type='text' name='depth' size='3' /></div>" +
 	"<div>Display images: <input id='displayImages' type='checkbox' name='displayImages' /></div>" +
-	"<div>Size mapping: <select id='sizeVariable' name='colorVariable'></select></div>" + 
+	"<fieldset><legend>Size mapping</legend>" +
+	"<div>Variable:<select id='sizeVariable' name='sizeVariable'></select></div>" + 
+	"<div>Scaling: <select id='sizeScaling' name='sizeScaling'></select></div>" +
+	"</fieldset>" +
 	"<fieldset><legend>Color mapping</legend>" +
-	"<select id='colorVariable' name='colorVariable'></select>" + 
-	"<div class='row'><label class='col col1'>Variable value min:</label><input class='col col2' id='colorVariableMinValue' type='text' name='minValue' size='6' /><label class='col col3'>max:</label><input class='col col4' id='colorVariableMaxValue' type='text' name='maxValue' size='6' /></div>" + 
+	"<div>Variable:<select id='colorVariable' name='colorVariable'></select></div>" + 
+	"<div class='row'><label class='col col1'>Variable min:</label><input class='col col2' id='colorVariableMinValue' type='text' name='minValue' size='6' /><label class='col col3'>max:</label><input class='col col4' id='colorVariableMaxValue' type='text' name='maxValue' size='6' /></div>" + 
 	"<div class='row'><label class='col col1'>Color min:</label><input id='minColor' class='color col col2' size='6' /><label class='col col3'>max:</label><input id='maxColor' class='color col col4' size='6' /></div>" + 
+	"</fieldset>" +
 	"</fieldset>" +
 	"</form>";
 
