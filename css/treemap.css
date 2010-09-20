@@ -25,8 +25,8 @@
 	text-overflow:ellipsis;
 }
 
-.treemap-container div.head.highlight {
-	background-color:silver;	
+.treemap-container div.content.highlight {
+	border-color: white;
 }
 
 .treemap-container > div.content > div.head {

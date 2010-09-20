@@ -82,6 +82,13 @@ function EOLTreeMap(container) {
 		}
 		jQuery("img.freeze-indicator").detach().appendTo(newParent);
 	});
+	
+	this.addNodeSelectHandler(function (node) {
+		//add highlight class to selected node and ancestors
+		if (node && node.id) {
+			jQuery("#" + that.rootId + " div.content").removeClass("highlight").filter("#" + node.id).addClass("highlight").parents("div.content").addClass("highlight");
+		}
+	});
 }
 
 EOLTreeMap.prototype = new TM.Squarified();
