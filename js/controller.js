@@ -107,6 +107,12 @@ function EOLTreeMapController(rootId) {
 			func: function (taxon) {
 				return 100 * taxon.total_trusted_images / (taxon.total_trusted_images + taxon.total_unreviewed_images);
 			}
+		},
+		depth: {
+			name: "classification depth",
+			func: function (taxon) {
+				return taxon.getDepth();
+			}
 		}
 	};
 	

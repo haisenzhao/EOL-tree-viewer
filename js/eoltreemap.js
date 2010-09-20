@@ -102,8 +102,8 @@ EOLTreeMap.prototype.getOptionsForm = function () {
 	var scaleVariableList = jQuery("#sizeScaling", form);
 	Taxon.prototype.getArea = function() {
 		var scaleFunc = that.controller.scale[scaleVariableList.val()].func;
-		var value = that.controller.stats[sizeVariableList.val()].func(this) || 1.0;
-		return scaleFunc(value);
+		var value = that.controller.stats[sizeVariableList.val()].func(this);
+		return scaleFunc(value) || 1.0;
 	};
 	
 	// color binding to taxon
