@@ -100,7 +100,7 @@ EOLTreeMap.prototype.getOptionsForm = function () {
 	
 	// any form element change triggers a refresh
 	form.change(function() {
-		that.view(null);
+		that.view(that.shownTree.id);
 		return false;
 	});
 	

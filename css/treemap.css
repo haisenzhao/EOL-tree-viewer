@@ -7,7 +7,6 @@
 .treemap-container {
 	line-height:normal;
 	text-align: center;
-	font-size:16px;
     color:white;
 }
 
@@ -19,22 +18,20 @@
 	overflow:hidden;
 }
 
-.treemap-container div.head {
-    white-space:nowrap;
-	overflow:hidden;
-	text-overflow:ellipsis;
-}
-
 .treemap-container div.content.highlight {
 	border-color: white;
 }
 
-.treemap-container > div.content > div.head {
-
+.treemap-container div.head {
+    white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	font-size:16px;
 }
 
 .treemap-container div.body {
 	overflow:hidden;
+	font-size:10px;
 }
 
 .treemap-container a.body {
