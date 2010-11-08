@@ -11,7 +11,7 @@ function EOLTreeMapController(rootId) {
 		minValue: 0,
 		maxValue: 1,
 		minColorValue: [0, 0, 0],
-		maxColorValue: [128, 128, 128]
+		maxColorValue: [0, 192, 0]
 	};
 	
 	this.Tips = {
@@ -339,15 +339,30 @@ EOLTreeMapController.prototype.updateVariableRange = function(){
 	//update range to current [min,max] if the fields are empty
 	if (this.optionsForm) {
 		var colorVariableList = jQuery("#colorVariable", this.optionsForm);
+		var minValue = jQuery("#colorVariableMinValue", this.optionsForm).val();
+		var maxValue = jQuery("#colorVariableMaxValue", this.optionsForm).val()
 		
-		if (jQuery("#colorVariableMinValue", this.optionsForm).val().length === 0) {
+		if (minValue.length === 0) {
 			this.Color.minValue = this.stats[colorVariableList.val()].min;
+		} else {
+			this.Color.minValue = parseInt(minValue);
 		}
 		
-		if (jQuery("#colorVariableMaxValue", this.optionsForm).val().length === 0) {
+		if (maxValue.length === 0) {
 			this.Color.maxValue = this.stats[colorVariableList.val()].max;
+		} else {
+			this.Color.maxValue = parseInt(maxValue);
 		}
+			
+		this.updateVariableDisplay();
 	}
+}
+
+EOLTreeMapController.prototype.updateVariableDisplay = function() {
+	jQuery("#colorVariableMinLabel").text(this.Color.minValue.toPrecision(3));
+	jQuery("#colorVariableMaxLabel").text(this.Color.maxValue.toPrecision(3));
+	jQuery("#colorGradient stop[offset='0']").attr("stop-color", EOLTreeMapController.$rgbToHex(this.Color.minColorValue));
+	jQuery("#colorGradient stop[offset='1']").attr("stop-color", EOLTreeMapController.$rgbToHex(this.Color.maxColorValue));
 }
 
 EOLTreeMapController.bindOptionsForm = function (controller) {
@@ -399,31 +414,24 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 	
 	jQuery("#colorVariableMinValue", form).val("");
 	jQuery("#colorVariableMinValue", form).change(function() {
-		if (this.value.length === 0) {
-			controller.Color.minValue = controller.stats[colorVariableList.val()].min;
-		} else {
-			controller.Color.minValue = parseInt(this.value);
-		}
-		
+		controller.updateVariableRange();
 	});
 	
 	jQuery("#colorVariableMaxValue", form).val("");
 	jQuery("#colorVariableMaxValue", form).change(function() {
-		if (this.value.length === 0) {
-			controller.Color.maxValue = controller.stats[colorVariableList.val()].max;
-		} else {
-			controller.Color.maxValue = parseInt(this.value);
-		}
+		controller.updateVariableRange();
 	});
 	
 	jQuery("#minColor", form).val(EOLTreeMapController.$rgbToHex(controller.Color.minColorValue));
 	jQuery("#minColor", form).change(function() {
 		controller.Color.minColorValue = jQuery.map(this.color.rgb, mapTo255);
+		controller.updateVariableDisplay();
 	});
 	
 	jQuery("#maxColor", form).val(EOLTreeMapController.$rgbToHex(controller.Color.maxColorValue));
 	jQuery("#maxColor", form).change(function() {
 		controller.Color.maxColorValue = jQuery.map(this.color.rgb, mapTo255);
+		controller.updateVariableDisplay();
 	});
 	
 	return form;
@@ -439,8 +447,9 @@ EOLTreeMapController.optionsForm = "<form name='treemap' onsubmit='return false;
 	"</fieldset>" +
 	"<fieldset><legend>Color mapping</legend>" +
 	"<div class='row'><label class='col col1'>Variable:</label><select id='colorVariable' name='colorVariable'></select></div>" + 
-	"<div class='row'><label class='col col1'>Variable min:</label><input class='col col2' id='colorVariableMinValue' type='text' name='minValue' size='6' /><label class='col col3'>max:</label><input class='col col4' id='colorVariableMaxValue' type='text' name='maxValue' size='6' /></div>" + 
-	"<div class='row'><label class='col col1'>Color min:</label><input id='minColor' class='color col col2' size='6' /><label class='col col3'>max:</label><input id='maxColor' class='color col col4' size='6' /></div>" + 
+	"<div id='colorVariableRange' class='row'><label class='col col1'>Variable min:</label><input class='col col2' id='colorVariableMinValue' type='text' name='minValue' size='6' /><label class='col col3'>max:</label><input class='col col4' id='colorVariableMaxValue' type='text' name='maxValue' size='6' /></div>" + 
+	"<div id='colorRange' class='row'><label class='col col1'>Color min:</label><input id='minColor' class='color col col2' size='6' /><label class='col col3'>max:</label><input id='maxColor' class='color col col4' size='6' /></div>" + 
+	"<div id='color-display'><svg id='gradientBar'><rect x='0' y='0' width='100%' height='100%' fill='url(#colorGradient)'/><linearGradient id='colorGradient'><stop offset='0' stop-color='white'/><stop offset='1' stop-color='black'/></linearGradient></svg><div><span id='colorVariableMinLabel'>min</span><span id='colorVariableMaxLabel'>max</span><br/></div></div>" + 
 	"</fieldset>" +
 	"</fieldset>" +
 	"</form>";

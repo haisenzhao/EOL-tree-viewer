@@ -469,9 +469,9 @@ EOLTreeMap.prototype.setColor = function(taxon) {
     diff = maxv - minv,
     x = (taxon.getColor() - 0);
 	
-	//if the value range has just one value, return the max color
+	//if the value range has just one value, return the min color
 	if (diff === 0) {
-		return EOLTreeMapController.$rgbToHex(c.maxColorValue);
+		return EOLTreeMapController.$rgbToHex(c.minColorValue);
 	}
 	
 	//clamp x to range [minv,maxv]
