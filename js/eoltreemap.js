@@ -233,8 +233,8 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 			var nextAncestorID;
 			if (subtree === this.tree) {
 				//we're at the root, so the next ancestor is the classification
-				nextAncestorID = jQuery.grep(this.tree.children, function (classification) { return classification.name == json.nameAccordingTo })[0].id;
-			} else if (subtree.name == json.nameAccordingTo) {
+				nextAncestorID = jQuery.grep(this.tree.children, function (classification) { return classification.name == json.nameAccordingTo[0] })[0].id;
+			} else if (subtree.name == json.nameAccordingTo[0]) {
 				//we're at the classification, so the next ancestor is the hierarchy_entry root (e.g. the kingdom)
 				nextAncestorID = json.ancestors[0].taxonID;
 			} else {
@@ -431,6 +431,18 @@ EOLTreeMap.prototype.isDisplayLeaf = function (taxon) {
 EOLTreeMap.prototype.atMaxDisplayDepth = function (taxon) {
 	return taxon.getDepth() - this.shownTree.getDepth() >= this.controller.levelsToShow;
 };
+
+EOLTreeMap.prototype.currentHierarchyName = function () {
+	if (this.shownTree) {
+		if (this.shownTree.nameAccordingTo) {
+			return this.shownTree.nameAccordingTo[0];
+		} else {
+			return this.shownTree.name; //nameAccordingTo at the root of a classification is just the name of that classification
+		}
+	}
+	
+	return null;
+}
 
 /* Minor edit of processChildrenLayout to sort equal-area nodes alphabetically */
 EOLTreeMap.prototype.processChildrenLayout = function (par, ch, coord) {
