@@ -41,7 +41,7 @@
 </ul>
 <div id='detail'>Hold the F key to freeze this panel<h1 id="detail-title"></h1><h2 id="detail-subtitle"></h2><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
 <div id='statistics'><ul><li>descendants:<span id='total_descendants'></span></li><ul><li>descendants with text:<span id='total_descendants_with_text'></span></li><li>descendants with images:<span id='total_descendants_with_images'></span></li></ul><li>text</li><ul><li>trusted text:<span id='total_trusted_text'></span></li><li>unreviewed text:<span id='total_unreviewed_text'></span></li></ul><li>images</li><ul><li>trusted images:<span id='total_trusted_images'></span></li><li>unreviewed images:<span id='total_unreviewed_images'></span></li></ul></ul></div>
-<div id='search'><form onsubmit="return false;">Name: <input type='text' name='query'/></form>Matches in the current classification:<ul id='classification-search-results'></ul>Matches in the other classifications:<ul id='other-search-results'></ul></div>
+<div id='search'><form onsubmit="return false;">Name: <input type='text' name='query'/></form><div id='search-results'></div></div>
 <div id='options'></div>
 <div id='help'>[Help text]</div>;
 </div>
@@ -146,19 +146,56 @@ $(document).ready(function() {
 	jQuery("#search").submit(function () {
 		var query = jQuery("#search input").val();
 		if (query) {
-			jQuery("#classification-search-results").empty();
-			jQuery("#other-search-results").empty();
-			//TODO add a busy indicator
+			jQuery("#search-results").html("<img src='images/ajax-loader.gif' />");
+			
+			//a function for filtering taxonConcepts below
+			var nameAccordingTo = tm.currentHierarchyName();
+			var hierarchyMatch = function (taxonConcept) {
+				return taxonConcept.nameAccordingTo === nameAccordingTo;
+			};
 			
 			var api = new EolApi();
-			api.searchHierarchyEntries(query, tm.currentHierarchyName(), function (json) {
+			api.searchHierarchyEntries(query, function (json) {
+				jQuery("#search-results").empty();
+				var thisClassificationMsg = jQuery("<div>").text("No results found in the current classification").appendTo("#search-results");
+				var thisClassificationResults = jQuery("<ul>").appendTo("#search-results");
+				var otherClassificationMsg = jQuery("<div>").text("No results found in other classifications").appendTo("#search-results");
+				var otherClassificationResults = jQuery("<ul>").appendTo("#search-results");
+				var hoverDetails = jQuery("<div id='search-result-details'>").appendTo("#search-results");
+				
 				jQuery.each(json.results, function (index, result) {
-					if (result.taxonID) {
-						jQuery("#classification-search-results").append("<li><a href=#" + result.taxonID + ">" + result.title + "</a></li>");
+					var match = jQuery.grep(result.page.taxonConcepts, hierarchyMatch);
+					var item;
+
+					var hoverIn = function (eventObject) {
+						hoverDetails.html("<h3>Content matched:</h3>").append(result.content);
+						hoverDetails.show();
+					};
+
+					var hoverOut = function (eventObject) {
+						hoverDetails.hide();
+					};
+
+					if (match.length > 0) {
+						thisClassificationResults.show();
+						thisClassificationMsg.html("<h3>Results in the current classification:</h3>");
+						var link = jQuery("<a href=#" + match[0].identifier + ">" + match[0].scientificName + "</a>");
+						item = jQuery("<li class='same-classification-result'>").append(link).appendTo(thisClassificationResults);
+
 					}
-					else
+					else if (result.page.taxonConcepts && result.page.taxonConcepts.length > 0)
 					{
-						jQuery("#other-search-results").append("<li>" + result.title + "</li>");
+						otherClassificationResults.show();
+						otherClassificationMsg.html("<h3>Results in other classifications:</h3>");
+						item = jQuery("<li class='other-result'>").append(result.title).appendTo(otherClassificationResults);
+						var links = jQuery("<ul>").appendTo(item);
+						jQuery.each(result.page.taxonConcepts, function(index, taxonConcept) {
+							links.append("<li><a href=#" + taxonConcept.identifier + ">" + taxonConcept.nameAccordingTo + "</a></li>");
+						});
+					}
+
+					if (item) {
+						item.hover(hoverIn, hoverOut);
 					}
 				});
 			});

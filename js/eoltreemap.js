@@ -136,13 +136,13 @@ EOLTreeMap.prototype.addViewChangeHandler = function(handler){
 
 EOLTreeMap.prototype.select = function(id) {
 	if (!this.selectionFrozen) {
-		this.selectedNode = TreeUtil.getSubtree(this.tree, id);
+		var selectedNode = TreeUtil.getSubtree(this.tree, id);
 		var that = this;
 		
-		if (this.selectedNode && !this.selectedNode.apiContentFetched) {
+		if (selectedNode && !selectedNode.apiContentFetched) {
 			//current node and breadcrumb ancestors may not have been fetched yet
-			this.api.decorateNode(this.selectedNode, function () {
-				that.selectedNode.apiContentFetched = true;
+			this.api.decorateNode(selectedNode, function () {
+				selectedNode.apiContentFetched = true;
 				
 				//if user is still hovering that node, go ahead and select it again now that the api content is available
 				var hoverId = jQuery(".selectable:hover").last().attr("id");
@@ -153,7 +153,7 @@ EOLTreeMap.prototype.select = function(id) {
 		}
 		
 		jQuery.each(this.nodeSelectHandlers, function(index, handler) {
-			handler(that.selectedNode);
+			handler(selectedNode);
 		});
 	}
 };
@@ -199,9 +199,13 @@ EOLTreeMap.prototype.view = function(id) {
 		TreeUtil.loadSubtrees(node, post, this.controller.levelsToShow);
 	} else {
 		this.api.fetchNode(id, function (json) {
-			that.graft(that.tree, json, function (newNode) {
-				TreeUtil.loadSubtrees(newNode, post, that.controller.levelsToShow);
-			});
+			try {
+				that.graft(that.tree, json, function (newNode) {
+					TreeUtil.loadSubtrees(newNode, post, that.controller.levelsToShow);
+				});
+			} catch (error) {
+				console.log(error.msg);
+			}
 		});
 	}
 	
@@ -233,7 +237,15 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 			var nextAncestorID;
 			if (subtree === this.tree) {
 				//we're at the root, so the next ancestor is the classification
-				nextAncestorID = jQuery.grep(this.tree.children, function (classification) { return classification.name == json.nameAccordingTo[0] })[0].id;
+				var classificationMatches = jQuery.grep(this.tree.children, function (classification) { return classification.name == json.nameAccordingTo[0] });
+				if (classificationMatches.length > 0) {
+					nextAncestorID = classificationMatches[0].id;
+				} else {
+					//uh oh, no classification has the same name as the json response
+					//TODO add a new classification to the tree
+					var error = {msg: "EOLTreeMap.prototype.graft: The json.nameAccordingTo classification not found", json:json};
+					throw(error);
+				}
 			} else if (subtree.name == json.nameAccordingTo[0]) {
 				//we're at the classification, so the next ancestor is the hierarchy_entry root (e.g. the kingdom)
 				nextAncestorID = json.ancestors[0].taxonID;

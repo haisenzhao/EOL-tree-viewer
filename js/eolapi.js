@@ -66,33 +66,24 @@ EolApi.prototype.search = function (query, onSuccess) {
 	jQuery.getJSON(url, {}, onSuccess);
 };
 
-/* Gets search results and also gets the hierarchy entry id for each result in the given hierarchy nameAccordingTo */
-EolApi.prototype.searchHierarchyEntries = function (query, nameAccordingTo, onSuccess) {
+/* Gets search results and also adds the pages response (without media) for each result */
+EolApi.prototype.searchHierarchyEntries = function (query, onSuccess) {
 	var config = {
 		images:0,
 		videos:0,
 		text:0,
-		common_names:0,
-		format:"json"
+		common_names:0
 	}
 	
 	var that = this;
 	var searchResponse;
 	var pageResponseCount = 0;
 	
-	//a function for filtering taxonConcepts below
-	var hierarchyMatch = function (taxonConcept) {
-		return taxonConcept.nameAccordingTo === nameAccordingTo;
-	};
-	
 	//a function for setting search result taxon ids below
-	var setTaxonID = function (index, searchResult) {
+	var setPage = function (index, searchResult) {
 		that.pages(searchResult.id, config, function (page) {
-			var match = jQuery.grep( page.taxonConcepts, hierarchyMatch)[0];
-			if (match) {
-				searchResult.taxonID = match.identifier;
-			}
-			
+			searchResult.page = page;
+
 			pageResponseCount++;
 			if (pageResponseCount === searchResponse.results.length) {
 				onSuccess(searchResponse);
@@ -102,7 +93,7 @@ EolApi.prototype.searchHierarchyEntries = function (query, nameAccordingTo, onSu
 	
 	this.search(query, function (response) {
 		searchResponse = response;
-		jQuery.each(response.results, setTaxonID);
+		jQuery.each(response.results, setPage);
 	});
 };
 
