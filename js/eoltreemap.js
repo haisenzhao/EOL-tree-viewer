@@ -167,7 +167,10 @@ EOLTreeMap.prototype.select = function(id) {
 EOLTreeMap.prototype.view = function(id) {
 	
 	//show a progress pointer
-	jQuery("#" + this.rootId).css("cursor", "progress");
+	var rootElement = jQuery("#" + this.rootId);
+	rootElement.css("cursor", "progress");
+//	jQuery("#" + this.rootId).append("<img src='images/ajax-loader.gif' class='overlay-image'/>");
+	jQuery("<div class='overlay'>").appendTo(rootElement).width(rootElement.innerWidth()).height(rootElement.innerHeight());
 	
     /* JIT leaves the layout orientation set to whatever it was at the
      * end of the last draw, which sometimes makes the layout alternate between 
@@ -204,7 +207,7 @@ EOLTreeMap.prototype.view = function(id) {
 					TreeUtil.loadSubtrees(newNode, post, that.controller.levelsToShow);
 				});
 			} catch (error) {
-				console.log(error.msg);
+//				console.log(error.msg);
 			}
 		});
 	}
