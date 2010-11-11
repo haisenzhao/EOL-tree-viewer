@@ -61,14 +61,26 @@ EolApi.prototype.data_objects = function (objectID, onSuccess) {
 	}
 };
 
-EolApi.prototype.search = function (query, onSuccess) {
+EolApi.prototype.search = function (query, config, onSuccess) {
+	if (typeof(config) == "function") {
+		onSuccess = config; 
+		config = {};
+	}
+	
+	if (!query || !onSuccess) return;
+	
 	var url = "http://" + this.apiHost + "/api/search/" + this.apiVersion + "/" + query + ".json?callback=?";
-	jQuery.getJSON(url, {}, onSuccess);
+	jQuery.getJSON(url, config, onSuccess);
 };
 
 /* Gets search results and also adds the pages response (without media) for each result */
-EolApi.prototype.searchHierarchyEntries = function (query, onSuccess) {
-	var config = {
+EolApi.prototype.searchHierarchyEntries = function (query, searchConfig, onSuccess) {
+	if (typeof(searchConfig) == "function") {
+		onSuccess = searchConfig; 
+		searchConfig = {};
+	}
+	
+	var pagesConfig = {
 		images:0,
 		videos:0,
 		text:0,
@@ -79,9 +91,9 @@ EolApi.prototype.searchHierarchyEntries = function (query, onSuccess) {
 	var searchResponse;
 	var pageResponseCount = 0;
 	
-	//a function for setting search result taxon ids below
+	//a function for setting search result page data
 	var setPage = function (index, searchResult) {
-		that.pages(searchResult.id, config, function (page) {
+		that.pages(searchResult.id, pagesConfig, function (page) {
 			searchResult.page = page;
 
 			pageResponseCount++;
@@ -91,7 +103,11 @@ EolApi.prototype.searchHierarchyEntries = function (query, onSuccess) {
 		});
 	}; 
 	
-	this.search(query, function (response) {
+	this.search(query, searchConfig, function (response) {
+		if (response.results.length === 0) {
+			onSuccess(response);
+		}
+		
 		searchResponse = response;
 		jQuery.each(response.results, setPage);
 	});

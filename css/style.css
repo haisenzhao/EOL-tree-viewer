@@ -46,3 +46,28 @@ a img {
 .tab.selected, .tab.hover {
 	background-color:silver;
 }
+
+#search-results div.nav {
+	padding:5px;	
+}
+
+#search-results span.prev {
+	margin-right: 1em;
+}
+
+#search-results span.next {
+	margin-left: 1em;
+}
+
+#search-results span.active {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+#search-results span.inactive {
+	color:gray;
+}
+
+#search-results .match-text {
+	background-color: gray;
+}
