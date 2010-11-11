@@ -368,6 +368,12 @@ EOLTreeMapController.prototype.updateVariableDisplay = function() {
 EOLTreeMapController.bindOptionsForm = function (controller) {
 	var form = jQuery(EOLTreeMapController.optionsForm);
 	
+	var svg = jQuery("#gradientBar", form)[0];
+	if (!svg || !(svg.namespaceURI == "http://www.w3.org/2000/svg")) {
+		//svg not supported
+		jQuery("#color-display", form).hide();
+	}
+	
 	/** helper function to map a color value from [0,1] to [0,255] */
 	var mapTo255 = function(colorValue) {
 		return colorValue * 255;
