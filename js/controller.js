@@ -440,7 +440,7 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 		controller.updateVariableDisplay();
 	});
 	
-	return form;
+	return form[0];
 }
 
 EOLTreeMapController.optionsForm = "<form name='treemap' onsubmit='return false;'>" +

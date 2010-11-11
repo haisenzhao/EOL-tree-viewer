@@ -3,7 +3,7 @@ function EOLTreeMap(container) {
 	jQuery(container).addClass("treemap-container");
 	
 	var controller = new EOLTreeMapController(container.id);
-	this.initialize(controller);
+	this.initialize({"rootId":controller.rootId, "Tips":controller.Tips});
 	this.controller = this.config = controller; //JIT's TM.initialize() uses $merge() which breaks my controller's binding to its options form
 	
 	this.api = new EolApi();
@@ -99,7 +99,7 @@ EOLTreeMap.prototype.getOptionsForm = function () {
 	var that = this;
 	
 	// any form element change triggers a refresh
-	form.change(function() {
+	jQuery(form).change(function() {
 		that.view(that.shownTree.id);
 		return false;
 	});
