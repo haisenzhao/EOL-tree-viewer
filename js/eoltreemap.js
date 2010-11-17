@@ -265,19 +265,19 @@ EOLTreeMap.prototype.graft = function (subtree, json, callback) {
 EOLTreeMap.stump = function () {
 	
 	/* TODO: put the rest of the roots in (for all classifications).*/
-	var col = new Taxon(null, "COL", "Species 2000 & ITIS Catalogue of Life: Annual Checklist 2009");
-	col.image = {mediaURL:"http://www.catalogueoflife.org/annual-checklist/2009/images/2009_checklist_cd_front_cover.jpg"};
+	var col = new Taxon(null, "COL", "Species 2000 & ITIS Catalogue of Life: Annual Checklist 2010");
+	col.image = {mediaURL:"http://www.catalogueoflife.org/annual-checklist/2010/images/dvd_front_cover.jpg"};
 	col.text = {description:"<p><b>CoL</b> <a href='http://www.catalogueoflife.org/'>http://www.catalogueoflife.org/</a><br>The Catalogue of Life Partnership (CoLP) is an informal partnership dedicated to creating an index of the world’s organisms, called the Catalogue of Life (CoL). The CoL provides different forms of access to an integrated, quality, maintained, comprehensive consensus species checklist and taxonomic hierarchy, presently covering more than one million species, and intended to cover all know species in the near future. The Annual Checklist EOL uses contains substantial contributions of taxonomic expertise from more than fifty organizations around the world, integrated into a single work by the ongoing work of the CoLP partners. EOL currently uses the CoL Annual Checklist as its taxonomic backbone.</p>"};
 	
 	col.children = [
-	    new Taxon({taxonID:"24974884", taxonConceptID:"1", scientificName:"Animalia"}),
-	    new Taxon({taxonID:"26322083", taxonConceptID:"7920", scientificName:"Archaea"}),
-	    new Taxon({taxonID:"27919817", taxonConceptID:"288", scientificName:"Bacteria"}),
-	    new Taxon({taxonID:"26310295", taxonConceptID:"3352", scientificName:"Chromista"}),
-	    new Taxon({taxonID:"26250396", taxonConceptID:"5559", scientificName:"Fungi"}),
-	    new Taxon({taxonID:"26017607", taxonConceptID:"281", scientificName:"Plantae"}),
-	    new Taxon({taxonID:"26301920", taxonConceptID:"4651", scientificName:"Protozoa"}),
-	    new Taxon({taxonID:"26319587", taxonConceptID:"5006", scientificName:"Viruses"})
+	    new Taxon({taxonID:"33311700", taxonConceptID:"1", scientificName:"Animalia"}),
+	    new Taxon({taxonID:"34786662", taxonConceptID:"7920", scientificName:"Archaea"}),
+	    new Taxon({taxonID:"34703233", taxonConceptID:"288", scientificName:"Bacteria"}),
+	    new Taxon({taxonID:"34723315", taxonConceptID:"3352", scientificName:"Chromista"}),
+	    new Taxon({taxonID:"34735128", taxonConceptID:"5559", scientificName:"Fungi"}),
+	    new Taxon({taxonID:"34425376", taxonConceptID:"281", scientificName:"Plantae"}),
+	    new Taxon({taxonID:"34714978", taxonConceptID:"4651", scientificName:"Protozoa"}),
+	    new Taxon({taxonID:"34732632", taxonConceptID:"5006", scientificName:"Viruses"})
 	];
 	col.setAsParent();
 	
