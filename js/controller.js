@@ -150,23 +150,10 @@ EOLTreeMapController.prototype.onCreateElement = function (content, node, isLeaf
 		return;
 	}
 	
-	//if page API content not loaded, get that first and then call this method again
-	var that = this;
-	if (!node.apiContentFetched) {
-		this.api.decorateNode(node, function () {
-			node.apiContentFetched = true;
-			that.onCreateElement(content, node, isLeaf, head, body);
-		});
-	}
-	
 	//ignore isLeaf parameter, JIT.each is wrong about this.  Use this.isLeafElement(content)
 	if (this.isLeafElement(content)) {
-		if (node.apiContentFetched) {
+		if (!(jQuery("#" + this.rootId).hasClass("hide-images"))) {
 			this.insertBodyContent(node, body);
-		} else {
-			var placeholder = new Image();
-			placeholder.src = "images/ajax-loader.gif";
-			jQuery(body).html(placeholder);
 		}
 	}
 };
@@ -271,29 +258,13 @@ EOLTreeMapController.prototype.insertBodyContent = function (node, container) {
 	}
 	
 	if (node.image) {
-		if (node.image.image && node.image.image.src) { //for some reason, IE (only) is resetting these images to have no src...
-			this.insertImage(node.image.image, container, function(){});
-		} else if (node.image.eolThumbnailURL) { 
-			if (!node.image.thumb || !node.image.thumb.src) {
-				node.image.thumb = new Image();
-				node.image.thumb.src = node.image.eolThumbnailURL;
-			}
-			this.insertImage(node.image.thumb, container, function(){
-				if (node.image.thumb.naturalWidth < jQuery(container).innerWidth()) {
-					node.image.image = new Image();
-					node.image.image.src = node.image.eolMediaURL;
-					that.insertImage(node.image.image, container, function(){});
-				}
-			});
-		} else if (node.image.eolMediaURL) {
+		if (!node.image.image) {
 			node.image.image = new Image();
-			node.image.image.src = node.image.eolMediaURL;
-			that.insertImage(node.image.image, container, function(){});
-		} else if (node.image.mediaURL) {
-			node.image.image = new Image();
-			node.image.image.src = node.image.mediaURL;
-			that.insertImage(node.image.image, container, function(){});
+			node.image.image.src = node.image.eolMediaURL || node.image.mediaURL || "";
+			node.image.image.lowsrc = node.image.eolThumbnailURL || "";
 		}
+		
+		this.insertImage(node.image.image, container, function(){});
 	} else {
 		jQuery(container).html("No image available.<p><a href='http://www.eol.org/content/page/help_build_eol#images' target='_blank'>Click here to help EOL find one.</a></p>");
 	}
