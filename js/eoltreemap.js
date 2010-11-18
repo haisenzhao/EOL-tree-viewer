@@ -1,4 +1,5 @@
 function EOLTreeMap(container) {
+	var that = this;
 	this.rootId = container.id;
 	jQuery(container).addClass("treemap-container");
 	
@@ -11,11 +12,16 @@ function EOLTreeMap(container) {
 	
 	/** 
 	 * returns new custom taxon objects instead of hierarchy_entries objects
+	 * Also, does a second api call to get iucn data
 	 */
 	this.api.fetchNode = function (taxonID, onSuccess) {
 		this.hierarchy_entries(taxonID, function (json) {
 			var taxon = new Taxon(json);
-			onSuccess(taxon);
+			that.api.getIucnStatus(taxon, function(iucn){
+				taxon.iucn = iucn;
+				onSuccess(taxon);
+			});
+			
 		});
 	};
 
@@ -29,8 +35,6 @@ function EOLTreeMap(container) {
 	this.tree = EOLTreeMap.stump(); //start with a stump tree, so view() has something to graft to.  
 	
 	/* Add mouse and keyboard event handlers */
-	var that = this;
-	
 	jQuery(".selectable").live("mouseenter", function() {
 		that.select(this.id);
 	});
@@ -99,9 +103,16 @@ EOLTreeMap.prototype.getOptionsForm = function () {
 	var form = this.controller.optionsForm;
 	var that = this;
 	
-	// any form element change triggers a refresh
-	jQuery(form).change(function() {
-		that.view(that.shownTree.id);
+	// some form element changes trigger a refresh
+	jQuery(form).change(function(eventObject) {
+		switch(eventObject.srcElement.id) {
+			case "displayImages": 
+				break;
+			default: 
+				that.view(that.shownTree.id); 
+				break;
+		}
+		
 		return false;
 	});
 	
@@ -200,13 +211,9 @@ EOLTreeMap.prototype.view = function(id) {
 		TreeUtil.loadSubtrees(node, post, this.controller.levelsToShow);
 	} else {
 		this.api.fetchNode(id, function (json) {
-			try {
-				that.graft(that.tree, json, function (newNode) {
-					TreeUtil.loadSubtrees(newNode, post, that.controller.levelsToShow);
-				});
-			} catch (error) {
-//				console.log(error.msg);
-			}
+			that.graft(that.tree, json, function (newNode) {
+				TreeUtil.loadSubtrees(newNode, post, that.controller.levelsToShow);
+			});
 		});
 	}
 	
@@ -492,14 +499,20 @@ EOLTreeMap.prototype.setColor = function(taxon) {
     maxv = c.maxValue,
     minv = c.minValue,
     diff = maxv - minv,
-    x = (taxon.getColor() - 0);
+    x = taxon.getColor();
 	
+    //if x is already a color value, just return that
+	if (EOLTreeMap.hexPattern.test(x)) {
+		return x;
+	}
+    
 	//if the value range has just one value, return the min color
 	if (diff === 0) {
 		return EOLTreeMapController.$rgbToHex(c.minColorValue);
 	}
 	
-	//clamp x to range [minv,maxv]
+	//make x a number and clamp to range [minv,maxv]
+	x = (taxon.getColor() - 0);
 	x = Math.max(x, minv);
 	x = Math.min(x, maxv);
 	
@@ -593,5 +606,8 @@ EOLTreeMap.getSubtree = function(tree, id){
 	
 	return null;
 };
+
+/* Used to test taxon color values for being a hex color string */
+EOLTreeMap.hexPattern = /^#([0-9a-f]{3}){1,2}$/i;
 
 

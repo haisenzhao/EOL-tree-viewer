@@ -113,6 +113,17 @@ function EOLTreeMapController(rootId) {
 			func: function (taxon) {
 				return taxon.getDepth();
 			}
+		},
+		iucn: {
+			name: "IUCN status",
+			func: function (taxon) {
+				var color;
+				if (taxon.iucn) {
+					color = EOLTreeMapController.iucnColorMap[taxon.iucn.description];
+				}
+
+				return color || EOLTreeMapController.iucnColorMap["default"];
+			}
 		}
 	};
 	
@@ -134,6 +145,7 @@ function EOLTreeMapController(rootId) {
 	};
 	
 	this.optionsForm = EOLTreeMapController.bindOptionsForm(this);
+	this.colorVariableSelect = jQuery("#colorVariable", this.optionsForm);
 }
 
 EOLTreeMapController.prototype = jQuery.extend(true, {}, TM.innerController, TM.config);
@@ -205,6 +217,14 @@ EOLTreeMapController.prototype.onAfterCompute = function (tree) {
 			
 			if (head && node.taxonConceptID) {
 				jQuery(head).wrapInner("<a class='head' target='_blank' href=http://www.eol.org/" + node.taxonConceptID + " onclick='window.event.stopPropagation();'></a>");
+			
+				if (that.colorVariableSelect.val() === "iucn" && node.iucn && node.iucn.description) {
+					//background color is handled by the JIT, just setting foreground (overrides css)
+					var color = EOLTreeMapController.iucnForegroundColorMap[node.iucn.description];
+					if (color) {
+						jQuery("a.head", head).css("color", color);
+					}
+				}
 			}
 		}
 	});
@@ -310,18 +330,17 @@ EOLTreeMapController.prototype.isLeafElement = function(element) {
 EOLTreeMapController.prototype.updateVariableRange = function(){
 	//update range to current [min,max] if the fields are empty
 	if (this.optionsForm) {
-		var colorVariableList = jQuery("#colorVariable", this.optionsForm);
 		var minValue = jQuery("#colorVariableMinValue", this.optionsForm).val();
 		var maxValue = jQuery("#colorVariableMaxValue", this.optionsForm).val()
 		
 		if (minValue.length === 0) {
-			this.Color.minValue = this.stats[colorVariableList.val()].min;
+			this.Color.minValue = this.stats[this.colorVariableSelect.val()].min;
 		} else {
 			this.Color.minValue = parseInt(minValue);
 		}
 		
 		if (maxValue.length === 0) {
-			this.Color.maxValue = this.stats[colorVariableList.val()].max;
+			this.Color.maxValue = this.stats[this.colorVariableSelect.val()].max;
 		} else {
 			this.Color.maxValue = parseInt(maxValue);
 		}
@@ -370,8 +389,13 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 	scaleVariableList.val("sqrt");
 	
 	//on change, update Color.minValue and Color.maxValue
-	colorVariableList.change(function() {
+	colorVariableList.change(function(eventObject) {
 		controller.updateVariableRange();
+		
+		//show the appropriate legend for the current selection
+		var isIUCN = eventObject.currentTarget.value == "iucn";
+		jQuery("#gradient-legend" , form).toggle(!isIUCN);
+		jQuery("#iucn-legend" , form).toggle(isIUCN);
 	});
 	colorVariableList.change();
 
@@ -415,21 +439,25 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 	return form[0];
 }
 
-EOLTreeMapController.optionsForm = "<form name='treemap' onsubmit='return false;'>" +
-	"<fieldset><legend>Treemap options</legend>" +
-	"<div>Maximum depth: <input id='depth' type='text' name='depth' size='3' /></div>" +
-	"<div>Display images: <input id='displayImages' type='checkbox' name='displayImages' /></div>" +
-	"<fieldset><legend>Size mapping</legend>" +
-	"<div><label class='col col1'>Variable:</label><select id='sizeVariable' name='sizeVariable'></select></div>" + 
-	"<div><label class='col col1'>Scaling:</label><select id='sizeScaling' name='sizeScaling'></select></div>" +
-	"</fieldset>" +
-	"<fieldset><legend>Color mapping</legend>" +
-	"<div class='row'><label class='col col1'>Variable:</label><select id='colorVariable' name='colorVariable'></select></div>" + 
-	"<div id='colorVariableRange' class='row'><label class='col col1'>Variable min:</label><input class='col col2' id='colorVariableMinValue' type='text' name='minValue' size='6' /><label class='col col3'>max:</label><input class='col col4' id='colorVariableMaxValue' type='text' name='maxValue' size='6' /></div>" + 
-	"<div id='colorRange' class='row'><label class='col col1'>Color min:</label><input id='minColor' class='color col col2' size='6' /><label class='col col3'>max:</label><input id='maxColor' class='color col col4' size='6' /></div>" + 
-	"<div id='color-display'><svg id='gradientBar'><rect x='0' y='0' width='100%' height='100%' fill='url(#colorGradient)'/><linearGradient id='colorGradient'><stop offset='0' stop-color='white'/><stop offset='1' stop-color='black'/></linearGradient></svg><div><span id='colorVariableMinLabel'>min</span><span id='colorVariableMaxLabel'>max</span><br/></div></div>" + 
-	"</fieldset>" +
-	"</fieldset>" +
+EOLTreeMapController.optionsForm = 
+	"<form name='treemap' onsubmit='return false;'>" +
+		"<fieldset><legend>Treemap options</legend>" +
+			"<div>Maximum depth: <input id='depth' type='text' name='depth' size='3' /></div>" +
+			"<div>Display images: <input id='displayImages' type='checkbox' name='displayImages' /></div>" +
+			"<fieldset><legend>Size mapping</legend>" +
+				"<div><label class='col col1'>Variable:</label><select id='sizeVariable' name='sizeVariable'></select></div>" + 
+				"<div><label class='col col1'>Scaling:</label><select id='sizeScaling' name='sizeScaling'></select></div>" +
+			"</fieldset>" +
+			"<fieldset><legend>Color mapping</legend>" +
+				"<div class='row'><label class='col col1'>Variable:</label><select id='colorVariable' name='colorVariable'></select></div>" + 
+				"<div id='colorVariableRange' class='row'><label class='col col1'>Variable min:</label><input class='col col2' id='colorVariableMinValue' type='text' name='minValue' size='6' /><label class='col col3'>max:</label><input class='col col4' id='colorVariableMaxValue' type='text' name='maxValue' size='6' /></div>" + 
+				"<div id='colorRange' class='row'><label class='col col1'>Color min:</label><input id='minColor' class='color col col2' size='6' /><label class='col col3'>max:</label><input id='maxColor' class='color col col4' size='6' /></div>" + 
+				"<div id='color-display'>" + 
+					"<div id='gradient-legend'><svg id='gradientBar'><rect x='0' y='0' width='100%' height='100%' fill='url(#colorGradient)'/><linearGradient id='colorGradient'><stop offset='0' stop-color='white'/><stop offset='1' stop-color='black'/></linearGradient></svg><div><span id='colorVariableMinLabel'>min</span><span id='colorVariableMaxLabel'>max</span><br/></div></div>" +
+					"<img id='iucn-legend' src='images/Status_iucn3.1.svg' height=100px />" +
+				"</div>" + 
+			"</fieldset>" +
+		"</fieldset>" +
 	"</form>";
 
 EOLTreeMapController.$rgbToHex = function(srcArray, array){
@@ -442,3 +470,25 @@ EOLTreeMapController.$rgbToHex = function(srcArray, array){
     }
     return (array) ? hex : '#' + hex.join('');
 };
+
+EOLTreeMapController.iucnColorMap = {
+	"Least Concern (LC)":"#006666",
+	"Near Threatened (NT)":"#006666",
+	"Vulnerable (VU)":"#CC9900",
+	"Endangered (EN)":"#CC6633",
+	"Critically Endangered (CR)":"#CC3333",
+	"Extinct in the Wild (EW)":"#000000",
+	"Extinct (EX)":"#000000",
+	"default":"#888888"
+};
+
+EOLTreeMapController.iucnForegroundColorMap = {
+	"Least Concern (LC)":"#FFFFFF",
+	"Near Threatened (NT)":"#99CC99",
+	"Vulnerable (VU)":"#FFFFCC",
+	"Endangered (EN)":"#FFCC99",
+	"Critically Endangered (CR)":"#FFCCCC",
+	"Extinct in the Wild (EW)":"#FFFFFF",
+	"Extinct (EX)":"#CC3333",
+	"default":"#FFFFFF"
+}

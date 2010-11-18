@@ -129,3 +129,28 @@ EolApi.prototype.decorateNode = function (node, callback) {
 		callback();
 	});
 };
+
+/** Calls callback with the entire IUCN dataObject */
+EolApi.prototype.getIucnStatus = function(node, callback) {
+	var pagesConfig = {
+		"text":75,
+		"images":0,
+		"videos":0,
+		"subjects":"ConservationStatus",
+		"details":1,
+		"common_names":0,
+		"vetted":1
+	}
+
+	this.pages(node.taxonConceptID, pagesConfig, function(json) {
+		var iucn;
+		
+		if (json.dataObjects && json.dataObjects.length > 0) {
+			iucn = jQuery.grep(json.dataObjects, function (dataObject) {
+				return dataObject.rightsHolder == "International Union for Conservation of Nature and Natural Resources";
+			})[0];
+		}
+		
+		callback(iucn);
+	});
+}
