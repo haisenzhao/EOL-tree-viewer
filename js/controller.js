@@ -393,9 +393,18 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 		controller.updateVariableRange();
 		
 		//show the appropriate legend for the current selection
-		var isIUCN = eventObject.currentTarget.value == "iucn";
-		jQuery("#gradient-legend" , form).toggle(!isIUCN);
-		jQuery("#iucn-legend" , form).toggle(isIUCN);
+		jQuery("#gradient-legend" , form).hide();
+		jQuery("#iucn-legend" , form).hide();
+		
+		switch (eventObject.currentTarget.value) {
+			case "none": 
+				break;
+			case "iucn": 
+				jQuery("#iucn-legend" , form).show();
+				break;
+			default: 
+				jQuery("#gradient-legend" , form).show();
+		}
 	});
 	colorVariableList.change();
 
