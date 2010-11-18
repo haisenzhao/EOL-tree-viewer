@@ -20,6 +20,7 @@ function EOLTreeMap(container) {
 	};
 
 	TreeUtil.loadSubtrees = EOLTreeMap.loadSubtrees; //override TreeUtil.loadSubtrees with mine
+	TreeUtil.getSubtree = EOLTreeMap.getSubtree; //override TreeUtil.getSubtree with mine
 	
 	this.nodeSelectHandlers = [];
 	this.viewChangeHandlers = [];
@@ -165,11 +166,11 @@ EOLTreeMap.prototype.select = function(id) {
  * Also, view(null) will just refresh the current view (recalculates layout for browser resize)
  */
 EOLTreeMap.prototype.view = function(id) {
+	id = id || this.shownTree.id; //default to refreshing the current view
 	
-	//show a progress pointer
+	//show a progress pointer and overlay a tinted div on the current view
 	var rootElement = jQuery("#" + this.rootId);
 	rootElement.css("cursor", "progress");
-//	jQuery("#" + this.rootId).append("<img src='images/ajax-loader.gif' class='overlay-image'/>");
 	jQuery("<div class='overlay'>").appendTo(rootElement).width(rootElement.innerWidth()).height(rootElement.innerHeight());
 	
     /* JIT leaves the layout orientation set to whatever it was at the
@@ -178,11 +179,6 @@ EOLTreeMap.prototype.view = function(id) {
      * resetting it here.
      */ 	
 	this.layout.orientation = this.config.orientation;
-	 
-	if (id === null) {
-		this.loadTree(this.shownTree.id); //recalculate and refresh
-	}
-	
 	var that = this;
 
 	post = jQuery.extend({}, this.controller);
@@ -194,7 +190,9 @@ EOLTreeMap.prototype.view = function(id) {
 			handler(that.shownTree);
 		});
 		
-		jQuery("#" + that.rootId).css("cursor", "auto");
+		//clean up wait indicators
+		rootElement.css("cursor", "auto");
+		jQuery("div.overlay", rootElement).remove();
 	};
 
 	var node = TreeUtil.getSubtree(this.tree, id);
@@ -521,7 +519,7 @@ EOLTreeMap.prototype.compute = function(json, coord) {
     if (!(coord.width >= coord.height && this.layout.horizontal())) 
       this.layout.change();
     var ch = json.children, config = this.config;
-    if(ch.length > 0) {
+    if(ch && ch.length > 0) {
       this.processChildrenLayout(json, ch, coord);
       for(var i=0; i<ch.length; i++) {
         var chcoord = ch[i].coord,
@@ -552,7 +550,7 @@ EOLTreeMap.loadSubtrees = function (subtree, controller, depth, onComplete) {
 		depth = controller.levelsToShow;	
 	} 
 	
-	if (!subtree.children || subtree.children.length === 0) {
+	if (!subtree.children) {
 		
 		//this node has not loaded children - do controller.request() to fetch the subtree
 		controller.request(subtree.id, depth, {onComplete: function(nodeId, fetchedSubtree){
@@ -564,6 +562,12 @@ EOLTreeMap.loadSubtrees = function (subtree, controller, depth, onComplete) {
 		
 		//this node has children.  recurse and call onComplete once we've heard back from all of them
 		var childrenToCallback = subtree.children.length;
+		
+		if (!childrenToCallback) {
+			//FIXME figure out where childless nodes are getting empty child arrays added to them
+			onComplete();
+		}
+		
 		jQuery(subtree.children).each(function(i, child) {
 			TreeUtil.loadSubtrees(child, controller, depth - 1, function () {
 				childrenToCallback -= 1;
@@ -573,6 +577,21 @@ EOLTreeMap.loadSubtrees = function (subtree, controller, depth, onComplete) {
 			});
 		});
 	}
+};
+
+EOLTreeMap.getSubtree = function(tree, id){
+	if (tree.id == id) 
+		return tree;
+	
+	if (tree.children) {
+		for (var i = 0, ch = tree.children; i < ch.length; i++) {
+			var t = this.getSubtree(ch[i], id);
+			if (t != null) 
+				return t;
+		}
+	}
+	
+	return null;
 };
 
 

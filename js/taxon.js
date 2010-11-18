@@ -6,9 +6,9 @@ function Taxon(hierarchy_entry, id, name) {
 	this.merge(hierarchy_entry);
 
 	//make all of the children a Taxon too
-	this.children = [];
-	var that = this;
 	if (hierarchy_entry && hierarchy_entry.children) {
+		this.children = [];
+		var that = this;
 		jQuery.each(hierarchy_entry.children, function(index, child) { 
 			var childTaxon = new Taxon(child);
 			that.children.push(childTaxon);
