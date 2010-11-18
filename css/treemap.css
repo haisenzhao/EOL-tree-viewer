@@ -50,7 +50,7 @@
 	overflow:hidden;
 }
 
-.treemap-container.hide-images img {
+.treemap-container.hide-images .body-image {
 	display:none;
 }
 

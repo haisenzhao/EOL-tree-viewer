@@ -264,9 +264,10 @@ EOLTreeMapController.prototype.insertBodyContent = function (node, container) {
 			node.image.image.lowsrc = node.image.eolThumbnailURL || "";
 		}
 		
+		jQuery(node.image.image).addClass("body-image");
 		this.insertImage(node.image.image, container, function(){});
 	} else {
-		jQuery(container).html("No image available.<p><a href='http://www.eol.org/content/page/help_build_eol#images' target='_blank'>Click here to help EOL find one.</a></p>");
+		jQuery(container).html("<div class='body-image'>No image available.<p><a href='http://www.eol.org/content/page/help_build_eol#images' target='_blank'>Click here to help EOL find one.</a></p></div>");
 	}
 
 };
