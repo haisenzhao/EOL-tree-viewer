@@ -105,7 +105,7 @@ EOLTreeMap.prototype.getOptionsForm = function () {
 	
 	// some form element changes trigger a refresh
 	jQuery(form).change(function(eventObject) {
-		switch(eventObject.srcElement.id) {
+		switch(eventObject.target.id) {
 			case "displayImages": 
 				break;
 			default: 
