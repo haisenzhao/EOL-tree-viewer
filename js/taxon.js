@@ -1,8 +1,5 @@
 function Taxon(hierarchy_entry, id, name) {
 	this.data = {};
-	this.id = id || hierarchy_entry.taxonID;
-	this.name = name || hierarchy_entry.scientificName;
-	
 	this.merge(hierarchy_entry);
 
 	//make all of the children a Taxon too
@@ -15,6 +12,9 @@ function Taxon(hierarchy_entry, id, name) {
 			child.parent = that;
 		});
 	}
+	
+	this.id = id || hierarchy_entry.taxonID;
+	this.name = name || hierarchy_entry.scientificName;
 }
 
 Taxon.prototype.getArea = function() {

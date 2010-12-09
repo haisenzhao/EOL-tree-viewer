@@ -73,6 +73,16 @@ EolApi.prototype.search = function (query, config, onSuccess) {
 	jQuery.getJSON(url, config, onSuccess);
 };
 
+EolApi.prototype.provider_hierarchies = function (onSuccess) {
+	var url = "http://" + this.apiHost + "/api/provider_hierarchies/" + this.apiVersion + ".json?callback=?";
+	jQuery.getJSON(url, {}, onSuccess);
+}
+
+EolApi.prototype.hierarchies = function (id, onSuccess) {
+	var url = "http://" + this.apiHost + "/api/hierarchies/" + this.apiVersion + "/" + id + ".json?callback=?";
+	jQuery.getJSON(url, {}, onSuccess);
+}
+
 /* Gets search results and also adds the pages response (without media) for each result */
 EolApi.prototype.searchHierarchyEntries = function (query, searchConfig, onSuccess) {
 	if (typeof(searchConfig) == "function") {
