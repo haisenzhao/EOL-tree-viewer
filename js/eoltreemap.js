@@ -17,11 +17,15 @@ function EOLTreeMap(container) {
 	this.api.fetchNode = function (taxonID, onSuccess) {
 		this.hierarchy_entries(taxonID, function (json) {
 			var taxon = new Taxon(json);
-			that.api.getIucnStatus(taxon, function(iucn){
-				taxon.iucn = iucn;
-				onSuccess(taxon);
-			});
 			
+			if (taxon.taxonRank == "Species" || taxon.taxonRank == "Subspecies" || taxon.children.length == 0) {
+				that.api.getIucnStatus(taxon, function(iucn){
+					taxon.iucn = iucn;
+					onSuccess(taxon);
+				});
+			} else {
+				onSuccess(taxon);
+			}
 		});
 	};
 
