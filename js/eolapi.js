@@ -27,6 +27,12 @@ function EolApi() {
 	
 }
 
+EolApi.baseConfig = {
+	key:"cf5cf04c752d2716f006872a898b1fa73ec9ba45"
+}
+
+HierarchyConfig.prototype = PagesConfig.prototype = EolApi.baseConfig;
+
 EolApi.prototype.ping = function (success, error) {
 	jQuery.ajax({
 		type: "GET",
@@ -57,14 +63,14 @@ EolApi.prototype.pages = function (taxonConceptID, config, onSuccess) {
 EolApi.prototype.data_objects = function (objectID, onSuccess) {
 	if (objectID) {
 		var url = "http://" + this.apiHost + "/api/data_objects/" + this.apiVersion + "/" + objectID + ".json?callback=?";
-		jQuery.getJSON(url, {}, onSuccess);
+		jQuery.getJSON(url, EolApi.baseConfig, onSuccess);
 	}
 };
 
 EolApi.prototype.search = function (query, config, onSuccess) {
 	if (typeof(config) == "function") {
 		onSuccess = config; 
-		config = {};
+		config = EolApi.baseConfig;
 	}
 	
 	if (!query || !onSuccess) return;
@@ -75,19 +81,19 @@ EolApi.prototype.search = function (query, config, onSuccess) {
 
 EolApi.prototype.provider_hierarchies = function (onSuccess) {
 	var url = "http://" + this.apiHost + "/api/provider_hierarchies/" + this.apiVersion + ".json?callback=?";
-	jQuery.getJSON(url, {}, onSuccess);
+	jQuery.getJSON(url, EolApi.baseConfig, onSuccess);
 }
 
 EolApi.prototype.hierarchies = function (id, onSuccess) {
 	var url = "http://" + this.apiHost + "/api/hierarchies/" + this.apiVersion + "/" + id + ".json?callback=?";
-	jQuery.getJSON(url, {}, onSuccess);
+	jQuery.getJSON(url, EolApi.baseConfig, onSuccess);
 }
 
 /* Gets search results and also adds the pages response (without media) for each result */
 EolApi.prototype.searchHierarchyEntries = function (query, searchConfig, onSuccess) {
 	if (typeof(searchConfig) == "function") {
 		onSuccess = searchConfig; 
-		searchConfig = {};
+		searchConfig = EolApi.baseConfig;
 	}
 	
 	var pagesConfig = {
@@ -149,7 +155,8 @@ EolApi.prototype.getIucnStatus = function(node, callback) {
 		"subjects":"ConservationStatus",
 		"details":1,
 		"common_names":0,
-		"vetted":1
+		"vetted":1,
+		"key":"cf5cf04c752d2716f006872a898b1fa73ec9ba45"
 	}
 
 	this.pages(node.taxonConceptID, pagesConfig, function(json) {
