@@ -298,6 +298,7 @@ EOLTreeMap.prototype.stump = function (onSuccess) {
 				var id = "hierarchy" + hierarchy.id; //just in case there are hierarchy_entries with the same ids as provider_hierarchies
 				hierarchy.children = hierarchyResponse.roots; 
 				var node = new Taxon(hierarchy, id, hierarchy.label);
+				node.image = {mediaURL:"images/tree_icon.svg"};
 				node.apiContentFetched = true;
 				tree.children.push(node);
 				
