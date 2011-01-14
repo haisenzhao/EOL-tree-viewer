@@ -295,10 +295,19 @@ EOLTreeMap.prototype.stump = function (onSuccess) {
 		
 		jQuery.each(response, function (index, hierarchy) {
 			that.api.hierarchies(hierarchy.id, function (hierarchyResponse) {
-				var id = "hierarchy" + hierarchy.id; //just in case there are hierarchy_entries with the same ids as provider_hierarchies
+				var metadata = EOLTreeMap.hierarchies[hierarchy.id];
+				var id = metadata ? metadata.short : "hierarchy" + hierarchy.id;
+
 				hierarchy.children = hierarchyResponse.roots; 
 				var node = new Taxon(hierarchy, id, hierarchy.label);
+				
 				node.image = {mediaURL:"images/tree_icon.svg"};
+				
+				if (metadata) {
+					node.image = metadata.image;
+					node.text = metadata.text;
+				}
+
 				node.apiContentFetched = true;
 				tree.children.push(node);
 				
@@ -591,4 +600,53 @@ EOLTreeMap.getSubtree = function(tree, id){
 /* Used to test taxon color values for being a hex color string */
 EOLTreeMap.hexPattern = /^#([0-9a-f]{3}){1,2}$/i;
 
+//some more info to dress up the currently known hierarchy nodes.  (new ones will get a placeholder image but no description.)
+EOLTreeMap.hierarchies = {
+    529: {
+		short:"COL",
+		image:{mediaURL:"images/col_dvd_front_cover.jpg"},
+		text:{description:"<p><b>CoL</b> <a href='http://www.catalogueoflife.org/'>http://www.catalogueoflife.org/</a><br>The Catalogue of Life Partnership (CoLP) is an informal partnership dedicated to creating an index of the world’s organisms, called the Catalogue of Life (CoL). The CoL provides different forms of access to an integrated, quality, maintained, comprehensive consensus species checklist and taxonomic hierarchy, presently covering more than one million species, and intended to cover all know species in the near future. The Annual Checklist EOL uses contains substantial contributions of taxonomic expertise from more than fifty organizations around the world, integrated into a single work by the ongoing work of the CoLP partners. EOL currently uses the CoL Annual Checklist as its taxonomic backbone.</p>"}
+	},
+	441: {
+		short:"NCBI",
+		image:{mediaURL:"images/white_ncbi.png"},
+		text:{description:"<p><b>NCBI</b> <a href='http://www.ncbi.nlm.nih.gov/'>http://www.ncbi.nlm.nih.gov</a><br>As a U.S. national resource for molecular biology information, NCBI's mission is to develop new information technologies to aid in the understanding of fundamental molecular and genetic processes that control health and disease. The NCBI taxonomy database contains the names of all organisms that are represented in the genetic databases with at least one nucleotide or protein sequence.</p>"}
+	},
+	144: {
+		short:"IUCN",
+		image: {mediaURL:"images/iucn_high_res.jpg"},
+		text: {description:"<p><b>IUCN</b> <a href='http://www.iucn.org//'>http://www.iucn.org/</a><br>International Union for Conservation of Nature (IUCN) helps the world find pragmatic solutions to our most pressing environment and development challenges. IUCN supports scientific research; manages field projects all over the world; and brings governments, non-government organizations, United Nations agencies, companies and local communities together to develop and implement policy, laws and best practice. EOL partnered with the IUCN to indicate status of each species according to the Red List of Threatened Species.</p>"}
+	},
+	143: {
+		short:"FishBase",
+		image: {mediaURL:"images/fblogo.jpg"},
+		text: {description:"<p><b>FishBase</b> <a href='http://www.fishbase.org/'>http://www.fishbase.org/</a><br>FishBase is a global information system with all you ever wanted to know about fishes. FishBase is a relational database with information to cater to different professionals such as research scientists, fisheries managers, zoologists and many more. The FishBase Website contains data on practically every fish species known to science. The project was developed at the WorldFish Center in collaboration with the Food and Agriculture Organization of the United Nations and many other partners, and with support from the European Commission. FishBase is serving information on more than 30,000 fish species through EOL.</p>"}
+	},
+	107: {
+		short:"ITIS",
+		image:{mediaURL:"images/itis_circle_image.jpg"},
+		text: {description:"<p><b>ITIS</b> <a href='http://www.itis.gov/'>http://www.itis.gov/</a><br />The Integrated Taxonomic Information System (ITIS) is a partnership of federal agencies and other organizations from the United States, Canada, and Mexico, with data stewards and experts from around the world (see http://www.itis.gov). The ITIS database is an automated reference of scientific and common names of biota of interest to North America . It contains more than 600,000 scientific and common names in all kingdoms, and is accessible via the World Wide Web in English, French, Spanish, and Portuguese (http://itis.gbif.net). ITIS is part of the US National Biological Information Infrastructure (http://www.nbii.gov).</p>"}
+	},
+	121: {
+		short:"AntWeb",
+		image:{mediaURL:"images/antweb_logo.png"},
+		text: {description:"<p><b>AntWeb</b> <a href='http://www.antweb.org/'>http://www.antweb.org/</a><br />AntWeb is generally recognized as the most advanced biodiversity information system at species level dedicated to ants. Altogether, its acceptance by the ant research community, the number of participating remote curators that maintain the site, number of pictures, simplicity of web interface, and completeness of species, make AntWeb the premier reference for dissemination of data, information, and knowledge on ants. AntWeb is serving information on tens of thousands of ant species through the EOL.</p>"}
+	},
+	123: {
+		short:"WoRMS",
+		image:{mediaURL:"images/wormsbanner1.jpg"},
+		text: {description:"<p><b>WoRMS</b> <a href='http://www.marinespecies.org/'>http://www.marinespecies.org/</a><br />The aim of a World Register of Marine Species (WoRMS) is to provide an authoritative and comprehensive list of names of marine organisms, including information on synonymy. While highest priority goes to valid names, other names in use are included so that this register can serve as a guide to interpret taxonomic literature.</p>"}
+	},
+	596: {
+		short:"Index Fungorum",
+		image:{mediaURL:"images/LogoIF.gif"},
+		text: {description:"<p><b>Index Fungorum</b> <a href='http://www.indexfungorum.org/'>http://www.indexfungorum.org/</a><br />The Index Fungorum, the global fungal nomenclator coordinated and supported by the Index Fungorum Partnership (CABI, CBS, Landcare Research-NZ), contains names of fungi (including yeasts, lichens, chromistan fungal analogues, protozoan fungal analogues and fossil forms) at all ranks. </p>"}
+	},
+	623: {
+		short:"Metalmark",
+		image:{mediaURL:"http://content7.eol.org/content/2010/07/13/04/52919_large.jpg"},
+		text: {description:"<p><b>Metalmark Moths of the World</b> <a href='http://choreutidae.lifedesks.org/'>http://choreutidae.lifedesks.org/</a><br />Metalmark moths (Lepidoptera: Choreutidae) are a poorly known, mostly tropical family of microlepidopterans.  The Metalmark Moths of the World LifeDesk provides species pages and an updated classification for the group.</p>"}
+	}
+}
 
+		
