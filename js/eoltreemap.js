@@ -642,7 +642,7 @@ EOLTreeMap.hierarchies = {
 		image:{mediaURL:"images/LogoIF.gif"},
 		text: {description:"<p><b>Index Fungorum</b> <a href='http://www.indexfungorum.org/'>http://www.indexfungorum.org/</a><br />The Index Fungorum, the global fungal nomenclator coordinated and supported by the Index Fungorum Partnership (CABI, CBS, Landcare Research-NZ), contains names of fungi (including yeasts, lichens, chromistan fungal analogues, protozoan fungal analogues and fossil forms) at all ranks. </p>"}
 	},
-	637: {
+	640: {
 		short:"Metalmark",
 		image:{mediaURL:"http://content7.eol.org/content/2010/07/13/04/52919_large.jpg"},
 		text: {description:"<p><b>Metalmark Moths of the World</b> <a href='http://choreutidae.lifedesks.org/'>http://choreutidae.lifedesks.org/</a><br />Metalmark moths (Lepidoptera: Choreutidae) are a poorly known, mostly tropical family of microlepidopterans.  The Metalmark Moths of the World LifeDesk provides species pages and an updated classification for the group.</p>"}
