@@ -11,6 +11,17 @@ var vole = {
 		if (location.hash) {
 			vole.tm.view(location.hash.slice(1));
 		} else {
+			//without hash, show splash and load HOME node behind it
+			var rootElement = jQuery("#" + vole.tm.rootId);
+			var overlay = jQuery("#splash");
+			overlay.width(rootElement.innerWidth()).height(rootElement.innerHeight()).show();
+			overlay.click(function() {
+				jQuery(this).fadeOut();
+			});
+			
+			jQuery("#splash a").click(function() {window.open(this.href); return false;}); //prevent cilcks on links from hiding the splash screen
+			
+			
 			location.hash = "HOME"; //By default redirect to the root
 		}
 	},

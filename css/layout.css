@@ -106,3 +106,13 @@ html,body {
 fieldset {
 	margin-top: 1em;
 }
+
+.overlay {
+	position:absolute;
+	z-index: 1;
+}
+
+#splash {
+	display:none;
+	z-index: 2;
+}

@@ -184,7 +184,7 @@ EOLTreeMap.prototype.view = function(id) {
 	//show a progress pointer and overlay a tinted div on the current view
 	var rootElement = jQuery("#" + this.rootId);
 	rootElement.css("cursor", "progress");
-	jQuery("<div class='overlay'>").appendTo(rootElement).width(rootElement.innerWidth()).height(rootElement.innerHeight());
+	jQuery("<div class='transparent overlay'>").appendTo(rootElement).width(rootElement.innerWidth()).height(rootElement.innerHeight());
 	
     /* JIT leaves the layout orientation set to whatever it was at the
      * end of the last draw, which sometimes makes the layout alternate between 
@@ -345,7 +345,7 @@ EOLTreeMap.resizeImage = function (image, container) {
 	}
 };
 
-EOLTreeMap.help = "<div class='help'><h2>Instructions</h2><div><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></div><p>Learn more about the project, download the source code, or leave feedback at the <a href='http://github.com/kurie/EOL-tree-viewer'>GitHub repository</a>. </div>";
+EOLTreeMap.help = "<div class='help'><h2>Instructions</h2><div><ul><li>Hover the mouse over a taxon image to see details about that taxon.  To freeze the details panel (so you can click links, select text, etc.), hold down the F key.</li>  <li>Left-click the image to view its subtaxa.</li>  <li>Left-click the underlined taxon name to go to the EOL page for that taxon.</li> <li>Left click the (non-underlined) taxon names in the 'breadcrumb trail' at the top to view supertaxa of this taxon</li> <li>Use your browser's back and next buttons, as you usually would, to see the previous or next page in your history, respectively.</li></div><p>Learn more about the project, download the source code, or leave feedback at the <a href='http://github.com/kurie/EOL-tree-viewer'>GitHub repository</a>.</p> </div>";
 
 /* Overrides TM.plot */
 EOLTreeMap.prototype.plot = function(taxon){
