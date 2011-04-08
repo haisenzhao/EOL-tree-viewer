@@ -37,26 +37,19 @@ function EOLTreeMap(container) {
 	this.selectionFrozen = false;
 	
 	/* Add mouse and keyboard event handlers */
-	jQuery(".selectable").live("mouseenter", function() {
-		that.select(this.id);
-	});
+	jQuery(".selectable")
+		.live("mouseout", function() {
+			that.select(null);
+			return false;
+		})
+		.live("mouseover", function() {
+			that.select(this.id);
+			return false;
+		});
 	
-	jQuery(".selectable").live("mouseleave", function() {
-		that.select(null);
-	});
-	
-	jQuery("div.content").live("click", function() {
+	jQuery("div.content, a.breadcrumb.ancestor").live("click", function() {
 		window.location.hash = this.id;
-	});
-	
-	//show EOL logo when hovering a link out to EOL
-	jQuery("a.head").live("mouseenter", function () {
-		jQuery("#_tooltip").html("<img src='images/eol_logo.gif' />");
-	});
-	
-	//force body element to trigger mouseovers on its parent (div.content)
-	jQuery("div.body").live("mouseover", function () {
-		jQuery(this).parent().mouseover();
+		return false;
 	});
 	
 	jQuery(document).keydown(function (eventObject) {
