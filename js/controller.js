@@ -451,8 +451,8 @@ EOLTreeMapController.bindOptionsForm = function (controller) {
 EOLTreeMapController.optionsForm = 
 	"<form name='treemap' onsubmit='return false;'>" +
 		"<fieldset><legend>Treemap options</legend>" +
-			"<div>Maximum depth: <input id='depth' type='text' name='depth' size='3' /></div>" +
-			"<div>Display images: <input id='displayImages' type='checkbox' name='displayImages' /></div>" +
+			"<div>Maximum depth: <input id='depth' type='text' name='depth' size='3' /></div>" + //FIXME: put a cap on how deep they can go.  Most classifications will take a *long* time to load more than 3 levels of the tree.  Also, on the HOME node, it might not make sense to be able to show nodes deeper than 1.
+			"<div>Display images: <input id='displayImages' type='checkbox' name='displayImages' /></div>" + //FIXME: rechecking this box does not download images until the view is updated (new node loaded, browser resize, etc.)  Also, IE seems to require two clicks to check or uncheck this box?
 			"<fieldset><legend>Size mapping</legend>" +
 				"<p>Choose a property of the taxon to determine the area of the taxon box in the treemap.  You may also choose a scaling function to control how quickly the areas grow.</p>" + 
 				"<div><label class='col col1'>Variable:</label><select id='sizeVariable' name='sizeVariable'></select></div>" + 
@@ -463,7 +463,7 @@ EOLTreeMapController.optionsForm =
 				"<div class='row'><label class='col col1'>Variable:</label><select id='colorVariable' name='colorVariable'></select></div>" + 
 				"<div id='colorVariableRange' class='row'><label class='col col1'>Variable min:</label><input class='col col2' id='colorVariableMinValue' type='text' name='minValue' size='6' /><label class='col col3'>max:</label><input class='col col4' id='colorVariableMaxValue' type='text' name='maxValue' size='6' /></div>" + 
 				"<div id='colorRange' class='row'><label class='col col1'>Color min:</label><input id='minColor' class='color col col2' size='6' /><label class='col col3'>max:</label><input id='maxColor' class='color col col4' size='6' /></div>" + 
-				"<div id='color-display'>" + 
+				"<div id='color-display'>" + //FIXME make a replacement color legend for firefox and IE (which can't handle the inline svg yet
 					"<div id='gradient-legend'><svg id='gradientBar'><rect x='0' y='0' width='100%' height='100%' fill='url(#colorGradient)'/><linearGradient id='colorGradient'><stop offset='0' stop-color='white'/><stop offset='1' stop-color='black'/></linearGradient></svg><div><span id='colorVariableMinLabel'>min</span><span id='colorVariableMaxLabel'>max</span><br/></div></div>" +
 					"<img id='iucn-legend' src='images/Status_iucn3.1.svg' height=100px />" +
 				"</div>" + 
