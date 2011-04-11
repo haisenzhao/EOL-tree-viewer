@@ -46,26 +46,45 @@ EolApi.prototype.ping = function (success, error) {
 	});
 };
 
-EolApi.getJSONP = function (url, config, requestID) {
-	var ajaxSettings = {
-		cache:true,
-		dataType:"jsonp", //appends the 'callback=?' param
-		jsonpCallback:requestID, //renames the ? callback function in the 'callback=?' param, instead of the random names jQuery gives them.  Keeps URL same, allows caching.
-		type:"GET",
-		url:url,
-		data:config,
-	};
-	
-	var deferred = jQuery.ajax(ajaxSettings);
-	
-	return deferred;
-};
+EolApi.prototype.getJSONP = ( function() {
+	//not having much luck getting the browser to cache JSONP responses, so I'll just keep my own.  (Based on http://www.slideshare.net/Dmitry.Baranovskiy/your-javascript-library)
+	var jsonCache = {};
+	var keys = [];
+		
+	return function (url, config, requestID) {
+		var key = url + "?" + jQuery.param(config);
+		key.replace("http://" + this.apiHost,""); //remove the protocol and host to (hopefully) make lookups a bit faster
+		
+		if (!(key in jsonCache)) {
+			console.log("miss: " + key);
+			var ajaxSettings = {
+		        dataType:"jsonp", //appends the 'callback=?' param
+		        type:"GET",
+		        url:url,
+		        data:config,
+			};
+				
+			//add to cache
+			jsonCache[key] = jQuery.ajax(ajaxSettings);
+			keys.push(key);
+			
+			//maintain the cache max. size
+			if (keys.length > this.cacheSize) {
+				delete jsonCache[keys.shift()];
+			}
+		} else {
+			console.log("hit: " + key);
+		}
+		
+		return jsonCache[key];
+	}	
+})();
 
 EolApi.prototype.hierarchy_entries = function (taxonID) {
 	//TODO handle unknown taxonIDs.  API responds with an http 200 OK, so I still have to check for errors on ajax 'success'. And it's in XML instead of json.  Response is like <response><error><message>Unknown identifier taxonID</message></error></response> 
 	if (taxonID) {
 		var url = "http://" + this.apiHost + "/api/hierarchy_entries/" + this.apiVersion + "/" + taxonID + ".json";
-		return EolApi.getJSONP(url, this.hierarchyConfig, "hierarchy_entries" + taxonID);
+		return this.getJSONP(url, this.hierarchyConfig, "hierarchy_entries" + taxonID);
 	} else {
 		return jQuery.Deferred().reject("invalid taxonID: " + taxonID);
 	}
@@ -74,7 +93,7 @@ EolApi.prototype.hierarchy_entries = function (taxonID) {
 EolApi.prototype.pages = function (taxonConceptID, config) {
 	if (taxonConceptID) {
 		var url = "http://" + this.apiHost + "/api/pages/" + this.apiVersion + "/" + taxonConceptID + ".json";
-		return EolApi.getJSONP(url, config, "pages" + taxonConceptID);
+		return this.getJSONP(url, config, "pages" + taxonConceptID);
 	} else {
 		return jQuery.Deferred().reject("invalid taxonConceptID: " + taxonConceptID);
 	}
@@ -83,7 +102,7 @@ EolApi.prototype.pages = function (taxonConceptID, config) {
 EolApi.prototype.data_objects = function (objectID) {
 	if (objectID) {
 		var url = "http://" + this.apiHost + "/api/data_objects/" + this.apiVersion + "/" + objectID + ".json";
-		return EolApi.getJSONP(url, EolApi.baseConfig,"data_objects" + objectID);
+		return this.getJSONP(url, EolApi.baseConfig,"data_objects" + objectID);
 	} else {
 		return jQuery.Deferred().reject("invalid objectID: " + objectID);
 	}
@@ -94,18 +113,18 @@ EolApi.prototype.search = function (query, config) {
 	config = config || EolApi.baseConfig;
 	
 	var url = "http://" + this.apiHost + "/api/search/" + this.apiVersion + "/" + query + ".json";
-	return EolApi.getJSONP(url, config, "search" + query);
+	return this.getJSONP(url, config, "search" + query);
 };
 
 EolApi.prototype.provider_hierarchies = function () {
 	var url = "http://" + this.apiHost + "/api/provider_hierarchies/" + this.apiVersion + ".json";
-	return EolApi.getJSONP(url, EolApi.baseConfig, "provider_hierarchies");
+	return this.getJSONP(url, EolApi.baseConfig, "provider_hierarchies");
 }
 
 EolApi.prototype.hierarchies = function (id) {
 	if(id) {
 		var url = "http://" + this.apiHost + "/api/hierarchies/" + this.apiVersion + "/" + id + ".json";
-		return EolApi.getJSONP(url, EolApi.baseConfig, "hierarchies" + id);
+		return this.getJSONP(url, EolApi.baseConfig, "hierarchies" + id);
 	} else {
 		return jQuery.Deferred().reject("invalid id: " + id);
 	}
