@@ -117,7 +117,8 @@ var vole = {
 			searchConfig = {"page":page};
 			
 			var api = new EolApi();
-			api.searchHierarchyEntries(query, searchConfig, function (json) {
+			api.searchPages(query, searchConfig, function (json) {
+				//TODO rewrite this so it doesn't build so much html on every search.
 				jQuery("#search-results").empty();
 				
 				if (json.results.length === 0) {

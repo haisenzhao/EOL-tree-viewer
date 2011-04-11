@@ -13,8 +13,8 @@ function Taxon(hierarchy_entry, id, name) {
 		});
 	}
 	
-	this.id = id || hierarchy_entry.taxonID;
-	this.name = name || hierarchy_entry.scientificName;
+	this.id = id || hierarchy_entry.id || hierarchy_entry.taxonID;
+	this.name = name || hierarchy_entry.name || hierarchy_entry.scientificName;
 }
 
 Taxon.prototype.getArea = function() {

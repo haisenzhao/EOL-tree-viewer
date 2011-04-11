@@ -224,7 +224,7 @@ EOLTreeMapController.prototype.onAfterCompute = function (tree) {
 
 EOLTreeMapController.prototype.request = function (nodeId, level, onComplete) {
 	var controller = this;
-	this.api.fetchNode(nodeId, function (json) {
+	this.api.fetchNode(nodeId, function (json) { //TODO update fetchNode to use jQuery.Deferred
 		
 		if (level > 0 && json.children && json.children.length > 0) {
 			var childrenToCallBack = json.children.length;
@@ -254,7 +254,7 @@ EOLTreeMapController.prototype.insertBodyContent = function (node, container) {
 	}
 	
 	if (!node.apiContentFetched) {
-		this.api.decorateNode(node, function () {
+		this.api.decorateNode(node).done(function () {
 			node.apiContentFetched = true;
 			that.insertBodyContent(node, container);
 		});
