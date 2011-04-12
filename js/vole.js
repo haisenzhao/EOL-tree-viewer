@@ -152,9 +152,6 @@ var vole = {
 				var hoverDetails = jQuery("<div id='search-result-details'>").appendTo("#search-results");
 				
 				jQuery.each(json.results, function (index, result) {
-					var match = jQuery.grep(result.page.taxonConcepts, hierarchyMatch);
-					var item;
-					
 					result.content = result.content.replace(matchRegex, "<span class='match-text'>" + query + "</span>");
 
 					var hoverIn = function (eventObject) {
@@ -166,20 +163,25 @@ var vole = {
 						hoverDetails.hide();
 					};
 
-					if (match.length > 0) {
-						thisClassificationResults.show();
-						thisClassificationMsg.html("<h3>Results in the current classification:</h3>");
-						var link = jQuery("<a href=#" + match[0].identifier + ">" + match[0].scientificName + "</a>");
-						item = jQuery("<li class='same-classification-result'>").append(link).appendTo(thisClassificationResults);
-
-					} else if (result.page.taxonConcepts && result.page.taxonConcepts.length > 0) {
-						otherClassificationResults.show();
-						otherClassificationMsg.html("<h3>Results in other classifications:</h3>");
-						item = jQuery("<li class='other-result'>").append(result.title).appendTo(otherClassificationResults);
-						var links = jQuery("<ul>").appendTo(item);
-						jQuery.each(result.page.taxonConcepts, function(index, taxonConcept) {
-							links.append("<li><a href=#" + taxonConcept.identifier + ">" + taxonConcept.nameAccordingTo + "</a></li>");
-						});
+					if (result.page) {
+						var match = jQuery.grep(result.page.taxonConcepts, hierarchyMatch);
+						var item;
+						
+						if (match.length > 0) {
+							thisClassificationResults.show();
+							thisClassificationMsg.html("<h3>Results in the current classification:</h3>");
+							var link = jQuery("<a href=#" + match[0].identifier + ">" + match[0].scientificName + "</a>");
+							item = jQuery("<li class='same-classification-result'>").append(link).appendTo(thisClassificationResults);
+	
+						} else if (result.page.taxonConcepts && result.page.taxonConcepts.length > 0) {
+							otherClassificationResults.show();
+							otherClassificationMsg.html("<h3>Results in other classifications:</h3>");
+							item = jQuery("<li class='other-result'>").append(result.title).appendTo(otherClassificationResults);
+							var links = jQuery("<ul>").appendTo(item);
+							jQuery.each(result.page.taxonConcepts, function(index, taxonConcept) {
+								links.append("<li><a href=#" + taxonConcept.identifier + ">" + taxonConcept.nameAccordingTo + "</a></li>");
+							});
+						}
 					} else {
 						//Has no taxonConcepts == appears in no classifications?
 						noClassificationMsg.show();

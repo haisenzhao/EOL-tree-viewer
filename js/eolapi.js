@@ -56,7 +56,6 @@ EolApi.prototype.getJSONP = ( function() {
 		key.replace("http://" + this.apiHost,""); //remove the protocol and host to (hopefully) make lookups a bit faster
 		
 		if (!(key in jsonCache)) {
-			console.log("miss: " + key);
 			var ajaxSettings = {
 		        dataType:"jsonp", //appends the 'callback=?' param
 		        type:"GET",
@@ -72,8 +71,7 @@ EolApi.prototype.getJSONP = ( function() {
 			if (keys.length > this.cacheSize) {
 				delete jsonCache[keys.shift()];
 			}
-		} else {
-			console.log("hit: " + key);
+			
 		}
 		
 		return jsonCache[key];
@@ -188,13 +186,17 @@ EolApi.prototype.searchPages = function (query, searchConfig, onSuccess) {
 	
 	//a function for setting search result page data
 	var setPage = function (index, searchResult) {
-		that.pages(searchResult.id, pagesConfig).done(function (page) {
+		that.pages(searchResult.id, pagesConfig)
+		.done(function (page) {
 			searchResult.page = page;
 
 			pageResponseCount++;
 			if (pageResponseCount === searchResponse.results.length) {
 				onSuccess(searchResponse);
 			}
+		})
+		.fail(function() {
+			pageResponseCount++;
 		});
 	}; 
 	
