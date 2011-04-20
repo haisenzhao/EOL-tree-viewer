@@ -24,7 +24,7 @@ function EolApi() {
 //	this.apiHost = "labs1.eol.org";
 	this.apiHost = "www.eol.org";
 	this.apiVersion = "1.0";
-	
+	this.cacheSize = 10000;
 	
 }
 
