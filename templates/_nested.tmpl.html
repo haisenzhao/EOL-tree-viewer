@@ -1,0 +1,94 @@
+<!-- Maps EOL API json hierarchy_entries responses into nested <div>s each with a head and body div. -->
+
+<script id="root" type="x-jquery-tmpl">
+	<div class='node selectable root' id='${vole.template.nested.getID($data)}'>
+		{{tmpl '#head-breadcrumb'}}
+		{{tmpl '#body'}}
+	</div>
+</script>
+
+<script id="node" type="x-jquery-tmpl">
+	{{if vole.template.nested.displayNode($item)}}
+		<div class='node selectable' id='${vole.template.nested.getID($data)}'>
+			{{tmpl '#head'}}
+			{{tmpl '#body'}}
+		</div>
+	{{/if}}
+</script>
+
+<script id="head" type="x-jquery-tmpl">
+	<div class='head'>
+		<span>${vole.template.nested.getName($data)}</span>
+	</div>
+</script>
+
+<script id="body" type="x-jquery-tmpl">
+	<div class='body'>
+		{{if children}}
+			{{tmpl(children) '#node'}}
+		{{else}}
+			<!--{{tmpl '#image'}}-->
+		{{/if}}
+	</div>
+</script>
+
+<script id="head-breadcrumb" type="x-jquery-tmpl">
+	<div class='head'>
+		<span class='breadcrumbs'>
+			<span class='breadcrumb current'>${vole.template.nested.getName($data)}</span>
+
+			<span class='breadcrumb ancestors'>
+				{{tmpl(vole.template.nested.reverse(ancestors)) '#breadcrumb-ancestor'}}
+			</span>
+			
+		</span>
+	</div>
+</script>
+
+<script id="breadcrumb-ancestor" type="x-jquery-tmpl">
+${' < '}<a class='breadcrumb ancestor'id='${vole.template.nested.getID($data)}'>${vole.template.nested.getName($data)}</a>
+</script>
+
+<script type="text/javascript">
+vole.template.nested = {
+	displayNode: function(item) {
+		return item.data.total_descendants; //if this is a fetched node and not just a child stub, this will be defined
+	},
+		
+	getID: function (hierarchy_entry) {
+		return hierarchy_entry.id || hierarchy_entry.taxonID;
+	},
+
+	getName: function (hierarchy_entry) {
+		return hierarchy_entry.name || hierarchy_entry.scientificName;
+	},
+
+	getDepth: function (item) {
+		return item.parent && this.getDepth(item.parent) + 1 || 0;
+	},
+
+	getHeadTemplateName: function (item) {
+		//the root node, at depth 1 in the template tree, gets a different head element.
+		if (this.getDepth(item) === 1) {
+			return '#breadcrumb';
+		} else {
+			return '#head';
+		}
+	},
+
+	getNodeClasses: function (item) {
+		var classes = 'node selectable';
+
+		if (this.getDepth(item) === 1) {
+			classes += ' root'
+		}
+		
+		return classes;
+	},
+
+	reverse: function (array) {
+		return array.reverse();
+	}
+};
+	
+</script>

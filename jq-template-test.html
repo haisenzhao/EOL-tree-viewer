@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>testing</title>
+
+<link type="text/css" rel="stylesheet" media="all" href="jq-template-test.css" />
+
+<!--[if IE]>
+<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
+<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+<script src="js/eolapi.js"></script>
+<script src="js/layout/treemap.js"></script>
+<script>
+	var api = new EolApi(),
+	viewDepth = 2;
+
+
+	jQuery(document).ready(function() {
+		window.vole = {};
+		window.vole.template = {};
+		
+		jQuery.get('templates/_nested.tmpl.html', function(templates) {
+			jQuery('head').append(templates);
+			viewIncremental('33311700', viewDepth, jQuery("#container"));
+		});
+	});
+
+	jQuery("div.node, a.breadcrumb.ancestor").live("click", function(){
+		var container = jQuery("#container").empty();
+		viewIncremental(this.id, viewDepth, container);
+		return false; //only innermost node handles event
+	});
+
+	jQuery(window).resize(function resize() {
+		//redo layout
+		var layoutContainer = jQuery("div.root > div.body").first();
+		squarifiedTreemap.doLayout(layoutContainer, sqrtSubtreeSize, setBounds);
+	});
+
+	function view(id, depth, container) {
+		api.hierarchySubtree(id,depth).
+				done(function(json){
+					var content = jQuery('#root').tmpl(json),
+						childContainer = content.children("div.body").first();
+					
+					content.appendTo(container);
+					squarifiedTreemap.doLayout(childContainer, sqrtSubtreeSize, setBounds);
+				});
+	}
+
+	function viewIncremental(id, depth, container) {
+		api.hierarchy_entries(id).done(function(json){
+			var root = jQuery('#root').tmpl(json);
+			container.append(root);
+			fetchChildren(root[0], depth);
+		});
+	}
+
+	function fetchChildren(node, depth) {
+		var childContainer = jQuery(node).children("div.body").first();
+		
+		//TODO check if node is big enough
+		if (depth > 0 && childContainer.width() > 50 && childContainer.height() > 50) {
+			api.hierarchySubtree(node.id, 1).done(function(json) {
+				var children = jQuery('#node').tmpl(json.children);
+						
+				childContainer.empty().append(children);
+				squarifiedTreemap.doLayout(childContainer, sqrtSubtreeSize, setBounds);
+						
+				children.each(function() {
+					fetchChildren(this, depth - 1);
+				});
+			});
+		}
+	}
+	
+	function subtreeSize(node) {
+		return jQuery(node).tmplItem().data.total_descendants + 1;
+	};
+
+	function sqrtSubtreeSize(node) {
+		return Math.sqrt(subtreeSize(node));
+	};
+	
+	function logBounds(node, bounds) {
+		console.log(node + ":" + bounds.x + "," + bounds.y + "," + bounds.width + "," + bounds.height);
+	}
+
+	function setBounds(node, bounds) {
+		bounds = {
+			x:Math.round(bounds.x),
+			y:Math.round(bounds.y),
+			width:Math.round(bounds.width),
+			height:Math.round(bounds.height)
+		}
+		
+		node = jQuery(node); //wrap the bare HTMLDivElement in a jQuery before setting bounds
+		node.css({'left':bounds.x, 'bottom':bounds.y});
+		node.height(bounds.height - 2);
+		node.width(bounds.width - 2);
+
+		//TODO FIXME the extra bounds checking and resetting might is making this slow.  Do this check once for all nodes and assume borders don't change.
+		//var widthPadAndBorder = node.outerWidth() - node.width();
+		//if (widthPadAndBorder != 0) {
+		//	node.width(bounds.width - widthPadAndBorder);
+		//}
+
+		//var heightPadAndBorder = node.outerHeight() - node.height();
+		//if (heightPadAndBorder != 0) {
+		//	node.height(bounds.height - heightPadAndBorder);
+		//}
+	}
+	
+</script>
+</head>
+<body>
+<div id='container'></div>
+</body>
+</html>
