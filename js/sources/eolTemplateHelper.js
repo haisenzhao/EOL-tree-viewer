@@ -22,8 +22,15 @@ function EolTemplateHelper() {
 		return this.data.children;
 	};
 
-	this.reverse = function reverse(array) {
-		//can't seem to call array.reverse directly from the template, but it works wrapped in this function.
-		return array.reverse();
+	this.getAncestors = function getAncestors() {
+		return this.data.ancestors.reverse(); //reverse to leaf-to-root order
+	};
+	
+	this.subtreeSize = function subtreeSize(node) {
+		if (node) {
+			return jQuery(node).tmplItem().data.total_descendants + 1;
+		} else {
+			return this.data.total_descendants + 1;
+		}
 	};
 }

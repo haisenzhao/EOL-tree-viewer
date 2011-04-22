@@ -29,7 +29,7 @@
 		{{if $item.hasChildren()}}
 			{{tmpl($item.getChildren(), $item.helper) '#node'}}
 		{{else}}
-			<!--{{tmpl '#image'}}-->
+			
 		{{/if}}
 	</div>
 </script>
@@ -40,7 +40,7 @@
 			<span class='breadcrumb current'>${$item.getName()}</span>
 
 			<span class='breadcrumb ancestors'>
-				{{tmpl($item.reverse(ancestors), $item.helper) '#breadcrumb-ancestor'}}
+				{{tmpl($item.getAncestors(), $item.helper) '#breadcrumb-ancestor'}}
 			</span>
 			
 		</span>
