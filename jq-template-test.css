@@ -37,14 +37,20 @@ div.head {
 	position:absolute;
 	height:20px;
 	width:100%;
-	padding-left: 3px;
-	padding-right: 3px;
+	margin-left: 3px;
+	margin-right: 3px;
 }
 
 div.head > span {
 	position: absolute;
+	left:0px;
 	height: 100%;
 	bottom: 0;	
+}
+
+.breadcrumb.ancestors {
+	font-size: 66%;
+	opacity: 0.5;	
 }
 
 div.body {
