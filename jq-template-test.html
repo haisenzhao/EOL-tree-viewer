@@ -9,15 +9,18 @@
 <!--[if IE]>
 <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
-<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
+<script src="js/lib/jquery.tmpl.ca165f.js"></script>
 <script src="js/eolapi.js"></script>
 <script src="js/layout/treemap.js"></script>
 <script src="js/layout/pivotTreemap.js"></script>
+<script src="js/sources/eolTemplateHelper.js"></script>
 <script>
 	var api = new EolApi(),
-	viewDepth = 1,
-	nodeOps = new NodeOps();
+	templateHelper = new EolTemplateHelper,
+	viewDepth = 2,
+	nodeOps = new NodeOps(),
+	layout = squarifiedTreemap;
 	
 	function NodeOps() {
 		var that = this;
@@ -32,12 +35,10 @@
 	}
 
 	jQuery(document).ready(function() {
-		window.vole = {};
-		window.vole.template = {};
-		
 		jQuery.get('templates/_nested.tmpl.html', function(templates) {
 			jQuery('head').append(templates);
-			viewIncremental('33311700', viewDepth, jQuery("#container"));
+			//viewIncremental('33311700', viewDepth, jQuery("#container"));
+			view('33311700', viewDepth, jQuery("#container"));
 		});
 	});
 
@@ -50,23 +51,27 @@
 	jQuery(window).resize(function resize() {
 		//redo layout
 		var root = jQuery("div.root")[0];
-		pivotTreemap.doLayout(root, nodeOps);
+		layout.doLayout(root, nodeOps);
 	});
 
+	/* gets the hierarchy_entries to some depth and displays them all */
 	function view(id, depth, container) {
 		api.hierarchySubtree(id,depth).
 				done(function(json){
-					var content = jQuery('#root').tmpl(json),
-						childContainer = content.children("div.body").first();
+					var content = jQuery('#root').tmpl(json, templateHelper);
 					
 					content.appendTo(container);
-					pivotTreemap.doLayout(content[0], nodeOps);
+					layout.doLayout(content[0], nodeOps);
 				});
 	}
 
+	/* gets the hierarchy_entries one level at a time and only fetches children
+	 * if the parent is not too small. Nodes are displayed as soon as they
+	 * are fetched.
+	 */
 	function viewIncremental(id, depth, container) {
 		api.hierarchy_entries(id).done(function(json){
-			var root = jQuery('#root').tmpl(json);
+			var root = jQuery('#root').tmpl(json, templateHelper);
 			container.append(root);
 			fetchChildren(root[0], depth);
 		});
@@ -74,20 +79,24 @@
 
 	function fetchChildren(node, depth) {
 		var childContainer = jQuery(node).children("div.body").first();
+		childContainer.empty();
 		
 		//TODO check if node is big enough
 		if (depth > 0 && childContainer.width() > 50 && childContainer.height() > 50) {
 			api.hierarchySubtree(node.id, 1).done(function(json) {
 				json.children.sort(function (a, b) { return a.scientificName.localeCompare(b.scientificName) });
-				var children = jQuery('#node').tmpl(json.children);
+				var children = jQuery('#node').tmpl(json.children, templateHelper);
 						
-				childContainer.empty().append(children);
-				pivotTreemap.doLayout(node, nodeOps);
+				childContainer.append(children);
+				layout.doLayout(node, nodeOps);
 						
 				children.each(function() {
 					fetchChildren(this, depth - 1);
 				});
 			});
+		} else {
+			//TODO display image
+			var image = jQuery("<img>").appendTo.childContainer;
 		}
 	}
 	
