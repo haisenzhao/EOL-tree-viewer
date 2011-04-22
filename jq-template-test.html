@@ -13,10 +13,23 @@
 <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
 <script src="js/eolapi.js"></script>
 <script src="js/layout/treemap.js"></script>
+<script src="js/layout/pivotTreemap.js"></script>
 <script>
 	var api = new EolApi(),
-	viewDepth = 2;
-
+	viewDepth = 1,
+	nodeOps = new NodeOps();
+	
+	function NodeOps() {
+		var that = this;
+		this.getArea = eolSubtreeSize;
+		this.getDisplayArea = function sqrtArea(node) {
+			return Math.sqrt(that.getArea(node));
+		};
+		this.setBounds = setDOMBounds;
+		this.getBounds = getDOMBounds;
+		this.getChildren = getDOMChildren;
+		this.getLayoutBounds = getDOMLayoutBounds;
+	}
 
 	jQuery(document).ready(function() {
 		window.vole = {};
@@ -36,8 +49,8 @@
 
 	jQuery(window).resize(function resize() {
 		//redo layout
-		var layoutContainer = jQuery("div.root > div.body").first();
-		squarifiedTreemap.doLayout(layoutContainer, sqrtSubtreeSize, setBounds);
+		var root = jQuery("div.root")[0];
+		pivotTreemap.doLayout(root, nodeOps);
 	});
 
 	function view(id, depth, container) {
@@ -47,7 +60,7 @@
 						childContainer = content.children("div.body").first();
 					
 					content.appendTo(container);
-					squarifiedTreemap.doLayout(childContainer, sqrtSubtreeSize, setBounds);
+					pivotTreemap.doLayout(content[0], nodeOps);
 				});
 	}
 
@@ -65,10 +78,11 @@
 		//TODO check if node is big enough
 		if (depth > 0 && childContainer.width() > 50 && childContainer.height() > 50) {
 			api.hierarchySubtree(node.id, 1).done(function(json) {
+				json.children.sort(function (a, b) { return a.scientificName.localeCompare(b.scientificName) });
 				var children = jQuery('#node').tmpl(json.children);
 						
 				childContainer.empty().append(children);
-				squarifiedTreemap.doLayout(childContainer, sqrtSubtreeSize, setBounds);
+				pivotTreemap.doLayout(node, nodeOps);
 						
 				children.each(function() {
 					fetchChildren(this, depth - 1);
@@ -77,19 +91,19 @@
 		}
 	}
 	
-	function subtreeSize(node) {
+	function eolSubtreeSize(node) {
 		return jQuery(node).tmplItem().data.total_descendants + 1;
 	};
 
 	function sqrtSubtreeSize(node) {
-		return Math.sqrt(subtreeSize(node));
+		return Math.sqrt(eolSubtreeSize(node));
 	};
 	
 	function logBounds(node, bounds) {
 		console.log(node + ":" + bounds.x + "," + bounds.y + "," + bounds.width + "," + bounds.height);
 	}
 
-	function setBounds(node, bounds) {
+	function setDOMBounds(node, bounds) {
 		bounds = {
 			x:Math.round(bounds.x),
 			y:Math.round(bounds.y),
@@ -98,7 +112,7 @@
 		}
 		
 		node = jQuery(node); //wrap the bare HTMLDivElement in a jQuery before setting bounds
-		node.css({'left':bounds.x, 'bottom':bounds.y});
+		node.css({'left':bounds.x, 'top':bounds.y});
 		node.height(bounds.height - 2);
 		node.width(bounds.width - 2);
 
@@ -112,6 +126,28 @@
 		//if (heightPadAndBorder != 0) {
 		//	node.height(bounds.height - heightPadAndBorder);
 		//}
+	}
+
+	function getDOMBounds(node) {
+		//TODO
+		throw "getDOMBounds not yet implemented";
+	}
+
+	//takes a DOM div.node and returns its div.node children (not the immediate DOM children, which would just be the header and body container)
+	function getDOMChildren(node) {
+		var childContainer = jQuery(node).children("div.body").first();
+		return jQuery.makeArray(childContainer.children("div.node"));
+	}
+
+	//takes a DOM div.node and returns the bounds of its child container
+	function getDOMLayoutBounds(node) {
+		var childContainer = jQuery(node).children("div.body").first();
+		return {
+			x: 0,
+			y: 0,
+			width: childContainer.width(),
+			height: childContainer.height()
+		};
 	}
 	
 </script>
