@@ -15,16 +15,17 @@
 <script src="js/layout/treemap.js"></script>
 <script src="js/layout/pivotTreemap.js"></script>
 <script src="js/sources/eolTemplateHelper.js"></script>
+<script src="js/sources/TolWebHelper.js"></script>
 <script>
 	var api = new EolApi(),
-	templateHelper = new EolTemplateHelper,
-	viewDepth = 2,
+	templateHelper = new TolWebHelper,
+	viewDepth = 1,
 	nodeOps = new NodeOps(),
 	layout = squarifiedTreemap;
 	
 	function NodeOps() {
 		var that = this;
-		this.getArea = eolSubtreeSize;
+		this.getArea = templateHelper.subtreeSize;
 		this.getDisplayArea = function sqrtArea(node) {
 			return Math.sqrt(that.getArea(node));
 		};
@@ -38,13 +39,15 @@
 		jQuery.get('templates/_nested.tmpl.html', function(templates) {
 			jQuery('head').append(templates);
 			//viewIncremental('33311700', viewDepth, jQuery("#container"));
-			view('33311700', viewDepth, jQuery("#container"));
+			//view('33311700', viewDepth, jQuery("#container"));
+			viewTOL('2374', viewDepth, jQuery("#container"));
 		});
 	});
 
 	jQuery("div.node, a.breadcrumb.ancestor").live("click", function(){
 		var container = jQuery("#container").empty();
-		viewIncremental(this.id, viewDepth, container);
+		//viewIncremental(this.id, viewDepth, container);
+		viewTOL(this.id, viewDepth, container);
 		return false; //only innermost node handles event
 	});
 
@@ -56,13 +59,23 @@
 
 	/* gets the hierarchy_entries to some depth and displays them all */
 	function view(id, depth, container) {
-		api.hierarchySubtree(id,depth).
-				done(function(json){
-					var content = jQuery('#root').tmpl(json, templateHelper);
+		api.hierarchySubtree(id,depth).done(function(json){
+				var content = jQuery('#root').tmpl(json, templateHelper);
 					
-					content.appendTo(container);
-					layout.doLayout(content[0], nodeOps);
-				});
+				content.appendTo(container);
+				layout.doLayout(content[0], nodeOps);
+			});
+	}
+
+	function viewTOL(id, depth, container) {
+		var url="http://localhost/tolwebAPI?service=external&page=xml/TreeStructureService&node_id=" + id + "&page_depth=" + depth;
+		jQuery.ajax(url, {dataType:"xml"}).done(function(xml) {
+				var root = jQuery(xml).children("tree").children("node");
+				var content = jQuery('#root').tmpl(root, new TolWebHelper());
+
+				content.appendTo(container);
+				layout.doLayout(content[0], nodeOps);
+			});
 	}
 
 	/* gets the hierarchy_entries one level at a time and only fetches children
@@ -98,18 +111,6 @@
 			//TODO display image
 			var image = jQuery("<img>").appendTo.childContainer;
 		}
-	}
-	
-	function eolSubtreeSize(node) {
-		return jQuery(node).tmplItem().data.total_descendants + 1;
-	};
-
-	function sqrtSubtreeSize(node) {
-		return Math.sqrt(eolSubtreeSize(node));
-	};
-	
-	function logBounds(node, bounds) {
-		console.log(node + ":" + bounds.x + "," + bounds.y + "," + bounds.width + "," + bounds.height);
 	}
 
 	function setDOMBounds(node, bounds) {
