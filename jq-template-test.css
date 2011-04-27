@@ -6,7 +6,6 @@ body {
 	width: 100%;
 	height: 100%;
 	position: absolute;
-	text-align: center;
 	font-size: 16px;
 	background-color: black;
 	border-radius: 10px;
@@ -39,6 +38,7 @@ div.head {
 	width:100%;
 	margin-left: 3px;
 	margin-right: 3px;
+	overflow: hidden;
 }
 
 div.head > span {
@@ -53,6 +53,9 @@ div.head > span {
 	opacity: 0.5;	
 }
 
+a.breadcrumb.ancestor {
+	cursor: pointer;
+}
 
 div.body {
 	position: absolute;
