@@ -21,6 +21,34 @@
 	viewDepth = 2,
 	nodeOps = new NodeOps(),
 	layout = squarifiedTreemap;
+
+	HTMLImageElement.prototype.resizeToFill = function resizeToFill() {
+		var jq = jQuery(this),
+			container = this.parentElement,
+			imageAR = this.naturalWidth / this.naturalHeight,
+			containerAR = container.clientWidth / container.clientHeight,
+			overlapPercent;
+
+		if (imageAR >= containerAR) {
+			//image aspect ratio is wider than container: fit height
+			jq.css("top", "auto");
+			jq.css("height", "100%");
+
+			//center overlapping width
+			jq.css("width", "auto");
+			overlapPercent = 50 * (imageAR / containerAR - 1);
+			jq.css("left", -overlapPercent + "%");
+		} else {
+			//image aspect ratio is taller than container: fit width
+			jq.css("left", "auto");
+			jq.css("width", "100%");
+
+			//center overlapping height
+			jq.css("height", "auto");
+			overlapPercent = 50 * (containerAR / imageAR - 1);
+			jq.css("top", -overlapPercent + "%");
+		}
+	};
 	
 	function NodeOps() {
 		var that = this;
@@ -37,8 +65,8 @@
 	jQuery(document).ready(function() {
 		jQuery.get('templates/_nested.tmpl.html', function(templates) {
 			jQuery('head').append(templates);
-			//viewIncremental('33311700', viewDepth, jQuery("#container"));
-			view('33311700', viewDepth, jQuery("#container"));
+			viewIncremental('28670753', viewDepth, jQuery("#container"));
+			//view('28670753', viewDepth, jQuery("#container"));
 		});
 	});
 
@@ -49,9 +77,22 @@
 	});
 
 	jQuery(window).resize(function resize() {
+		//trigger resize on the layout root
+		jQuery("div.root").resize();
+		return false;
+	});
+
+	jQuery("div.node").live("resize", function () {
 		//redo layout
-		var root = jQuery("div.root")[0];
-		layout.doLayout(root, nodeOps);
+		layout.doLayout(this, nodeOps, false);
+		jQuery("div.body > img.resizable", this).resize();
+		return false;
+	});
+
+	jQuery("img.resizable").live("resize", function () {
+		console.log("resizing image");
+		this.resizeToFill();
+		return false;
 	});
 
 	/* gets the hierarchy_entries to some depth and displays them all */
@@ -90,13 +131,20 @@
 				childContainer.append(children);
 				layout.doLayout(node, nodeOps);
 						
-				children.each(function() {
+				children.filter("div.node").each(function() {
 					fetchChildren(this, depth - 1);
 				});
 			});
 		} else {
 			//TODO display image
-			var image = jQuery("<img>").appendTo.childContainer;
+			var image = jQuery("<img class='resizable'>").appendTo(childContainer);
+			image.attr("src", "images/eol_logo.gif");
+			image.load(function() {
+				//assuming no scaling has been done yet, setting 'natural' dims for browsers that don't set them
+				this.naturalWidth = this.naturalWidth || this.width;
+				this.naturalHeight = this.naturalHeight || this.height;
+				this.resizeToFill();
+			});
 		}
 	}
 	
@@ -119,22 +167,14 @@
 			width:Math.round(bounds.width),
 			height:Math.round(bounds.height)
 		}
+		var borderWidth = 1;
+		//TODO check actual border width once at startup
 		
 		node = jQuery(node); //wrap the bare HTMLDivElement in a jQuery before setting bounds
 		node.css({'left':bounds.x, 'top':bounds.y});
-		node.height(bounds.height - 2);
-		node.width(bounds.width - 2);
-
-		//TODO FIXME the extra bounds checking and resetting might is making this slow.  Do this check once for all nodes and assume borders don't change.
-		//var widthPadAndBorder = node.outerWidth() - node.width();
-		//if (widthPadAndBorder != 0) {
-		//	node.width(bounds.width - widthPadAndBorder);
-		//}
-
-		//var heightPadAndBorder = node.outerHeight() - node.height();
-		//if (heightPadAndBorder != 0) {
-		//	node.height(bounds.height - heightPadAndBorder);
-		//}
+		node.height(bounds.height - 2 * borderWidth);
+		node.width(bounds.width - 2 * borderWidth);
+		node.resize();
 	}
 
 	function getDOMBounds(node) {

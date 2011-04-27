@@ -1,5 +1,6 @@
-<!-- Maps EOL API json hierarchy_entries responses into nested <div>s, each 
-	with a head and body div. The body div contains the node's children, if any. 
+<!-- 
+Maps EOL API json hierarchy_entries responses into nested <div>s, each with a 
+head and body div. The body div contains the node's children, if any. 
 -->
 
 <script id="root" type="x-jquery-tmpl">
@@ -28,8 +29,6 @@
 	<div class='body'>
 		{{if $item.hasChildren()}}
 			{{tmpl($item.getChildren(), $item.helper) '#node'}}
-		{{else}}
-			
 		{{/if}}
 	</div>
 </script>

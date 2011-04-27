@@ -1,28 +1,32 @@
 var squarifiedTreemap = {
 
-	doLayout: function doLayout(parent, nodeOps) {
+	doLayout: function doLayout(parent, nodeOps, recursive) {
 		var layoutBounds = nodeOps.getLayoutBounds(parent),
 			children = nodeOps.getChildren(parent),
 			layoutArea = layoutBounds.width * layoutBounds.height,
 			totalChildArea = children.reduce(function (accumulate, value) {return accumulate + nodeOps.getDisplayArea(value); }, 0),
 			scale = layoutArea / totalChildArea,
-			scaledNodeOps = this.shallowCopy(nodeOps),
+			scaledNodeOps,
 			child;
-			
-		/* 
-		 * Replace nodeOps with one that re-scales the child areas to fill this parent's layout area 
-		 * (This will be used in squarify, but not passed on to the recursive call to doLayout)
-		 */
-		scaledNodeOps.getDisplayArea = function scaledAreaCalc(node) {
-			return scale * nodeOps.getDisplayArea(node);
-		};
 
 		if (children && layoutArea > 0) {
+			scaledNodeOps = this.shallowCopy(nodeOps);
+			
+			/* 
+			 * Replace nodeOps with one that re-scales the child areas to fill this parent's layout area 
+			 * (This will be used in squarify, but not passed on to the recursive call to doLayout)
+			 */
+			scaledNodeOps.getDisplayArea = function scaledAreaCalc(node) {
+				return scale * nodeOps.getDisplayArea(node);
+			};
+			
 			children.sort(function (a, b) { return nodeOps.getDisplayArea(b) - nodeOps.getDisplayArea(a); }); //sort by area, descending
 			this.squarify(children, [], layoutBounds, scaledNodeOps);
 
-			for (child = 0; child < children.length; child++) {
-				this.doLayout(children[child], nodeOps);
+			if (recursive) {
+				for (child = 0; child < children.length; child++) {
+					this.doLayout(children[child], nodeOps, recursive);
+				}
 			}
 		}
 	},	

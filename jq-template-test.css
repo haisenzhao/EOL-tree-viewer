@@ -63,3 +63,7 @@ div.body {
 div.root div.node {
 	font-size: 75%;
 }
+
+img.resizable {
+	position:absolute;
+}
