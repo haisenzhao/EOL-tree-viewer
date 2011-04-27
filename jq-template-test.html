@@ -119,15 +119,16 @@
 
 	function fetchChildren(node, depth) {
 		var childContainer = jQuery(node).children("div.body").first();
-		childContainer.empty();
 		
 		//TODO check if node is big enough
 		if (depth > 0 && childContainer.width() > 50 && childContainer.height() > 50) {
+			childContainer.empty().append("<img src='images/ajax-loader.gif'>");
+			
 			api.hierarchySubtree(node.id, 1).done(function(json) {
 				json.children.sort(function (a, b) { return a.scientificName.localeCompare(b.scientificName) });
 				var children = jQuery('#node').tmpl(json.children, templateHelper);
 						
-				childContainer.append(children);
+				childContainer.empty().append(children);
 				layout.doLayout(node, nodeOps);
 						
 				children.filter("div.node").each(function() {
@@ -135,10 +136,7 @@
 				});
 			});
 		} else {
-			//TODO display image
-			//var image = jQuery("<img class='resizable'>").appendTo(childContainer);
 			var image = jQuery(templateHelper.getImage(node)).appendTo(childContainer);
-			//image.attr("src", "images/eol_logo.gif");
 			image.load(function() {
 				//assuming no scaling has been done yet, setting 'natural' dims for browsers that don't set them
 				this.naturalWidth = this.naturalWidth || this.width;
@@ -158,10 +156,6 @@
 	function sqrtSubtreeSize(node) {
 		return Math.sqrt(eolSubtreeSize(node));
 	};
-	
-	function logBounds(node, bounds) {
-		console.log(node + ":" + bounds.x + "," + bounds.y + "," + bounds.width + "," + bounds.height);
-	}
 
 	function setDOMBounds(node, bounds) {
 		bounds = {
