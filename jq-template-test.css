@@ -53,11 +53,13 @@ div.head > span {
 	opacity: 0.5;	
 }
 
+
 div.body {
 	position: absolute;
 	top:20px;
 	bottom:0px;
 	width: 100%;
+	overflow: hidden;
 }
 
 div.root div.node {

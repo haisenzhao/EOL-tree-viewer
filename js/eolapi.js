@@ -9,7 +9,7 @@ function PagesConfig() {
 	this.details = 1;
 	this.common_names = 1;
 	this.vetted = 0;
-	this.format = "html";
+	this.format = "json";
 }
 
 function HierarchyConfig() {
@@ -89,6 +89,8 @@ EolApi.prototype.hierarchy_entries = function (taxonID) {
 };
 
 EolApi.prototype.pages = function (taxonConceptID, config) {
+	config = config || this.pagesConfig;
+	
 	if (taxonConceptID) {
 		var url = "http://" + this.apiHost + "/api/pages/" + this.apiVersion + "/" + taxonConceptID + ".json";
 		return this.getJSONP(url, config, "pages" + taxonConceptID);

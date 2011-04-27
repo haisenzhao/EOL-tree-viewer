@@ -90,7 +90,6 @@
 	});
 
 	jQuery("img.resizable").live("resize", function () {
-		console.log("resizing image");
 		this.resizeToFill();
 		return false;
 	});
@@ -137,13 +136,17 @@
 			});
 		} else {
 			//TODO display image
-			var image = jQuery("<img class='resizable'>").appendTo(childContainer);
-			image.attr("src", "images/eol_logo.gif");
+			//var image = jQuery("<img class='resizable'>").appendTo(childContainer);
+			var image = jQuery(templateHelper.getImage(node)).appendTo(childContainer);
+			//image.attr("src", "images/eol_logo.gif");
 			image.load(function() {
 				//assuming no scaling has been done yet, setting 'natural' dims for browsers that don't set them
 				this.naturalWidth = this.naturalWidth || this.width;
 				this.naturalHeight = this.naturalHeight || this.height;
-				this.resizeToFill();
+
+				if (jQuery(this).hasClass("resizable")) {
+					this.resizeToFill();
+				}
 			});
 		}
 	}
