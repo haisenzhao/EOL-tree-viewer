@@ -52,12 +52,11 @@
 	
 	function NodeOps() {
 		var that = this;
-		this.getArea = eolSubtreeSize;
+		this.getArea = templateHelper.subtreeSize;
 		this.getDisplayArea = function sqrtArea(node) {
 			return Math.sqrt(that.getArea(node));
 		};
 		this.setBounds = setDOMBounds;
-		this.getBounds = getDOMBounds;
 		this.getChildren = getDOMChildren;
 		this.getLayoutBounds = getDOMLayoutBounds;
 	}
@@ -120,7 +119,6 @@
 	function fetchChildren(node, depth) {
 		var childContainer = jQuery(node).children("div.body").first();
 		
-		//TODO check if node is big enough
 		if (depth > 0 && childContainer.width() > 50 && childContainer.height() > 50) {
 			childContainer.empty().append("<img src='images/ajax-loader.gif'>");
 			
@@ -148,14 +146,6 @@
 			});
 		}
 	}
-	
-	function eolSubtreeSize(node) {
-		return jQuery(node).tmplItem().data.total_descendants + 1;
-	};
-
-	function sqrtSubtreeSize(node) {
-		return Math.sqrt(eolSubtreeSize(node));
-	};
 
 	function setDOMBounds(node, bounds) {
 		bounds = {
@@ -167,25 +157,22 @@
 		var borderWidth = 1;
 		//TODO check actual border width once at startup
 		
-		node = jQuery(node); //wrap the bare HTMLDivElement in a jQuery before setting bounds
+		node = jQuery(node);
 		node.css({'left':bounds.x, 'top':bounds.y});
 		node.height(bounds.height - 2 * borderWidth);
 		node.width(bounds.width - 2 * borderWidth);
 		node.resize();
 	}
 
-	function getDOMBounds(node) {
-		//TODO
-		throw "getDOMBounds not yet implemented";
-	}
-
-	//takes a DOM div.node and returns its div.node children (not the immediate DOM children, which would just be the header and body container)
+	/* takes a DOM div.node and returns its div.node children (not the 
+	   immediate DOM children, which would just be the header and body 
+	   container) */
 	function getDOMChildren(node) {
 		var childContainer = jQuery(node).children("div.body").first();
 		return jQuery.makeArray(childContainer.children("div.node"));
 	}
 
-	//takes a DOM div.node and returns the bounds of its child container
+	/* takes a DOM div.node and returns the bounds of its child container */
 	function getDOMLayoutBounds(node) {
 		var childContainer = jQuery(node).children("div.body").first();
 		return {
