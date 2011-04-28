@@ -28,7 +28,7 @@ function EolTemplateHelper() {
 		return this.data.ancestors.slice(0).reverse(); 
 	};
 	
-	this.subtreeSize = function subtreeSize(node) {
+	this.getArea = function getArea(node) {
 		if (node) {
 			return jQuery(node).tmplItem().data.total_descendants + 1;
 		} else {

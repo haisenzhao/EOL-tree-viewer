@@ -1,7 +1,7 @@
 var pivotTreemap = {
 	doLayout: function doLayout(parent, nodeOps) { 
 		var layoutBounds = nodeOps.getLayoutBounds(parent),
-			children = nodeOps.getChildren(parent),
+			children = nodeOps.getLayoutChildren(parent),
 			layoutArea = layoutBounds.width * layoutBounds.height,
 			totalChildArea = children.reduce(function (accumulate, value) {return accumulate + nodeOps.getDisplayArea(value); }, 0),
 			scale = layoutArea / totalChildArea,
