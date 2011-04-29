@@ -6,22 +6,17 @@ var squarifiedTreemap = {
 			layoutArea = layoutBounds.width * layoutBounds.height,
 			totalChildArea = children.reduce(function (accumulate, value) {return accumulate + nodeOps.getDisplayArea(value); }, 0),
 			scale = layoutArea / totalChildArea,
-			scaledNodeOps,
-			child;
+			child,
+			layoutObjects = [];
 
 		if (children && layoutArea > 0) {
-			scaledNodeOps = this.shallowCopy(nodeOps);
+			//wrap the children up with a object that stores their area, to avoid a bunch of extra calculation
+			for (child = 0; child < children.length; child++) {
+				layoutObjects.push({node: children[child], displayArea: scale * nodeOps.getDisplayArea(children[child])});
+			}
 			
-			/* 
-			 * Replace nodeOps with one that re-scales the child areas to fill this parent's layout area 
-			 * (This will be used in squarify, but not passed on to the recursive call to doLayout)
-			 */
-			scaledNodeOps.getDisplayArea = function scaledAreaCalc(node) {
-				return scale * nodeOps.getDisplayArea(node);
-			};
-			
-			children.sort(function (a, b) { return nodeOps.getDisplayArea(b) - nodeOps.getDisplayArea(a); }); //sort by area, descending
-			this.squarify(children, [], layoutBounds, scaledNodeOps);
+			layoutObjects.sort(function (a, b) { return b.displayArea - a.displayArea; }); //sort by area, descending
+			this.squarify(layoutObjects, [], layoutBounds, nodeOps);
 
 			if (recursive) {
 				for (child = 0; child < children.length; child++) {
@@ -43,7 +38,7 @@ var squarifiedTreemap = {
 			return;	
 		}
 
-		if (this.worst(row, w, nodeOps.getDisplayArea) >= this.worst(row.concat([c]), w, nodeOps.getDisplayArea)) {
+		if (this.worst(row, w) >= this.worst(row.concat([c]), w)) {
 			this.squarify(children.slice(1), row.concat([c]), bounds, nodeOps);
 		} else {
 			newBounds = this.layoutRow(row, bounds, nodeOps);
@@ -51,7 +46,7 @@ var squarifiedTreemap = {
 		}
 	},
 
-	worst: function worst(row, w, areaCalc) {
+	worst: function worst(row, w) {
 		if (row.length === 0) { 
 			return Number.MAX_VALUE; 
 		}
@@ -61,8 +56,16 @@ var squarifiedTreemap = {
 			max: -Number.MAX_VALUE,
 			sum: 0
 		};
+		
+		function minMaxSum(previousValue, currentValue, index, array) {
+			return { 
+				min: Math.min(previousValue.min, currentValue.displayArea), 
+				max: Math.max(previousValue.max, currentValue.displayArea),
+				sum: previousValue.sum + currentValue.displayArea
+			};
+		};
 
-		r = row.reduce(this.minMaxSum(areaCalc), r);
+		r = row.reduce(minMaxSum, r);
 
 		return Math.max(w * w * r.max / (r.sum * r.sum), r.sum * r.sum / (w * w * r.min));
 	},
@@ -74,7 +77,7 @@ var squarifiedTreemap = {
 				width: 0,
 				height: 0
 			},
-			rowSum = row.reduce(function (accumulate, value) {return accumulate + nodeOps.getDisplayArea(value); }, 0),
+			rowSum = row.reduce(function (accumulate, value) {return accumulate + value.displayArea; }, 0),
 			dir;
 
 		if (bounds.width > bounds.height) {
@@ -110,41 +113,17 @@ var squarifiedTreemap = {
 			};
 
 		if (dir === "h") {
-			nodeBounds.width = nodeOps.getDisplayArea(node) / rowBounds.height;
-			nodeOps.setBounds(node, nodeBounds);
+			nodeBounds.width = node.displayArea / rowBounds.height;
+			nodeOps.setBounds(node.node, nodeBounds);
 			rowBounds.x += nodeBounds.width;
 			rowBounds.width -= nodeBounds.width;
 		} else {
-			nodeBounds.height = nodeOps.getDisplayArea(node) / rowBounds.width;
-			nodeOps.setBounds(node, nodeBounds);
+			nodeBounds.height = node.displayArea / rowBounds.width;
+			nodeOps.setBounds(node.node, nodeBounds);
 			rowBounds.y += nodeBounds.height;
 			rowBounds.height -= nodeBounds.height;
 		}
 
 		this.layoutNodes(row, rowBounds, dir, nodeOps);
-	},
-	
-	minMaxSum: function minMaxSum(areaCalc) {
-		return function (previousValue, currentValue, index, array) {
-			return { 
-				min: Math.min(previousValue.min, areaCalc(currentValue)), 
-				max: Math.max(previousValue.max, areaCalc(currentValue)),
-				sum: previousValue.sum + areaCalc(currentValue)
-			};
-		};
-	},
-	
-	shallowCopy: function shallowCopy(obj) {
-		var copy = (this instanceof Array) ? [] : {},
-			prop;
-		
-		for (prop in obj) {
-			if (obj.hasOwnProperty(prop)) {
-				copy[prop] = obj[prop];
-			}
-		} 
-		
-		return copy;
 	}
-	
 };
