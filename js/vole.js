@@ -56,12 +56,20 @@ var vole = (function () {
 		layout.doLayout(parent, nodeOps, recursive);
 	};
 	
-	basicOps = {
-		getArea: function(node) {return 1;}, //will be replaced with a function from a source helper
+	basicOps = {	
+		getArea: function(node) {
+			return 1; //will be replaced with a function from a source helper
+		}, 
 				
 		scalingFunction: Math.sqrt,
 				
-		getDisplayArea: function(node) {return this.scalingFunction(this.getArea(node))}
+		getDisplayArea: function(node) {
+			return this.scalingFunction(this.getArea(node));
+		},
+		
+		setAreaFunction: function(func) {
+			this.getArea = func;
+		}
 	};
 	
 	return {
@@ -114,6 +122,10 @@ var vole = (function () {
 			if (depth >= 0 && depth < max_depth) {
 				viewDepth = depth;
 			}
+		},
+		
+		setAreaFunction: function(func) {
+			basicOps.setAreaFunction(func);
 		}
 	}
 })();
@@ -122,6 +134,10 @@ jQuery(document).ready(function() {
 	vole.loadTemplate('templates/_nested.tmpl.html');
 	vole.loadTemplate('templates/_right_panel.tmpl.html');
 	vole.setView('nested');
+	
+	vole.setAreaFunction(function(node) {
+		return jQuery(node).tmplItem().data.total_descendants + 1;
+	});
 	
 	vole.view('33311700');
 });
