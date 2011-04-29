@@ -32,6 +32,20 @@ div.node.hidden {
 	display:none;
 }
 
+div.node:hover {
+	border: 1px solid white;
+}
+
+/* When the mouse is anywhere over the treemap, dim all nodes 50%.  (Selected nodes will be un-dimmed below.) */
+div.node.root:hover div.node{
+	opacity:0.5;
+}
+
+/* Un-dim the hovered nodes */
+div.node.root div.node:hover {
+	opacity: 1.0;
+}
+
 div.head {
 	position:absolute;
 	height:20px;
