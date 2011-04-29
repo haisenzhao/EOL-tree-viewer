@@ -1,60 +1,41 @@
-var vole = {
-	api: new EolApi(),
-	templateHelper: new EolTemplateHelper(),
-	viewDepth: 2,
-	layout: squarifiedTreemap,
-		
-	init: jQuery.Deferred().resolve(),
+var vole = (function () {
+	var init = jQuery.Deferred().resolve(),
+		api = new EolApi(),
+		templateHelper = new EolTemplateHelper(),
+		basicOps = {},
+		layoutOps = {};
 	
-	view: function view(id) {
-		vole.init.done(function() {
-			vole.viewIncremental(id, vole.viewDepth, jQuery("#container"));
-		});
-	},
-	
-	loadTemplate: function loadTemplate(templateURL) {
-		var defer = jQuery.get(templateURL).done(function (template) {
-			jQuery('head').append(template);
-		});
-		
-		if (vole.init.isResolved()) {
-			vole.init = defer;
-		} else {
-			vole.init = jQuery.when(vole.init, defer);
-		}
-	},
-
 	/* gets the hierarchy_entries one level at a time and only fetches children
 	 * if the parent is not too small. Nodes are displayed as soon as they
 	 * are fetched.
 	 */
-	viewIncremental: function viewIncremental(id, depth, container) {
-		vole.api.hierarchy_entries(id).done(function(json){
-			var root = jQuery('#root').tmpl(json, vole.templateHelper);
+	function viewIncremental(id, depth, container) {
+		api.hierarchy_entries(id).done(function(json){
+			var root = jQuery('#root').tmpl(json, templateHelper);
 			container.append(root);
-			vole.fetchChildren(root[0], depth);
+			fetchChildren(root[0], depth);
 		});
-	},
+	};
 	
-	fetchChildren: function fetchChildren(node, depth) {
+	function fetchChildren(node, depth) {
 		var childContainer = jQuery(node).children("div.body").first();
 		
 		if (depth > 0 && childContainer.width() > 50 && childContainer.height() > 50) {
 			childContainer.empty().append("<img src='images/ajax-loader.gif'>");
 			
-			vole.api.hierarchySubtree(node.id, 1).done(function(json) {
+			api.hierarchySubtree(node.id, 1).done(function(json) {
 				json.children.sort(function (a, b) { return a.scientificName.localeCompare(b.scientificName) });
-				var children = jQuery('#node').tmpl(json.children, vole.templateHelper);
+				var children = jQuery('#node').tmpl(json.children, templateHelper);
 						
 				childContainer.empty().append(children);
 				vole.doLayout(node, false);
 						
 				children.filter("div.node").each(function() {
-					vole.fetchChildren(this, depth - 1);
+					fetchChildren(this, depth - 1);
 				});
 			});
 		} else {
-			var image = jQuery(vole.templateHelper.getImage(node)).appendTo(childContainer);
+			var image = jQuery(templateHelper.getImage(node)).appendTo(childContainer);
 			image.load(function() {
 				//assuming no scaling has been done yet, setting 'natural' dims for browsers that don't set them
 				this.naturalWidth = this.naturalWidth || this.width;
@@ -65,21 +46,44 @@ var vole = {
 				}
 			});
 		}
-	},
+	};
 	
-	doLayout: function doLayout(parent, recursive) {
-		var nodeOps = jQuery.extend({}, vole.NodeOps, vole.DOMOps, vole.templateHelper);
-		vole.layout.doLayout(parent, nodeOps, recursive);
+	basicOps = {
+		getArea: function(node) {return 1;}, //will be replaced with a function from a source helper
+				
+		scalingFunction: Math.sqrt,
+				
+		getDisplayArea: function(node) {return this.scalingFunction(this.getArea(node))}
+	};
+	
+	return {
+		viewDepth: 1,
+		layout: squarifiedTreemap,
+		
+		view: function view(id) {
+			init.done(function() {
+				viewIncremental(id, vole.viewDepth, jQuery("#container"));
+			});
+		},
+		
+		loadTemplate: function loadTemplate(templateURL) {
+			var defer = jQuery.get(templateURL).done(function (template) {
+				jQuery('head').append(template);
+			});
+			
+			if (init.isResolved()) {
+				init = defer;
+			} else {
+				init = jQuery.when(init, defer);
+			}
+		},
+		
+		doLayout: function doLayout(parent, recursive) {
+			var nodeOps = jQuery.extend({}, basicOps, vole.DOMOps, templateHelper);
+			vole.layout.doLayout(parent, nodeOps, recursive);
+		}
 	}
-}
-
-vole.NodeOps = {
-	getArea: function(node) {return 1;}, //will be replaced with a function from a source helper
-	
-	scalingFunction: Math.sqrt,
-	
-	getDisplayArea: function(node) {return this.scalingFunction(this.getArea(node))},
-}
+})();
 
 vole.DOMOps = {
 	setBounds: function setBounds(node, bounds) {
