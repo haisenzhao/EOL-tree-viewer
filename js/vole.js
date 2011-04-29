@@ -4,16 +4,24 @@ var vole = {
 	viewDepth: 2,
 	layout: squarifiedTreemap,
 		
-	init: function (callback) {
-		jQuery.get('templates/_nested.tmpl.html', function(templates) {
-			jQuery('head').append(templates);
-			callback();
+	init: jQuery.Deferred().resolve(),
+	
+	view: function view(id) {
+		vole.init.done(function() {
+			vole.viewIncremental(id, vole.viewDepth, jQuery("#container"));
 		});
 	},
 	
-	/* gets the hierarchy_entries to some depth and displays them all */
-	view: function view(id) {
-		vole.viewIncremental(id, vole.viewDepth, jQuery("#container"));
+	loadTemplate: function loadTemplate(templateURL) {
+		var defer = jQuery.get(templateURL).done(function (template) {
+			jQuery('head').append(template);
+		});
+		
+		if (vole.init.isResolved()) {
+			vole.init = defer;
+		} else {
+			vole.init = jQuery.when(vole.init, defer);
+		}
 	},
 
 	/* gets the hierarchy_entries one level at a time and only fetches children
@@ -113,9 +121,10 @@ vole.DOMOps = {
 };
 
 jQuery(document).ready(function() {
-	vole.init(function() {
-		vole.view('28670753');
-	});
+	vole.loadTemplate('templates/_nested.tmpl.html');
+	vole.loadTemplate('templates/_right_panel.tmpl.html');
+	
+	vole.view('28670753');
 });
 
 jQuery("div.node, a.breadcrumb.ancestor").live("click", function(){
