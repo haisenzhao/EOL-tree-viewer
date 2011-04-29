@@ -65,14 +65,21 @@ Note: Layout helper script assumes jQuery
 						width:Math.round(bounds.width),
 						height:Math.round(bounds.height)
 					}
-					var borderWidth = 1;
+					var borderWidth = 1,
+					image = {};
 					//TODO check actual border width once at startup
 					
 					node = jQuery(node);
 					node.css({'left':bounds.x, 'top':bounds.y});
 					node.height(bounds.height - 2 * borderWidth);
 					node.width(bounds.width - 2 * borderWidth);
-					node.resize();
+					//node.resize();
+
+					//if body contents is an image (i.e. node is displayed as a leaf) resize the image
+					image = node.children("div.body").children("img.resizable")[0];
+					if (image) {
+						image.resizeToFill();
+					}
 				},
 			
 				/* takes a DOM div.node and returns its div.node children (not the 
@@ -98,32 +105,18 @@ Note: Layout helper script assumes jQuery
 
 		//TODO add methods to setup and tear down the event handlers
 		jQuery("div.node, a.breadcrumb.ancestor").live("click", function(){
-			var container = jQuery("#container").empty();
 			vole.view(this.id);
 			return false; //only innermost node handles event
 		});
 
 		jQuery(window).resize(function resize() {
-			//trigger resize on the layout root
-			jQuery("div.root").resize();
-			return false;
-		});
-
-		jQuery("div.node").live("resize", function () {
-			//redo layout
-			vole.doLayout(this, false);
-			jQuery("div.body > img.resizable", this).resize();
-			return false;
-		});
-
-		jQuery("img.resizable").live("resize", function () {
-			this.resizeToFill();
+			vole.resize();
 			return false;
 		});
 
 		HTMLImageElement.prototype.resizeToFill = function resizeToFill() {
 			var jq = jQuery(this),
-				container = this.parentElement,
+				container = jq.parent()[0],
 				imageAR = this.naturalWidth / this.naturalHeight,
 				containerAR = container.clientWidth / container.clientHeight,
 				overlapPercent;

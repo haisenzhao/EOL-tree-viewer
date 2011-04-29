@@ -3,7 +3,10 @@ var vole = (function () {
 		api = new EolApi(),
 		templateHelper = new EolTemplateHelper(),
 		basicOps = {},
-		views = {};
+		views = {},
+		layout = squarifiedTreemap,
+		viewDepth = 1,
+		max_depth = 5; 
 	
 	/* gets the hierarchy_entries one level at a time and only fetches children
 	 * if the parent is not too small. Nodes are displayed as soon as they
@@ -12,7 +15,7 @@ var vole = (function () {
 	function viewIncremental(id, depth, container) {
 		api.hierarchy_entries(id).done(function(json){
 			var root = jQuery('#root').tmpl(json, templateHelper);
-			container.append(root);
+			container.empty().append(root);
 			fetchChildren(root[0], depth);
 		});
 	};
@@ -28,7 +31,7 @@ var vole = (function () {
 				var children = jQuery('#node').tmpl(json.children, templateHelper);
 						
 				childContainer.empty().append(children);
-				vole.doLayout(node, false);
+				doLayout(node, false);
 						
 				children.filter("div.node").each(function() {
 					fetchChildren(this, depth - 1);
@@ -47,6 +50,11 @@ var vole = (function () {
 			});
 		}
 	};
+		
+	function doLayout(parent, recursive) {
+		var nodeOps = jQuery.extend({}, basicOps, views.current.layoutOps, templateHelper);
+		layout.doLayout(parent, nodeOps, recursive);
+	};
 	
 	basicOps = {
 		getArea: function(node) {return 1;}, //will be replaced with a function from a source helper
@@ -57,12 +65,9 @@ var vole = (function () {
 	};
 	
 	return {
-		viewDepth: 1,
-		layout: squarifiedTreemap,
-		
 		view: function view(id) {
 			init.done(function() {
-				viewIncremental(id, vole.viewDepth, jQuery("#container"));
+				viewIncremental(id, viewDepth, jQuery("#container"));
 			});
 		},
 		
@@ -76,11 +81,6 @@ var vole = (function () {
 			} else {
 				init = jQuery.when(init, defer);
 			}
-		},
-		
-		doLayout: function doLayout(parent, recursive) {
-			var nodeOps = jQuery.extend({}, basicOps, views.current.layoutOps, templateHelper);
-			vole.layout.doLayout(parent, nodeOps, recursive);
 		},
 		
 		setView: function setView(name) {
@@ -98,6 +98,21 @@ var vole = (function () {
 					'nodeTemplateID': nodeTemplateID,
 					'layoutOps': layoutOps
 				};
+			}
+		},
+		
+		setLayout: function setLayout(newLayout) {
+			layout = newLayout;
+		},
+		
+		resize: function resize() {
+			var root = jQuery("div.node.root"); //TODO add a method to the view to get the root
+			doLayout(root, true);
+		},
+		
+		setViewDepth: function setViewDepth(depth) {
+			if (depth >= 0 && depth < max_depth) {
+				viewDepth = depth;
 			}
 		}
 	}
