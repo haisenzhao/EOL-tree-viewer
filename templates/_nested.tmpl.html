@@ -114,31 +114,30 @@ Note: Layout helper script assumes jQuery
 			return false;
 		});
 
+		//TODO change this to a plain old function in the closure of setBounds
 		HTMLImageElement.prototype.resizeToFill = function resizeToFill() {
-			var jq = jQuery(this),
-				container = jq.parent()[0],
+			var container = this.parentNode,
 				imageAR = this.naturalWidth / this.naturalHeight,
 				containerAR = container.clientWidth / container.clientHeight,
-				overlapPercent;
+				overlapPercent,
+				style = this.style;
 
 			if (imageAR >= containerAR) {
-				//image aspect ratio is wider than container: fit height
-				jq.css("top", "auto");
-				jq.css("height", "100%");
-
-				//center overlapping width
-				jq.css("width", "auto");
 				overlapPercent = 50 * (imageAR / containerAR - 1);
-				jq.css("left", -overlapPercent + "%");
-			} else {
-				//image aspect ratio is taller than container: fit width
-				jq.css("left", "auto");
-				jq.css("width", "100%");
 
-				//center overlapping height
-				jq.css("height", "auto");
+				//image aspect ratio is wider than container: fit height and center overlapping width
+				style.top = "auto";
+				style.height = "100%";
+				style.width = "auto";
+				style.left = -overlapPercent + "%";
+			} else {
 				overlapPercent = 50 * (containerAR / imageAR - 1);
-				jq.css("top", -overlapPercent + "%");
+
+				//image aspect ratio is taller than container: fit width and center overlapping height
+				style.left ="auto";
+				style.width = "100%";
+				style.height = "auto";
+				style.top = -overlapPercent + "%";
 			}
 		};
 		
