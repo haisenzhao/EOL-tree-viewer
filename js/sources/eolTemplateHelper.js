@@ -28,14 +28,6 @@ function EolTemplateHelper() {
 		return this.data.ancestors.slice(0).reverse(); 
 	};
 	
-	this.getArea = function getArea(node) {
-		if (node) {
-			return jQuery(node).tmplItem().data.total_descendants + 1;
-		} else {
-			return this.data.total_descendants + 1;
-		}
-	};
-	
 	this.getImage = function(node) {
 		var data = node && jQuery(node).tmplItem().data || this.data,
 			image;
