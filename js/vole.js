@@ -5,7 +5,7 @@ var vole = (function () {
 		basicOps = {},
 		views = {},
 		layout = squarifiedTreemap,
-		viewDepth = 1,
+		viewDepth = 2,
 		max_depth = 5; 
 	
 	/* gets the hierarchy_entries one level at a time and only fetches children
@@ -21,7 +21,9 @@ var vole = (function () {
 	};
 	
 	function fetchChildren(node, depth) {
-		var childContainer = jQuery(node).children("div.body").first();
+		var childContainer = jQuery(node).children("div.body").first(),
+			thumbnail = false,
+			image;
 		
 		if (depth > 0 && childContainer.width() > 50 && childContainer.height() > 50) {
 			childContainer.empty().append("<img src='images/ajax-loader.gif'>");
@@ -38,7 +40,10 @@ var vole = (function () {
 				});
 			});
 		} else {
-			var image = jQuery(templateHelper.getImage(node)).appendTo(childContainer);
+			//small nodes will get a thumbnail image.  (Some of the originals are huge.  Thumbnails appear to have a max of 147 in both dims)
+			thumbnail = childContainer.width() < 150 && childContainer.height() < 150;
+			
+			var image = jQuery(templateHelper.getImage(node, thumbnail)).appendTo(childContainer);
 			image.load(function() {
 				//assuming no scaling has been done yet, setting 'natural' dims for browsers that don't set them
 				this.naturalWidth = this.naturalWidth || this.width;

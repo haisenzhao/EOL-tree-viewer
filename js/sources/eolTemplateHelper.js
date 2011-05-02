@@ -28,7 +28,7 @@ function EolTemplateHelper() {
 		return this.data.ancestors.slice(0).reverse(); 
 	};
 	
-	this.getImage = function(node) {
+	this.getImage = function(node, thumbnail) {
 		var data = node && jQuery(node).tmplItem().data || this.data,
 			image;
 		
@@ -41,7 +41,13 @@ function EolTemplateHelper() {
 				return item.dataType === "http://purl.org/dc/dcmitype/StillImage";
 			})[0];
 			
-			url = dataObject && (dataObject.eolMediaURL || dataObject.mediaURL);
+			if (dataObject) {
+				if (thumbnail) {
+					url = dataObject.eolThumbnailURL;
+				} else {
+					url = dataObject.eolMediaURL || dataObject.mediaURL;
+				}
+			}
 			
 			if (url) {
 				image.addClass("resizable"); //the original (placeholder) image wasn't marked as resizable yet, because that's ugly
