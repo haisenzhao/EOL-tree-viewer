@@ -28,8 +28,40 @@ function EolTemplateHelper() {
 		return this.data.ancestors.slice(0).reverse(); 
 	};
 	
+	this.getVernacularName = function getVernacularName() {
+		var language = "en", //TODO pull this out and make it settable
+			vernacularNames = this.data.vernacularNames,
+			anyNames,
+			preferredName,
+			nameObj;
+
+		anyNames = jQuery.grep(vernacularNames, function (element) {
+			return element.language === language;
+		});
+			
+		if (anyNames) {
+			preferredName = jQuery.grep(anyNames, function (element) {
+				return element.eol_preferred;
+			})[0];
+		}
+		
+		nameObj = preferredName || 
+				anyNames && anyNames[0];
+		
+		return nameObj && nameObj.vernacularName || "";
+	}
+	
+	this.getDataObjects = function(dcmitype, page) {
+		page = page || this.data;
+		
+		return jQuery.grep(page.dataObjects, function (item) {
+			return item.dataType === "http://purl.org/dc/dcmitype/" + dcmitype;
+		});
+	}
+	
 	this.getImage = function(node, thumbnail) {
 		var data = node && jQuery(node).tmplItem().data || this.data,
+			that = this,
 			image;
 		
 		image = jQuery("<img src='images/ajax-loader.gif'>");
@@ -37,9 +69,7 @@ function EolTemplateHelper() {
 		this.api.pages(data.taxonConceptID).done(function (page) {
 			var dataObject, url;
 			
-			dataObject = jQuery.grep(page.dataObjects, function (item) {
-				return item.dataType === "http://purl.org/dc/dcmitype/StillImage";
-			})[0];
+			dataObject = that.getDataObjects("StillImage", page)[0];
 			
 			if (dataObject) {
 				if (thumbnail) {

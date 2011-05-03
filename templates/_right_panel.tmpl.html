@@ -1,4 +1,7 @@
-
+<!-- 
+Templates for various context panels.  These templates will deal specifically 
+with EOL content.
+-->
 <script id="right_tmpl" type="x-jquery-tmpl">
 	<div id='right'>
 		<ul id='tabs'>
@@ -19,21 +22,48 @@
 	</div>
 </script>
 
+<!-- Takes an EOL pages API response, preferably with at least one image and one text dataObject -->
 <script id="detail_tmpl" type="x-jquery-tmpl">
 	<div class='panel' id='detail'>
-		<p>Pass the mouse pointer over a node in the left panel to see images 
-		and descriptions.  Hold the F key to freeze this panel.</p>
-		<h1 id="detail-title">${scientificName}</h1>
-		<h2 id="detail-subtitle"></h2>
-		<figure>
-			<div class=image></div>
-			<figcaption></figcaption>
-		</figure>
-		<div class='description'>
-			<h2></h2>
-			<div></div>
-		</div>
+		<p class='help'>Pass the mouse pointer over a node in the left panel to see images 
+		and descriptions.</p>
+
+		{{if scientificName}}
+			<h1 id="detail-title">${scientificName}</h1>
+			<h2 id="detail-subtitle">${$item.getVernacularName()}</h2>
+
+			{{tmpl($item.getDataObjects("StillImage")[0]) "#detail_image_tmpl"}}
+			{{tmpl($item.getDataObjects("Text")[0]) "#detail_description_tmpl"}}
+
+		{{/if}}
 	</div>
+</script>
+
+<!-- Takes a dataObject from the EOL data_objects or pages API -->
+<script id="detail_image_tmpl" type="x-jquery-tmpl">
+	{{if eolMediaURL}}
+		<figure>
+			<div class=image>
+				<img src='${eolMediaURL}'/>
+			</div>
+			<figcaption>
+				${title}</br>
+				{{if agents && agents[0]}}
+					${agents[0].role}: ${agents[0].full_name}
+				{{/if}}
+			</figcaption>
+		</figure>
+	{{/if}}
+</script>
+
+<!-- Takes a dataObject from the EOL data_objects or pages API -->
+<script id="detail_description_tmpl" type="x-jquery-tmpl">
+	{{if description}}
+		<div class='description'>
+			<h2>${title}</h2>
+			<div>{{html description}}</div>
+		</div>
+	{{/if}}
 </script>
 
 <script id="statistics_tmpl" type="x-jquery-tmpl">
@@ -113,23 +143,33 @@
 </script>
 
 <script>
-	jQuery("#right .tab").live("click", function tabClick() {
-		jQuery("#right .tab").removeClass("selected");
-		jQuery(this).addClass("selected");
-		jQuery("#right div.panel").hide().filter(this.hash).show();
-		return false;
-	});
+	(function () {
+		var api = new EolApi(),
+			language = "en",
+			helper = new EolTemplateHelper();
 
-	jQuery(".selectable")
-		.live("mouseover", function() {
-			var tmplItem = jQuery(this).tmplItem(), 
-				data = tmplItem.data,
-				helper = tmplItem.helper,
-				details = jQuery("#detail_tmpl").tmpl(data, helper);
-
-			jQuery("#detail").empty().append(details.contents());
-			//TODO
+		jQuery("#right .tab").live("click", function tabClick() {
+			jQuery("#right .tab").removeClass("selected");
+			jQuery(this).addClass("selected");
+			jQuery("#right div.panel").hide().filter(this.hash).show();
 			return false;
 		});
+	
+		jQuery(".selectable")
+			.live("mouseover", function() {
+				var tmplItem = jQuery(this).tmplItem(), //the template item for the hovered node
+					taxonConceptID = tmplItem.data.taxonConceptID; //TODO for other tree sources, will need to do an EOL search to get the matching taxonConceptID
+
+				image = jQuery("<img src='images/ajax-loader.gif'>");
+				jQuery("#detail").empty().append(image);
+					
+				api.pages(taxonConceptID).done(function(page) {
+					var details = jQuery("#detail_tmpl").tmpl(page, helper);
+					jQuery("#detail").empty().append(details.contents());
+				});
+				
+				return false;
+			});
+	})();
 </script>
 

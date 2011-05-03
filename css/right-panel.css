@@ -147,6 +147,10 @@
 	color:gray;
 }
 
+#detail div.description {
+	margin-top: 10px;	
+}
+
 #search-results div.nav {
 	padding:5px;	
 }
