@@ -25,7 +25,7 @@ with EOL content.
 <!-- Takes an EOL pages API response, preferably with at least one image and one text dataObject -->
 <script id="detail_tmpl" type="x-jquery-tmpl">
 	<div class='panel' id='detail'>
-		<p class='help'>Pass the mouse pointer over a node in the left panel to see images 
+		<p class='help'>Move the mouse pointer over a node in the left panel to see images 
 		and descriptions.</p>
 
 		{{if scientificName}}
@@ -66,9 +66,10 @@ with EOL content.
 	{{/if}}
 </script>
 
+<!-- Takes a hierarchy_entries API response -->
 <script id="statistics_tmpl" type="x-jquery-tmpl">
 	<div class='panel' id='statistics'>
-		<p>Move the mouse pointer over a taxon in the left panel to see what 
+		<p class='help'>Move the mouse pointer over a taxon in the left panel to see what 
 		content the EOL has for that clade.</p>
 		<ul>
 			<li>descendants: ${total_descendants}</li>
@@ -89,7 +90,6 @@ with EOL content.
 		</ul>
 	</div>
 </script>
-
 
 
 <script id="search_tmpl" type="x-jquery-tmpl">
@@ -158,8 +158,15 @@ with EOL content.
 		jQuery(".selectable")
 			.live("mouseover", function() {
 				var tmplItem = jQuery(this).tmplItem(), //the template item for the hovered node
-					taxonConceptID = tmplItem.data.taxonConceptID; //TODO for other tree sources, will need to do an EOL search to get the matching taxonConceptID
+					taxonConceptID = tmplItem.data.taxonConceptID, //TODO for other tree sources, will need to do an EOL search to get the matching taxonConceptID
+					statistics;
 
+
+				//update statistics panel
+				statistics = jQuery("#statistics_tmpl").tmpl(tmplItem.data);
+				jQuery("#statistics").empty().append(statistics.contents());
+					
+				//put a 'loading' image in the details panel in case we have to wait for the api
 				image = jQuery("<img src='images/ajax-loader.gif'>");
 				jQuery("#detail").empty().append(image);
 					
