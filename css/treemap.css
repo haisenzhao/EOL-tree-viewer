@@ -1,0 +1,67 @@
+html, body {
+	margin:0px;	
+}
+
+#vole-container {
+	width: 100%;
+	height: 100%;
+	position:absolute;
+	font-size: 16px;
+}
+
+#vole-vis-container {
+	position:absolute;
+	left:0px;
+	top:0px;
+	width: 60%;
+	height: 100%;
+	border-radius: 10px;
+}
+
+#vole-vis-container div.node {
+	position: absolute;
+	overflow: hidden;
+}
+
+#vole-vis-container div.node.root {
+	left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+}
+
+#vole-vis-container div.node.hidden {
+	display:none;
+}
+
+#vole-vis-container div.head {
+	position:absolute;
+	height:20px;
+	width:100%;
+	margin-left: 3px;
+	margin-right: 3px;
+	overflow: hidden;
+}
+
+#vole-vis-container div.head > span {
+	position: absolute;
+	left:0px;
+	height: 100%;
+	bottom: 0;	
+}
+
+#vole-vis-container a.breadcrumb.ancestor {
+	cursor: pointer;
+}
+
+#vole-vis-container div.body {
+	position: absolute;
+	top:20px;
+	bottom:0px;
+	width: 100%;
+	overflow: hidden;
+}
+
+#vole-vis-container img.resizable {
+	position:absolute;
+}

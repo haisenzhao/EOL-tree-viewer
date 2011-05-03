@@ -6,7 +6,8 @@ var vole = (function () {
 		views = {},
 		layout = squarifiedTreemap,
 		viewDepth = 2,
-		max_depth = 5; 
+		max_depth = 5,
+		containerID = "";
 	
 	/* gets the hierarchy_entries one level at a time and only fetches children
 	 * if the parent is not too small. Nodes are displayed as soon as they
@@ -43,7 +44,7 @@ var vole = (function () {
 			//small nodes will get a thumbnail image.  (Some of the originals are huge.  Thumbnails appear to have a max of 147 in both dims)
 			thumbnail = childContainer.width() < 150 && childContainer.height() < 150;
 			
-			var image = jQuery(templateHelper.getImage(node, thumbnail)).appendTo(childContainer);
+			image = jQuery(templateHelper.getImage(node, thumbnail)).appendTo(childContainer);
 			image.load(function() {
 				//assuming no scaling has been done yet, setting 'natural' dims for browsers that don't set them
 				this.naturalWidth = this.naturalWidth || this.width;
@@ -80,7 +81,11 @@ var vole = (function () {
 	return {
 		view: function view(id) {
 			init.done(function() {
-				viewIncremental(id, viewDepth, jQuery("#container"));
+				var visContainer = jQuery(containerID).find("#vole-vis-container");
+				
+				if (visContainer) {
+					viewIncremental(id, viewDepth, visContainer);
+				}
 			});
 		},
 		
@@ -121,6 +126,9 @@ var vole = (function () {
 		resize: function resize() {
 			var root = jQuery("div.node.root"); //TODO add a method to the view to get the root
 			doLayout(root, true);
+			
+			//if the root is also a leaf, resize its image
+			root.children("div.body").children("img")[0].resizeToFill();
 		},
 		
 		setViewDepth: function setViewDepth(depth) {
@@ -131,6 +139,16 @@ var vole = (function () {
 		
 		setAreaFunction: function(func) {
 			basicOps.setAreaFunction(func);
+		},
+		
+		setContainerID: function(id) {
+			containerID = "#" + id;
+			
+			init.done(function() {
+				jQuery(containerID).empty().append("<div id='vole-vis-container'>");
+				
+				jQuery("#right_tmpl").tmpl().appendTo(containerID);
+			});
 		}
 	}
 })();
@@ -138,6 +156,8 @@ var vole = (function () {
 jQuery(document).ready(function() {
 	vole.loadTemplate('templates/_nested.tmpl.html');
 	vole.loadTemplate('templates/_right_panel.tmpl.html');
+	
+	vole.setContainerID("vole-container");
 	vole.setView('nested');
 	
 	vole.setAreaFunction(function(node) {

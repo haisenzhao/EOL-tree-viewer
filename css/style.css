@@ -1,0 +1,84 @@
+#vole-container {
+    font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
+    background-color:black;
+    color:white;
+}
+
+#vole-container a:link {
+	color:white;
+}
+#vole-container a:visited {
+	color:white;
+}
+
+#vole-container a img {
+	border:none;
+}
+
+#vole-container .loading {
+	background: url(../images/ajax-loader.gif) no-repeat center center;
+}
+
+#vole-vis-container div.node {
+	border: 1px solid #505050;
+	border-radius: 10px;
+	background-color: rgba(255,255,255,0.10);
+}
+
+#vole-vis-container div.node:hover {
+	border: 1px solid white;
+}
+
+/* When the mouse is anywhere over the treemap, dim all nodes 50%.  (Selected nodes will be un-dimmed below.) */
+#vole-vis-container div.node.root:hover div.node{
+	opacity:0.5;
+}
+
+/* Un-dim the hovered nodes */
+#vole-vis-container div.node.root div.node:hover {
+	opacity: 1.0;
+}
+
+#vole-vis-container div.root div.node {
+	font-size: 75%;
+}
+
+#vole-vis-container .breadcrumb.ancestors {
+	font-size: 66%;
+	opacity: 0.5;	
+}
+
+#vole-container #right {
+	font-size: 66%;	
+}
+
+#vole-container #right #panels {
+	overflow:auto;
+	border: 1px solid gray;
+}
+
+#vole-container #right .tab {
+	font-size:12px;
+	text-decoration:none;
+	background-color:gray;
+	border: 1px solid black;
+	-moz-border-radius: 5px 10px 0px 0px;
+	-webkit-border-radius: 5px 10px 0px 0px;
+}
+
+#vole-container #right .tab.selected, .tab.hover {
+	background-color:silver;
+}
+
+#search-results span.active {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+#search-results span.inactive {
+	color:gray;
+}
+
+#search-results .match-text {
+	background-color: gray;
+}

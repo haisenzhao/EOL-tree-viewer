@@ -1,0 +1,135 @@
+
+<script id="right_tmpl" type="x-jquery-tmpl">
+	<div id='right'>
+		<ul id='tabs'>
+			<li><a class='tab' href='#detail'>Detail</a></li>
+			<li><a class='tab' href='#statistics'>Stats</a></li>
+			<li><a class='tab' href='#search'>Search</a></li>
+			<li><a class='tab' href='#options'>Options</a></li>
+			<li><a class='tab' href='#help'>Help</a></li>
+		</ul>
+
+		<div id='panels'>
+			{{tmpl '#detail_tmpl'}}
+			{{tmpl '#statistics_tmpl'}}
+			{{tmpl '#search_tmpl'}}
+			{{tmpl '#options_tmpl'}}
+			{{tmpl '#help_tmpl'}}
+		</div>
+	</div>
+</script>
+
+<script id="detail_tmpl" type="x-jquery-tmpl">
+	<div class='panel' id='detail'>
+		<p>Pass the mouse pointer over a node in the left panel to see images 
+		and descriptions.  Hold the F key to freeze this panel.</p>
+		<h1 id="detail-title">${scientificName}</h1>
+		<h2 id="detail-subtitle"></h2>
+		<figure>
+			<div class=image></div>
+			<figcaption></figcaption>
+		</figure>
+		<div class='description'>
+			<h2></h2>
+			<div></div>
+		</div>
+	</div>
+</script>
+
+<script id="statistics_tmpl" type="x-jquery-tmpl">
+	<div class='panel' id='statistics'>
+		<p>Move the mouse pointer over a taxon in the left panel to see what 
+		content the EOL has for that clade.</p>
+		<ul>
+			<li>descendants: ${total_descendants}</li>
+			<ul>
+				<li>descendants with text: ${total_descendants_with_text}</li>
+				<li>descendants with images: ${total_descendants_with_images}</li>
+			</ul>
+			<li>text</li>
+			<ul>
+				<li>trusted text: ${total_trusted_text}</li>
+				<li>unreviewed text: ${total_unreviewed_text}</li>
+			</ul>
+			<li>images</li>
+			<ul>
+				<li>trusted images: ${total_trusted_images}</li>
+				<li>unreviewed images:${total_unreviewed_images}</li>
+			</ul>
+		</ul>
+	</div>
+</script>
+
+
+
+<script id="search_tmpl" type="x-jquery-tmpl">
+	<div class='panel' id='search'>
+		<p>Enter a common or scientific name in the box below to search.</p>
+		<form onsubmit="return false;">
+			Name: <input type='text' name='query'/>
+		</form>
+
+		{{if results}}
+			<div id='search-results'>
+				{{if (results.length === 0)}}
+					<h3>No matches found</h3>
+				{{else}}
+					{{tmpl($data) '#search_results_tmpl'}}
+				{{/if}}
+			</div>
+		{{/if}}
+	</div>		
+</script>
+
+<script id="search_results_tmpl" type="x-jquery-tmpl">
+	{{tmpl($data) '#search_nav_tmpl'}}
+	<ul>
+		{{tmpl(results) '#search_result_tmpl'}}
+	</ul>
+</script>
+
+<script id="search_nav_tmpl" type="x-jquery-tmpl">
+	<div class='search-nav'>
+		{{if previous}}<a class='search-prev' href=${previous}>prev</span> {{/if}}
+		
+		${startIndex} to ${startIndex + results.length - 1} of ${totalResults} results
+		
+		{{if next}}<span class='search-next' href=${next}>next</span>{{/if}}
+	</div>
+</script>
+
+<script id="search_result_tmpl" type="x-jquery-tmpl">
+	<li class='result'> 
+		<a href=#${page.identifier}>${page.scientificName}</a>
+	</li>
+</script>
+
+<script id="options_tmpl" type="x-jquery-tmpl">
+	<div class='panel' id='options'></div>
+</script>
+
+<script id="help_tmpl" type="x-jquery-tmpl">
+	<div class='panel' id='help'></div>
+</script>
+
+<script>
+	jQuery("#right .tab").live("click", function tabClick() {
+		jQuery("#right .tab").removeClass("selected");
+		jQuery(this).addClass("selected");
+		jQuery("#right div.panel").hide().filter(this.hash).show();
+		return false;
+	});
+
+	jQuery(".selectable")
+		.live("mouseover", function() {
+			var tmplItem = jQuery(this).tmplItem(), 
+				data = tmplItem.data,
+				helper = tmplItem.helper,
+				details = jQuery("#detail_tmpl").tmpl(data, helper);
+
+			jQuery("#detail").empty().append(details.contents());
+			//TODO
+			return false;
+		});
+</script>
+
