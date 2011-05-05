@@ -170,17 +170,10 @@ jQuery.extend({
 });
 
 
-/* Gets search results and also adds the pages response (without media) for each result */
+/* Gets search results and also adds the pages response for each result */
 //TODO change this to return a jQuery.Deferred instead of taking a callback
 EolApi.prototype.searchPages = function (query, searchConfig, onSuccess) {
 	searchConfig = searchConfig || EolApi.baseConfig;
-	
-	var pagesConfig = {
-		images:0,
-		videos:0,
-		text:0,
-		common_names:0
-	}
 	
 	var that = this;
 	var searchResponse;
@@ -188,7 +181,7 @@ EolApi.prototype.searchPages = function (query, searchConfig, onSuccess) {
 	
 	//a function for setting search result page data
 	var setPage = function (index, searchResult) {
-		that.pages(searchResult.id, pagesConfig)
+		that.pages(searchResult.id)
 		.done(function (page) {
 			searchResult.page = page;
 

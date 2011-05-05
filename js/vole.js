@@ -5,9 +5,10 @@ var vole = (function () {
 		basicOps = {},
 		views = {},
 		layout = squarifiedTreemap,
-		viewDepth = 2,
+		viewDepth = 1,
 		max_depth = 5,
-		containerID = "";
+		containerID = "",
+		displayRoot;
 	
 	/* gets the hierarchy_entries one level at a time and only fetches children
 	 * if the parent is not too small. Nodes are displayed as soon as they
@@ -15,9 +16,10 @@ var vole = (function () {
 	 */
 	function viewIncremental(id, depth, container) {
 		api.hierarchy_entries(id).done(function(json){
-			var root = jQuery('#root').tmpl(json, templateHelper);
-			container.empty().append(root);
-			fetchChildren(root[0], depth);
+			displayRoot = json;
+			var view = jQuery('#root').tmpl(json, templateHelper);
+			container.empty().append(view);
+			fetchChildren(view[0], depth);
 		});
 	};
 	
@@ -86,6 +88,8 @@ var vole = (function () {
 				if (visContainer) {
 					viewIncremental(id, viewDepth, visContainer);
 				}
+				
+				currentViewID = id;
 			});
 		},
 		
@@ -149,6 +153,10 @@ var vole = (function () {
 				
 				jQuery("#right_tmpl").tmpl().appendTo(containerID);
 			});
+		},
+		
+		getDisplayRootData: function () {
+			return displayRoot;
 		}
 	}
 })();

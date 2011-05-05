@@ -79,6 +79,12 @@
 	color:gray;
 }
 
-#search-results .match-text {
-	background-color: gray;
+#search-results li.result a{
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+#search-results a.same-classification {
+	text-decoration: underline;
+	color: yellow;
 }

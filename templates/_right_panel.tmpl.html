@@ -113,7 +113,7 @@ with EOL content.
 
 <script id="search_results_tmpl" type="x-jquery-tmpl">
 	{{tmpl($data) '#search_nav_tmpl'}}
-	<ul>
+	<ul class='result-page'>
 		{{tmpl(results) '#search_result_tmpl'}}
 	</ul>
 </script>
@@ -129,9 +129,17 @@ with EOL content.
 </script>
 
 <script id="search_result_tmpl" type="x-jquery-tmpl">
-	<li class='result'> 
-		<a href=#${page.identifier}>${page.scientificName}</a>
+	<li class='result'>${page.scientificName}
+		{{if page.taxonConcepts[0]}}
+			<ul>
+				{{tmpl(page.taxonConcepts) '#search_result_link_tmpl'}}
+			</ul>
+		{{/if}}
 	</li>
+</script>
+
+<script id="search_result_link_tmpl" type="x-jquery-tmpl">
+	<li><a>${nameAccordingTo}</a></li>
 </script>
 
 <script id="options_tmpl" type="x-jquery-tmpl">
@@ -146,15 +154,18 @@ with EOL content.
 	(function () {
 		var api = new EolApi(),
 			language = "en",
-			helper = new EolTemplateHelper();
+			helper = new EolTemplateHelper(); //TODO get the current helper from vole
 
+		//tab click handler - changes displayed panel
 		jQuery("#right .tab").live("click", function tabClick() {
 			jQuery("#right .tab").removeClass("selected");
 			jQuery(this).addClass("selected");
 			jQuery("#right div.panel").hide().filter(this.hash).show();
 			return false;
 		});
-	
+
+		//node hover handler - updates details and statistics panels
+		//TODO refactor this into a custom selection event handler, so it could be used by other kinds of views
 		jQuery(".selectable")
 			.live("mouseover", function() {
 				var tmplItem = jQuery(this).tmplItem(), //the template item for the hovered node
@@ -177,6 +188,38 @@ with EOL content.
 				
 				return false;
 			});
+
+		jQuery("#search form").live('submit', function () {
+			var query = jQuery("#search input").val();
+
+			//put a 'loading' image in the details panel while we have to wait for the api
+			image = jQuery("<img src='images/ajax-loader.gif'>").height(18);
+			jQuery("#search form input").after(image);
+			
+			api.searchPages(query, {page:1}, function (response) {
+				var results = jQuery("#search_tmpl").tmpl(response),
+					rootClassificationName = vole.getDisplayRootData().nameAccordingTo[0];
+
+				//decorate the same-classification results a bit
+				results.find("li.result a").each(function () {
+					var taxonConcept = jQuery(this).tmplItem().data,
+						anchor = jQuery(this);
+
+					if (taxonConcept.nameAccordingTo === rootClassificationName) {
+						anchor.addClass('same-classification');
+					}
+
+					anchor.click(function() {
+						vole.view(taxonConcept.identifier);
+						return false;
+					});
+				});
+
+				results.find(".result-page").before("<p>Results in the current EOL provider hierarchy are displayed <a class='same-classification'>like this</a>.</p>");
+				
+				jQuery("#search").empty().append(results.contents());
+			});
+		});
 	})();
 </script>
 
