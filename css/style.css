@@ -25,17 +25,17 @@
 	background-color: rgba(255,255,255,0.10);
 }
 
-#vole-vis-container div.node:hover {
+#vole-vis-container div.node.selected {
 	border: 1px solid white;
 }
 
 /* When the mouse is anywhere over the treemap, dim all nodes 50%.  (Selected nodes will be un-dimmed below.) */
-#vole-vis-container div.node.root:hover div.node{
+#vole-vis-container div.node.root.selected div.node{
 	opacity:0.5;
 }
 
 /* Un-dim the hovered nodes */
-#vole-vis-container div.node.root div.node:hover {
+#vole-vis-container div.node.root div.node.selected {
 	opacity: 1.0;
 }
 

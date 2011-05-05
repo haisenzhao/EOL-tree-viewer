@@ -154,7 +154,8 @@ with EOL content.
 	(function () {
 		var api = new EolApi(),
 			language = "en",
-			helper = new EolTemplateHelper(); //TODO get the current helper from vole
+			helper = new EolTemplateHelper(), //TODO get the current helper from vole
+			selectionFrozen = false;
 
 		//tab click handler - changes displayed panel
 		jQuery("#right .tab").live("click", function tabClick() {
@@ -164,29 +165,51 @@ with EOL content.
 			return false;
 		});
 
+		//holding F prevents selection update
+		jQuery(document).keydown(function (eventObject) {
+			if (eventObject.keyCode === 70) {
+				selectionFrozen = true;
+			}
+		});
+
+		jQuery(document).keyup(function (eventObject) {
+			if (eventObject.keyCode === 70) {
+				selectionFrozen = false;
+			}
+		});
+
 		//node hover handler - updates details and statistics panels
 		//TODO refactor this into a custom selection event handler, so it could be used by other kinds of views
 		jQuery(".selectable")
 			.live("mouseover", function() {
-				var tmplItem = jQuery(this).tmplItem(), //the template item for the hovered node
-					taxonConceptID = tmplItem.data.taxonConceptID, //TODO for other tree sources, will need to do an EOL search to get the matching taxonConceptID
-					statistics;
+				if (!selectionFrozen) {
+					var tmplItem = jQuery(this).tmplItem(), //the template item for the hovered node
+						taxonConceptID = tmplItem.data.taxonConceptID, //TODO for other tree sources, will need to do an EOL search to get the matching taxonConceptID
+						statistics;
 
-
-				//update statistics panel
-				statistics = jQuery("#statistics_tmpl").tmpl(tmplItem.data);
-				jQuery("#statistics").empty().append(statistics.contents());
-					
-				//put a 'loading' image in the details panel in case we have to wait for the api
-				image = jQuery("<img src='images/ajax-loader.gif'>");
-				jQuery("#detail").empty().append(image);
-					
-				api.pages(taxonConceptID).done(function(page) {
-					var details = jQuery("#detail_tmpl").tmpl(page, helper);
-					jQuery("#detail").empty().append(details.contents());
-				});
+					jQuery(".selectable").removeClass("selected").filter(this).addClass("selected");
+					jQuery(this).parents("div.node").addClass("selected");
+	
+					//update statistics panel
+					statistics = jQuery("#statistics_tmpl").tmpl(tmplItem.data);
+					jQuery("#statistics").empty().append(statistics.contents());
+						
+					//put a 'loading' image in the details panel in case we have to wait for the api
+					image = jQuery("<img src='images/ajax-loader.gif'>");
+					jQuery("#detail").empty().append(image);
+						
+					api.pages(taxonConceptID).done(function(page) {
+						var details = jQuery("#detail_tmpl").tmpl(page, helper);
+						jQuery("#detail").empty().append(details.contents());
+					});
+				}
 				
 				return false;
+			})
+			.live("mouseout", function() {
+				if (!selectionFrozen) {
+					jQuery(this).removeClass("selected");
+				}
 			});
 
 		jQuery("#search form").live('submit', function () {
