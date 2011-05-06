@@ -88,8 +88,6 @@ var vole = (function () {
 				if (visContainer) {
 					viewIncremental(id, viewDepth, visContainer);
 				}
-				
-				currentViewID = id;
 			});
 		},
 		

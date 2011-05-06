@@ -4,23 +4,19 @@
 <meta http-equiv="X-UA-Compatible" content="chrome=1">
 <title>EOL Treemap</title>
 
-<!--[if lt IE 9]>
+<link type="text/css" rel="stylesheet" media="all" href="css/treemap.css" />
+<link type="text/css" rel="stylesheet" media="all" href="css/right-panel.css" />
+<link type="text/css" rel="stylesheet" media="all" href="css/style.css" />
+
+<!--[if IE]>
 <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
-
-<link type="text/css" rel="stylesheet" media="all" href="css/layout.css" />
-<link type="text/css" rel="stylesheet" media="all" href="css/style.css" />
-<link type="text/css" rel="stylesheet" media="all" href="css/detail.css" />
-<link type="text/css" rel="stylesheet" media="all" href="css/treemap.css" />
-<script src="http://code.jquery.com/jquery-1.5.js"></script>
-<script src="js/lib/jit.js"></script>
-<script src="js/lib/jquery.ba-hashchange.js"></script>
-<script src="js/lib/jQuery_mousewheel_plugin.js"></script>
-<script src="js/lib/jscolor/jscolor.js"></script>
-<script src="js/taxon.js"></script>
-<script src="js/controller.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js"></script>
+<script src="js/lib/jquery.tmpl.ca165f.js"></script>
 <script src="js/eolapi.js"></script>
-<script src="js/eoltreemap.js"></script>
+<script src="js/layout/treemap.js"></script>
+<script src="js/layout/pivotTreemap.js"></script>
+<script src="js/sources/eolTemplateHelper.js"></script>
 <script src="js/vole.js"></script>
 
 </head>
@@ -32,21 +28,7 @@
   </div>
 </noscript>
 
-<div id='splash' class='overlay'><h1 style='text-align: center'>Welcome to VoLE</h1><h2>Viewer of Life in the EOL</h2><p>This app is a visual browser for the <a href='http://www.eol.org/' target='_blank'>Encyclopedia of Life</a>.  All of the text, images and data come from the EOL <a href='http://www.eol.org/api' target='_blank'>APIs</a>.  Learn more about the project, download the source code, or leave feedback at the project's <a href='http://github.com/kurie/EOL-tree-viewer' target='_blank'>GitHub repository</a>.</p><p>Click to continue.</p></div>
-<div id='thejit'></div>
-<div id='right'>
-<ul id='tabs'>
-	<li><a class='tab' href='#detail'>Detail</a></li>
-	<li><a class='tab' href='#statistics'>Stats</a></li>
-	<li><a class='tab' href='#search'>Search</a></li>
-	<li><a class='tab' href='#options'>Options</a></li>
-	<li><a class='tab' href='#help'>Help</a></li>
-</ul>
-<div id='detail'>Pass the mouse pointer over a node in the left panel to see images and descriptions.  Hold the F key to freeze this panel<h1 id="detail-title"></h1><h2 id="detail-subtitle"></h2><figure><div class=image></div><figcaption></figcaption></figure><div class='description'><h2></h2><div></div></div></div>
-<div id='statistics'>Move the mouse pointer over a taxon in the left panel to see what content the EOL has for that clade.<ul><li>descendants:<span id='total_descendants'></span></li><ul><li>descendants with text:<span id='total_descendants_with_text'></span></li><li>descendants with images:<span id='total_descendants_with_images'></span></li></ul><li>text</li><ul><li>trusted text:<span id='total_trusted_text'></span></li><li>unreviewed text:<span id='total_unreviewed_text'></span></li></ul><li>images</li><ul><li>trusted images:<span id='total_trusted_images'></span></li><li>unreviewed images:<span id='total_unreviewed_images'></span></li></ul></ul></div>
-<div id='search'>Enter a common or scientific name in the box below to search.<form onsubmit="return false;">Name: <input type='text' name='query'/></form><div id='search-results'></div></div>
-<div id='options'></div>
-<div id='help'>[Help text]</div>;
-</div>
+<div id='vole-container'></div>
+
 </body>
 </html>

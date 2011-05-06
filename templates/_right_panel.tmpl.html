@@ -221,7 +221,7 @@ with EOL content.
 			var query = jQuery("#search input").val();
 
 			//put a 'loading' image in the details panel while we have to wait for the api
-			image = jQuery("<img src='images/ajax-loader.gif'>").height(18);
+			image = jQuery("<img src='images/ajax-loader.gif'>").height(15);
 			jQuery("#search form input").after(image);
 			
 			api.searchPages(query, {page:1}, function (response) {
