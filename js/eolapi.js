@@ -51,8 +51,11 @@ EolApi.prototype.getJSONP = ( function() {
 	var jsonCache = {};
 	var keys = [];
 		
-	return function (url, config, requestID) {
-		var key = url + "?" + jQuery.param(config);
+	return function (url, config) {
+		var key;
+		
+		config = config || EolApi.baseConfig;
+		key = url + "?" + jQuery.param(config);
 		key.replace("http://" + this.apiHost,""); //remove the protocol and host to (hopefully) make lookups a bit faster
 		
 		if (!(key in jsonCache)) {
@@ -82,7 +85,7 @@ EolApi.prototype.hierarchy_entries = function (taxonID) {
 	//TODO handle unknown taxonIDs.  API responds with an http 200 OK, so I still have to check for errors on ajax 'success'. And it's in XML instead of json.  Response is like <response><error><message>Unknown identifier taxonID</message></error></response> 
 	if (taxonID) {
 		var url = "http://" + this.apiHost + "/api/hierarchy_entries/" + this.apiVersion + "/" + taxonID + ".json";
-		return this.getJSONP(url, this.hierarchyConfig, "hierarchy_entries" + taxonID);
+		return this.getJSONP(url, this.hierarchyConfig);
 	} else {
 		return jQuery.Deferred().reject("invalid taxonID: " + taxonID);
 	}
@@ -93,7 +96,7 @@ EolApi.prototype.pages = function (taxonConceptID, config) {
 	
 	if (taxonConceptID) {
 		var url = "http://" + this.apiHost + "/api/pages/" + this.apiVersion + "/" + taxonConceptID + ".json";
-		return this.getJSONP(url, config, "pages" + taxonConceptID);
+		return this.getJSONP(url, config);
 	} else {
 		return jQuery.Deferred().reject("invalid taxonConceptID: " + taxonConceptID);
 	}
@@ -102,7 +105,7 @@ EolApi.prototype.pages = function (taxonConceptID, config) {
 EolApi.prototype.data_objects = function (objectID) {
 	if (objectID) {
 		var url = "http://" + this.apiHost + "/api/data_objects/" + this.apiVersion + "/" + objectID + ".json";
-		return this.getJSONP(url, EolApi.baseConfig,"data_objects" + objectID);
+		return this.getJSONP(url);
 	} else {
 		return jQuery.Deferred().reject("invalid objectID: " + objectID);
 	}
@@ -110,21 +113,20 @@ EolApi.prototype.data_objects = function (objectID) {
 
 EolApi.prototype.search = function (query, config) {
 	if (!query) return jQuery.Deferred().reject("no query");
-	config = config || EolApi.baseConfig;
 	
 	var url = "http://" + this.apiHost + "/api/search/" + this.apiVersion + "/" + query + ".json";
-	return this.getJSONP(url, config, "search" + query);
+	return this.getJSONP(url);
 };
 
 EolApi.prototype.provider_hierarchies = function () {
 	var url = "http://" + this.apiHost + "/api/provider_hierarchies/" + this.apiVersion + ".json";
-	return this.getJSONP(url, EolApi.baseConfig, "provider_hierarchies");
+	return this.getJSONP(url);
 }
 
 EolApi.prototype.hierarchies = function (id) {
 	if(id) {
 		var url = "http://" + this.apiHost + "/api/hierarchies/" + this.apiVersion + "/" + id + ".json";
-		return this.getJSONP(url, EolApi.baseConfig, "hierarchies" + id);
+		return this.getJSONP(url);
 	} else {
 		return jQuery.Deferred().reject("invalid id: " + id);
 	}
@@ -173,8 +175,6 @@ jQuery.extend({
 /* Gets search results and also adds the pages response for each result */
 //TODO change this to return a jQuery.Deferred instead of taking a callback
 EolApi.prototype.searchPages = function (query, searchConfig, onSuccess) {
-	searchConfig = searchConfig || EolApi.baseConfig;
-	
 	var that = this;
 	var searchResponse;
 	var pageResponseCount = 0;
