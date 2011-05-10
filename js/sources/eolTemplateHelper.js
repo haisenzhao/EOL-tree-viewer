@@ -4,7 +4,7 @@ function EolTemplateHelper() {
 	this.api = new EolApi();
 	
 	this.displayableNode = function displayableNode() {
-		return this.data.total_descendants; //if this is just a child stub, this will be undefined, and we can't map without area
+		return this.data && "total_descendants" in this.data; //if this is just a child stub, this will be undefined, and we can't map without area
 	};
 		
 	this.getID = function getID() {
