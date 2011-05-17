@@ -1,35 +1,32 @@
 var pivotTreemap = {
-	doLayout: function doLayout(parent, nodeOps) { 
+	doLayout: function doLayout(parent, nodeOps, recursive) {
 		var layoutBounds = nodeOps.getLayoutBounds(parent),
-			children = nodeOps.getLayoutChildren(parent),
-			layoutArea = layoutBounds.width * layoutBounds.height,
-			totalChildArea = children.reduce(function (accumulate, value) {return accumulate + nodeOps.getDisplayArea(value); }, 0),
-			scale = layoutArea / totalChildArea,
-			scaledNodeOps = squarifiedTreemap.shallowCopy(nodeOps),
-			child;
+		children = nodeOps.getLayoutChildren(parent),
+		layoutArea = layoutBounds.width * layoutBounds.height,
+		totalChildArea = children.reduce(function (total, child) {return total + nodeOps.getDisplayArea(child); }, 0),
+		scale = layoutArea / totalChildArea,
+		child;
 		
-		/* 
-		 * Replace nodeOps with one that re-scales the child areas to fill this parent's layout area 
-		 * (This will be used in layoutNodes, but not passed on to the recursive call to doLayout)
-		 */
-		scaledNodeOps.getDisplayArea = function scaledAreaCalc(node) {
-			return scale * nodeOps.getDisplayArea(node);
-		};
-		
-		if (children && layoutArea > 0) {
-			this.layoutNodes(children, layoutBounds, scaledNodeOps, this.makePivotBySize(nodeOps.getDisplayArea));
-
+		if (children && children.length > 0 && layoutArea > 0) {
 			for (child = 0; child < children.length; child++) {
-				this.doLayout(children[child], nodeOps);
+				children[child].displayArea = scale * nodeOps.getDisplayArea(children[child]);
+			}
+
+			this.layoutNodes(children, layoutBounds, nodeOps, this.pivotBySize);
+
+			if (recursive) {
+				for (child = 0; child < children.length; child++) {
+					this.doLayout(children[child], nodeOps, recursive);
+				}
 			}
 		}
 	},
 	
 	layoutNodes: function layoutNodes(nodes, layoutBounds, nodeOps, pivotFunction) {
 		var width = Math.min(layoutBounds.width, layoutBounds.height),
-			pivotIndex = pivotFunction(nodes, nodeOps.getDisplayArea),
-			pivotArea = nodeOps.getDisplayArea(nodes[pivotIndex]),
-			partition = this.partition(nodes, pivotIndex, nodeOps.getDisplayArea, width),
+			pivotIndex = pivotFunction(nodes),
+			pivotArea = nodes[pivotIndex].displayArea,
+			partition = this.partition(nodes, pivotIndex, width),
 			areas = this.getAreas(partition, nodeOps.getDisplayArea),
 			regions = this.getRegions(partition, areas, pivotArea, layoutBounds),
 			list;
@@ -39,37 +36,34 @@ var pivotTreemap = {
 		
 		//recursively lay out lists in their regions
 		for (list = 0; list < partition.length; list++) {
-			if (partition[list].length > 0) {
-				this.layoutNodes(partition[list], regions.otherRegions[list], nodeOps, pivotFunction);
-			}
-			
-			/* TODO just doing a squarifiedTreemap.layoutRow gets a little
-			 * better aspect ratios if there are few nodes in the partition.
-			 * Extend this to do that. 
+			/* just doing a squarifiedTreemap.layoutRow gets a little
+			 * better aspect ratios if there are few nodes in the partition. 
 			 * 
-			 * Update: this is actually already covered in the Stopping Conditions 
-			 * section of http://hcil.cs.umd.edu/trs/2001-18/2001-18.html
+			 * TODO: this is actually already covered in the Stopping Conditions 
+			 * section of http://hcil.cs.umd.edu/trs/2001-18/2001-18.html and there are
+			 * three options for handling small partitions.  Implement all three and 
+			 * choose the one that gives the best aspect ratios for a each partition.
 			 */
-			//if (partition[list].length > 3) {
-			//	this.layoutNodes(partition[list], regions.otherRegions[list], nodeOps, pivotFunction);
-			//} else if (partition[list].length > 0) {
-			//	var bounds = regions.otherRegions[list],
-			//		dir = bounds.width > bounds.height ? "h" : "v";
-			//	squarifiedTreemap.layoutNodes(partition[list], regions.otherRegions[list], dir, nodeOps);
-			//}
+			if (partition[list].length > 3) {
+				this.layoutNodes(partition[list], regions.otherRegions[list], nodeOps, pivotFunction);
+			} else if (partition[list].length > 0) {
+				var bounds = regions.otherRegions[list],
+					dir = bounds.width > bounds.height ? "h" : "v";
+				squarifiedTreemap.layoutNodes(partition[list], regions.otherRegions[list], dir, nodeOps);
+			}
 		}
 	},
 	
 	//return an array like [list1, list2, list3].
-	partition: function partition(nodes, pivotIndex, areaCalc, layoutWidth) {
+	partition: function partition(nodes, pivotIndex, layoutWidth) {
 		var part = [[], [], []],
 			list2End;
 		
-		list2End = this.bestList2End(nodes, pivotIndex, areaCalc, layoutWidth);
+		list2End = this.bestList2End(nodes, pivotIndex, layoutWidth);
 		
 		part[0] = nodes.slice(0, pivotIndex); //this slice doesn't include nodes[pivotIndex] 
 		part[1] = nodes.slice(pivotIndex + 1, list2End); //this slice doesn't include nodes[list2End] 
-		part[2] = nodes.slice(list2End); //this slice *does* include nodes[list2End].  empty list if list2End == nodes.length
+		part[2] = nodes.slice(list2End); //this slice *does* include nodes[list2End].  empty list if list2End >= nodes.length
 		
 		return part;
 	},
@@ -81,25 +75,28 @@ var pivotTreemap = {
 		return Math.max(pivotWidth / pivotHeight, pivotHeight / pivotWidth);
 	},
 	
-	bestList2End: function bestList2End(nodes, pivotIndex, areaCalc, layoutWidth) {
+	bestList2End: function bestList2End(nodes, pivotIndex, layoutWidth) {
 		/* 
 		 * Let  L2 and  L3 be such that all items in  L2
 		 * have an index less than those in  L3, and the aspect 
 		 * ratio of  P is as close to 1 as possible.  
 		 */
-		var pivotArea = areaCalc(nodes[pivotIndex]),
+		var pivotArea = nodes[pivotIndex].displayArea,
 			pivotRatio,
 			list2Start = pivotIndex + 1,
-			list2End,
-			list2Area = areaCalc(nodes[list2Start]);
+			list2End = list2Start + 1,
+			list2Area;
 		
-		for (list2End = list2Start + 1; list2End < nodes.length; list2End++) {
-			pivotRatio = this.pivotAspectRatio(pivotArea, list2Area, layoutWidth);
-			
-			list2Area += areaCalc(nodes[list2End]);
-			
-			if (pivotRatio < this.pivotAspectRatio(pivotArea, list2Area, layoutWidth)) { //TODO factor out the second call to pivotAspectRatio. should only need to call once per iter
-				break;
+		if (list2Start < nodes.length) {
+			list2Area = nodes[list2Start].displayArea
+			for (; list2End < nodes.length; list2End++) {
+				pivotRatio = this.pivotAspectRatio(pivotArea, list2Area, layoutWidth);
+				
+				list2Area += nodes[list2End].displayArea;
+				
+				if (pivotRatio < this.pivotAspectRatio(pivotArea, list2Area, layoutWidth)) { //TODO factor out the second call to pivotAspectRatio. should only need to call once per iter
+					break;
+				}
 			}
 		}
 		
@@ -112,11 +109,11 @@ var pivotTreemap = {
 	},
 	
 	//return an array [AreaList1, AreaList2, AreaList3]
-	getAreas: function getAreas(partition, areaCalc) {
+	getAreas: function getAreas(partition) {
 		return [
-		        partition[0].reduce(function (accumulate, value) {return accumulate + areaCalc(value); }, 0),
-		        partition[1].reduce(function (accumulate, value) {return accumulate + areaCalc(value); }, 0),
-		        partition[2].reduce(function (accumulate, value) {return accumulate + areaCalc(value); }, 0)
+		        partition[0].reduce(function (total, node) {return total + node.displayArea; }, 0),
+		        partition[1].reduce(function (total, node) {return total + node.displayArea; }, 0),
+		        partition[2].reduce(function (total, node) {return total + node.displayArea; }, 0)
 		        ];
 	},
 	
@@ -206,24 +203,17 @@ var pivotTreemap = {
 	},
 	
 	//return the index of the largest element
-	makePivotBySize: function makePivotBySize(areaCalc) {
-		return function pivotBySize(nodes) {
-			var area = areaCalc(nodes[0]),
-				max = area;
-				maxIndex = 0,
-				i = 1
-			
-			for (; i < nodes.length; i++) {
-				area = areaCalc(nodes[i]);
-				
-				if (area > max) {
-					max = area;
-					maxIndex = i;
-				}
+	pivotBySize: function(nodes) {
+		var maxIndex = 0,
+			i = 1
+		
+		for (; i < nodes.length; i++) {
+			if (nodes[i].displayArea > nodes[maxIndex].displayArea) {
+				maxIndex = i;
 			}
-				
-			return maxIndex;
-		};
+		}
+			
+		return maxIndex;
 	},
 	
 	//return the index of the middle element
@@ -232,7 +222,7 @@ var pivotTreemap = {
 	},
 	
 	//return the index of the element that splits the total area most equally.  (need to verify this is the right goal)
-	pivotBySplitSize: function pivotBySplitSize(nodes, areaCalc) {
+	pivotBySplitSize: function pivotBySplitSize(nodes) {
 		//TODO
 		
 	}

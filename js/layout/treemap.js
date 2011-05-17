@@ -6,17 +6,15 @@ var squarifiedTreemap = {
 			layoutArea = layoutBounds.width * layoutBounds.height,
 			totalChildArea = children.reduce(function (accumulate, value) {return accumulate + nodeOps.getDisplayArea(value); }, 0),
 			scale = layoutArea / totalChildArea,
-			child,
-			layoutObjects = [];
+			child;
 
-		if (children && layoutArea > 0) {
-			//wrap the children up with a object that stores their area, to avoid a bunch of extra calculation
+		if (children && children.length > 0 && layoutArea > 0) {
 			for (child = 0; child < children.length; child++) {
-				layoutObjects.push({node: children[child], displayArea: scale * nodeOps.getDisplayArea(children[child])});
+				children[child].displayArea = scale * nodeOps.getDisplayArea(children[child]);
 			}
 			
-			layoutObjects.sort(function (a, b) { return b.displayArea - a.displayArea; }); //sort by area, descending
-			this.squarify(layoutObjects, [], layoutBounds, nodeOps);
+			children.sort(function (a, b) { return b.displayArea - a.displayArea; }); //sort by area, descending
+			this.squarify(children, [], layoutBounds, nodeOps);
 
 			if (recursive) {
 				for (child = 0; child < children.length; child++) {
@@ -114,12 +112,12 @@ var squarifiedTreemap = {
 
 		if (dir === "h") {
 			nodeBounds.width = node.displayArea / rowBounds.height;
-			nodeOps.setBounds(node.node, nodeBounds);
+			nodeOps.setBounds(node, nodeBounds);
 			rowBounds.x += nodeBounds.width;
 			rowBounds.width -= nodeBounds.width;
 		} else {
 			nodeBounds.height = node.displayArea / rowBounds.width;
-			nodeOps.setBounds(node.node, nodeBounds);
+			nodeOps.setBounds(node, nodeBounds);
 			rowBounds.y += nodeBounds.height;
 			rowBounds.height -= nodeBounds.height;
 		}
