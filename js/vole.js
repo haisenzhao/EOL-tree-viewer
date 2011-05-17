@@ -126,11 +126,14 @@ var vole = (function () {
 		},
 		
 		resize: function resize() {
-			var root = jQuery("div.node.root"); //TODO add a method to the view to get the root
+			var root = jQuery("div.node.root"), //TODO add a method to the view to get the root
+				rootImage = root.children("div.body").children("img")[0];
 			doLayout(root, true);
 			
 			//if the root is also a leaf, resize its image
-			root.children("div.body").children("img")[0].resizeToFill();
+			if (rootImage) {
+				rootImage.resizeToFill();
+			}
 		},
 		
 		setViewDepth: function setViewDepth(depth) {
