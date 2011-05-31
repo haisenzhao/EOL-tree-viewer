@@ -2,7 +2,7 @@ var vole = (function () {
 	var init = jQuery.Deferred().resolve(),
 		api = new EolApi(),
 		templateHelper = new EolTemplateHelper(),
-		basicOps = {},
+		areaModel = {},
 		views = {},
 		layout = squarifiedTreemap,
 		viewDepth = 1,
@@ -23,48 +23,18 @@ var vole = (function () {
 		});
 	};
 	
-	function fetchChildren(node, depth) {
-		var childContainer = jQuery(node).children("div.body").first(),
-			thumbnail = false,
-			image;
-		
-		if (depth > 0 && childContainer.width() > 50 && childContainer.height() > 50) {
-			childContainer.empty().append("<img src='images/ajax-loader.gif'>");
-			
-			api.hierarchySubtree(node.id, 1).done(function(json) {
-				json.children.sort(function (a, b) { return a.scientificName.localeCompare(b.scientificName) });
-				var children = jQuery('#node').tmpl(json.children, templateHelper);
-						
-				childContainer.empty().append(children);
-				doLayout(node, false);
-						
-				children.filter("div.node").each(function() {
-					fetchChildren(this, depth - 1);
-				});
-			});
-		} else {
-			//small nodes will get a thumbnail image.  (Some of the originals are huge.  Thumbnails appear to have a max of 147 in both dims)
-			thumbnail = childContainer.width() < 150 && childContainer.height() < 150;
-			
-			image = jQuery(templateHelper.getImage(node, thumbnail)).appendTo(childContainer);
-			image.load(function() {
-				//assuming no scaling has been done yet, setting 'natural' dims for browsers that don't set them
-				this.naturalWidth = this.naturalWidth || this.width;
-				this.naturalHeight = this.naturalHeight || this.height;
-
-				if (jQuery(this).hasClass("resizable")) {
-					this.resizeToFill();
-				}
-			});
-		}
-	};
-		
-	function doLayout(parent, recursive) {
-		var nodeOps = jQuery.extend({}, basicOps, views.current.layoutOps, templateHelper);
-		layout.doLayout(parent, nodeOps, recursive);
-	};
+	function viewURL(url, depth, container) {
+		templateHelper.getTree(url).done(function (response) {
+			views.current.show(response, templateHelper, container);
+		});
+	}
 	
-	basicOps = {	
+	function viewString(tree, viewDepth, visContainer) {
+		//TODO try to figure out the format of the string
+		//TODO display the tree
+	}
+	
+	areaModel = {	
 		getArea: function(node) {
 			return 1; //will be replaced with a function from a source helper
 		}, 
@@ -80,13 +50,27 @@ var vole = (function () {
 		}
 	};
 	
+	jQuery(window).resize(function resize() {
+		vole.resize();
+		return false;
+	});
+	
 	return {
-		view: function view(id) {
+		view: function view(tree) {
 			init.done(function() {
 				var visContainer = jQuery(containerID).find("#vole-vis-container");
 				
 				if (visContainer) {
-					viewIncremental(id, viewDepth, visContainer);
+					if (typeof tree === "string") {
+						//TODO find a reasonably good URL regex.  for now, just testing for "://"
+						if (tree.indexOf("://") > 0) {
+							viewURL(tree, viewDepth, visContainer);
+						} else {
+							viewString(tree, viewDepth, visContainer);
+						}
+					} else {
+						//TODO handle obj tree
+					}
 				}
 			});
 		},
@@ -111,13 +95,9 @@ var vole = (function () {
 			});
 		},
 		
-		addView: function addView(name, rootTemplateID, nodeTemplateID, layoutOps) {
+		addView: function addView(name, view) {
 			if (!views[name]) {
-				views[name] = {
-					'rootTemplateID': rootTemplateID,
-					'nodeTemplateID': nodeTemplateID,
-					'layoutOps': layoutOps
-				};
+				views[name] = view;
 			}
 		},
 		
@@ -125,15 +105,12 @@ var vole = (function () {
 			layout = newLayout;
 		},
 		
+		getLayout: function getLayout() {
+			return layout;
+		},
+		
 		resize: function resize() {
-			var root = jQuery("div.node.root"), //TODO add a method to the view to get the root
-				rootImage = root.children("div.body").children("img")[0];
-			doLayout(root, true);
-			
-			//if the root is also a leaf, resize its image
-			if (rootImage) {
-				rootImage.resizeToFill();
-			}
+			views.current.resize();
 		},
 		
 		setViewDepth: function setViewDepth(depth) {
@@ -142,8 +119,12 @@ var vole = (function () {
 			}
 		},
 		
-		setAreaFunction: function(func) {
-			basicOps.setAreaFunction(func);
+		getViewDepth: function getViewDepth() {
+			return viewDepth;
+		},
+		
+		getAreaModel: function() {
+			return areaModel;
 		},
 		
 		setContainerID: function(id) {
@@ -169,9 +150,9 @@ jQuery(document).ready(function() {
 	vole.setContainerID("vole-container");
 	vole.setView('nested');
 	
-	vole.setAreaFunction(function(node) {
+	vole.getAreaModel().setAreaFunction(function(node) {
 		return jQuery(node).tmplItem().data.total_descendants + 1;
 	});
 	
-	vole.view('33311700');
+	vole.view('http://www.eol.org/api/hierarchy_entries/1.0/33311700');
 });

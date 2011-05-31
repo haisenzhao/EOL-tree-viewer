@@ -310,6 +310,18 @@ EolApi.prototype.stump = function (onSuccess) {
 	return defer.promise();	
 };
 
+EolApi.prototype.buildURL = function (api, query) {
+	var url = "http://" + this.apiHost + "/api/" + api + "/" + this.apiVersion;
+	
+	if (query) {
+		url += "/" + query;
+	}
+	
+	//url += ".json";
+	
+	return url;
+}
+
 //some more info to dress up the currently known hierarchy nodes.  (new ones will get a placeholder image but no description.)
 //ID numbers may not remain the same.  Metalmark, for example, has gone through several ID changes
 EolApi.hierarchyData = {

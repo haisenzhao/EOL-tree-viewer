@@ -1,7 +1,19 @@
 /* Treemap template helper object for EOL */
 function EolTemplateHelper() {
-	this.helper = this,
+	this.helper = this;
 	this.api = new EolApi();
+	this.urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\-\.]+)*\/)([\w\-\.]+)(\.[^#?\s]+)?(\?([^#]*))?(#(.*))?$/;
+	
+	this.getTree = function (id, depth) {
+		depth = depth || 0;
+		
+		// extract id from URL
+		if (typeof id === "string" && id.indexOf("://" > 0)) {
+			id = this.urlRegex.exec(id)[8];
+		} 
+		
+		return this.api.hierarchySubtree(id, depth);
+	};
 	
 	this.displayableNode = function displayableNode() {
 		return this.data && "total_descendants" in this.data; //if this is just a child stub, this will be undefined, and we can't map without area
@@ -10,6 +22,10 @@ function EolTemplateHelper() {
 	this.getID = function getID() {
 		return this.data.taxonID;
 	};
+	
+	this.getURL = function getURL() {
+		return this.api.buildURL("hierarchy_entries", this.getID());
+	}
 
 	this.getName = function getName() {
 		return this.data.scientificName;
@@ -19,8 +35,25 @@ function EolTemplateHelper() {
 		return this.data.children.length > 0;
 	};
 	
-	this.getChildren = function getChildren() {
-		return this.data.children;
+	this.hasChildrenLocal = function hasChildrenLocal() {
+		return this.data.children.length > 0 && "total_descendants" in this.data.children[0]; //if it has stats, it's the full node
+	};
+	
+	this.getChildrenAsync = function getChildrenAsync() {
+		var defer = new jQuery.Deferred(),
+			that = this;
+		
+		if (this.hasChildrenLocal()) {
+			defer.resolve(this.data.children);
+		} else {
+			//create a deferred that gets this.api.hierarchySubtree(id, depth) and returns the children when it's done
+			this.api.hierarchySubtree(this.getID(), 1).done(function(subtree) {
+				that.data.children = subtree.children;
+				defer.resolve(subtree.children);
+			});
+		}
+
+		return defer;
 	};
 
 	this.getAncestors = function getAncestors() {

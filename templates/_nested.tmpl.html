@@ -14,7 +14,7 @@ Note: Layout helper script assumes jQuery
 
 <script id="node" type="x-jquery-tmpl">
 	{{if $item.displayableNode()}}
-		<div class='node selectable' id='${$item.getID()}'>
+		<div class='node selectable' id='${$item.getID()}' data-vole-url='${$item.getURL()}'>
 			{{tmpl($item.data, $item.helper) '#head'}}
 			{{tmpl($item.data, $item.helper) '#body'}}
 		</div>
@@ -28,11 +28,11 @@ Note: Layout helper script assumes jQuery
 </script>
 
 <script id="body" type="x-jquery-tmpl">
-	<div class='body'>
-		{{if $item.hasChildren()}}
-			{{tmpl($item.getChildren(), $item.helper) '#node'}}
-		{{/if}}
-	</div>
+	{{if $item.hasChildren()}}
+		<div class='body children to-fetch'></div>
+	{{else}}	
+		<div class='body leaf'></div>
+	{{/if}}
 </script>
 
 <script id="head-breadcrumb" type="x-jquery-tmpl">
@@ -49,15 +49,67 @@ Note: Layout helper script assumes jQuery
 </script>
 
 <script id="breadcrumb-ancestor" type="x-jquery-tmpl">
-	${' < '}<a class='breadcrumb ancestor'id='${$item.getID()}'>${$item.getName()}</a>
+	${' < '}<a class='breadcrumb ancestor' id='${$item.getID()}' data-vole-url='${$item.getURL()}'>${$item.getName()}</a>
 </script>
 
 <script>
 	(function () {
-		var name = 'nested',
-			rootTemplateID = 'root',
-			nodeTemplateID = 'node',
-			layoutOps = {
+		var rootTemplateID = '#root',
+			nodeTemplateID = '#node';
+		
+		function fetchChildren(container, templateHelper, maxDepth) {
+			container.find("div.body.children.to-fetch").each(function(){
+				var parent = jQuery(this),
+					tmplItem = parent.tmplItem(),
+					parentDepth = tmplItem.data.voleDepth;
+
+				if (parentDepth < maxDepth && parent.width() > 50 && parent.height() > 50) {
+					parent.addClass("async-wait");
+					tmplItem.getChildrenAsync().done(function (children) {
+						jQuery.each(children, function(index, child) {
+							child.voleDepth = parentDepth + 1;
+						});
+						
+						var childNodes = jQuery(nodeTemplateID).tmpl(children, templateHelper);  
+						
+						parent.empty().append(childNodes);
+						
+						vole.getLayout().doLayout(container, getNodeOps(), true);
+	
+						parent.removeClass("to-fetch async-wait");
+					});
+				} else {
+					parent.addClass("leaf");
+				}
+				
+				parent.removeClass("to-fetch");
+			});
+		}
+
+		function getNodeOps() {
+			return jQuery.extend({}, vole.getAreaModel(), view.layoutOps);
+		}
+		
+		var view = {
+			name: 'nested',
+			show: function (tree, templateHelper, container) {
+				tree.voleDepth = 0;
+				var view = jQuery(rootTemplateID).tmpl(tree, templateHelper);
+				container.empty().append(view);
+
+				vole.getLayout().doLayout(view, getNodeOps(), true);
+				//TODO handle leaves either here or in the template
+				
+				fetchChildren(view, templateHelper, vole.getViewDepth());
+			},
+			resize: function () {
+				var root = jQuery("div.node.root");
+				vole.getLayout().doLayout(root, getNodeOps(), true);
+				
+				//if the root is also a leaf, resize its image
+				root.children("div.body").children("img")[0].resizeToFill();
+			},
+			layoutOps: {
 				setBounds: function setBounds(node, bounds) {
 					bounds = {
 						x:Math.round(bounds.x),
@@ -73,7 +125,6 @@ Note: Layout helper script assumes jQuery
 					node.css({'left':bounds.x, 'top':bounds.y});
 					node.height(bounds.height - 2 * borderWidth);
 					node.width(bounds.width - 2 * borderWidth);
-					//node.resize();
 
 					//if body contents is an image (i.e. node is displayed as a leaf) resize the image
 					image = node.children("div.body").children("img.resizable")[0];
@@ -101,17 +152,13 @@ Note: Layout helper script assumes jQuery
 						height: childContainer.height()
 					};
 				}
-			};
+			}
+		}
 
 		//TODO add methods to setup and tear down the event handlers
 		jQuery("div.node, a.breadcrumb.ancestor").live("click", function(){
-			vole.view(this.id);
+			vole.view(jQuery(this).attr("data-vole-url"));
 			return false; //only innermost node handles event
-		});
-
-		jQuery(window).resize(function resize() {
-			vole.resize();
-			return false;
 		});
 
 		//TODO change this to a plain old function in the closure of setBounds
@@ -141,6 +188,6 @@ Note: Layout helper script assumes jQuery
 			}
 		};
 		
-		vole.addView(name, rootTemplateID, nodeTemplateID, layoutOps);
+		vole.addView(view.name, view);
 	})();
 </script>
