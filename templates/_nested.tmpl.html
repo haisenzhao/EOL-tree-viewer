@@ -5,6 +5,10 @@ head and body div. The body div contains the node's children, if any.
 Note: Layout helper script assumes jQuery 
 -->
 
+<script id="tree" type="x-jquery-tmpl">
+	{{tmpl($item.getRoot(), $item.helper) '#root'}}
+</script>
+
 <script id="root" type="x-jquery-tmpl">
 	<div class='node selectable root' id='${$item.getID()}'>
 		{{tmpl($item.data, $item.helper) '#head-breadcrumb'}}
@@ -54,7 +58,7 @@ Note: Layout helper script assumes jQuery
 
 <script>
 	(function () {
-		var rootTemplateID = '#root',
+		var treeTemplateID = '#tree',
 			nodeTemplateID = '#node';
 
 		/**
@@ -66,9 +70,11 @@ Note: Layout helper script assumes jQuery
 				var parentBody = jQuery(this),
 					tmplItem = parentBody.tmplItem(),
 					parentDepth = tmplItem.data.voleDepth,
-					parentNode = parentBody.parent()[0];
+					parentNode = parentBody.parent()[0],
+					parentName = tmplItem.getName();
 
-				if (parentDepth < maxDepth && parentBody.width() > 50 && parentBody.height() > 50) {
+				//display children if there is space or if the parent is unnamed 
+				if (!parentName || parentDepth < maxDepth && parentBody.width() > 50 && parentBody.height() > 50) {
 					parentBody.addClass("async-wait");
 					tmplItem.getChildrenAsync().done(function (children) {
 						jQuery.each(children, function(index, child) {
@@ -128,8 +134,11 @@ Note: Layout helper script assumes jQuery
 		var view = {
 			name: 'nested',
 			show: function (tree, templateHelper, container) {
-				tree.voleDepth = 0;
-				var view = jQuery(rootTemplateID).tmpl(tree, templateHelper);
+				var view = jQuery(treeTemplateID).tmpl(tree, templateHelper);
+
+				//mark the data item with its view depth, so children can tell how deep they are
+				view.tmplItem().data.voleDepth = 0;
+				
 				container.empty().append(view);
 
 				vole.getLayout().doLayout(view[0], getNodeOps(), true);

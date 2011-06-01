@@ -4,15 +4,9 @@ function EolTemplateHelper() {
 	this.api = new EolApi();
 	this.urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\-\.]+)*\/)([\w\-\.]+)(\.[^#?\s]+)?(\?([^#]*))?(#(.*))?$/;
 	
-	this.getTree = function (id, depth) {
-		depth = depth || 0;
-		
-		// extract id from URL
-		if (typeof id === "string" && id.indexOf("://" > 0)) {
-			id = this.urlRegex.exec(id)[8];
-		} 
-		
-		return this.api.hierarchySubtree(id, depth);
+	this.getRoot = function getRoot() {
+		//the tree is the same as the root node, just return this node;  (other tree types will have to handle this differently)
+		return this.data;
 	};
 	
 	this.displayableNode = function displayableNode() {
