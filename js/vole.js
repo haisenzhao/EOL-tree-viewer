@@ -1,7 +1,5 @@
 var vole = (function () {
 	var init = jQuery.Deferred().resolve(),
-		api = new EolApi(),
-		templateHelper = new EolTemplateHelper(),
 		areaModel = {},
 		views = {},
 		layout = squarifiedTreemap,
@@ -10,18 +8,6 @@ var vole = (function () {
 		containerID = "",
 		displayRoot;
 	
-	/* gets the hierarchy_entries one level at a time and only fetches children
-	 * if the parent is not too small. Nodes are displayed as soon as they
-	 * are fetched.
-	 */
-	function viewIncremental(id, depth, container) {
-		api.hierarchy_entries(id).done(function(json){
-			displayRoot = json;
-			var view = jQuery('#root').tmpl(json, templateHelper);
-			container.empty().append(view);
-			fetchChildren(view[0], depth);
-		});
-	};
 	
 	function viewURL(url, depth, container) {
 		templateHelper.getTree(url).done(function (response) {
