@@ -2,6 +2,11 @@
 function TolWebHelper() {
 	this.helper = this,
 	
+	this.getRoot = function getRoot() {
+		//assuming this is the <tree> element, return node
+		return jQuery(this.data).children("tree").children("node");
+	};
+	
 	this.displayableNode = function displayableNode() {
 		return true;
 	};
@@ -11,11 +16,18 @@ function TolWebHelper() {
 	};
 
 	this.getName = function getName() {
-		return this.data.children("name").text();
+		var name = this.data.children("name").text(),
+			children;
+		
+		if (name.indexOf("Node ") > -1) {
+			return ""; //treat crap "Node X" names as no name
+		}
+		
+		return name;
 	};
 	
 	this.hasChildren = function hasChildren() {
-		return this.getChildren().length > 0;
+		return this.data.children("nodes").length > 0;
 	};
 	
 	this.getChildren = function getChildren() {
@@ -26,6 +38,32 @@ function TolWebHelper() {
 		});
 		
 		return childArray;
+	};
+	
+	this.hasChildrenLocal = function hasChildrenLocal() {
+		return this.data.children("nodes").children("node").length > 0
+	};
+	
+	this.getChildrenAsync = function getChildrenAsync() {
+		var defer = new jQuery.Deferred(),
+			that = this;
+		
+		if (this.hasChildrenLocal()) {
+			defer.resolve(this.getChildren());
+		} else {
+			//create a deferred that gets the node and returns the children
+			params = {
+					url:this.getURL(),
+					mode:"native"
+			}
+			
+			jQuery.get("proxy.php", params).done(function(subtree) {
+				//TODO update parent's <NODES> element?
+				defer.resolve(jQuery(subtree).children("tree").children("node").children("nodes").children("node"));
+			});
+		}
+
+		return defer;
 	};
 
 	this.getAncestors = function getAncestors() {
@@ -42,4 +80,15 @@ function TolWebHelper() {
 			return this.getChildren().length + 1;
 		}
 	};
+	
+	this.getImage = function getImage() {
+		//TODO
+		return new Image();
+	};
+	
+	this.getURL = function getURL(id) {
+		id = id | this.getID();
+		
+		return "http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&page_depth=1&node_id=" + id;
+	}
 }
