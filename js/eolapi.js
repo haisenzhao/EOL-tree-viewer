@@ -115,7 +115,7 @@ EolApi.prototype.search = function (query, config) {
 	if (!query) return jQuery.Deferred().reject("no query");
 	
 	var url = "http://" + this.apiHost + "/api/search/" + this.apiVersion + "/" + query + ".json";
-	return this.getJSONP(url);
+	return this.getJSONP(url, config);
 };
 
 EolApi.prototype.provider_hierarchies = function () {
@@ -317,9 +317,19 @@ EolApi.prototype.buildURL = function (api, query) {
 		url += "/" + query;
 	}
 	
-	//url += ".json";
+	url += ".json";
 	
 	return url;
+}
+
+EolApi.prototype.getDataObjects = function (dcmitype, page) {
+	if (!page || !dcmitype || typeof dcmitype !== "string") {
+		return [];
+	}
+	
+	return jQuery.grep(page.dataObjects, function (item) {
+		return item.dataType === "http://purl.org/dc/dcmitype/" + dcmitype;
+	});
 }
 
 //some more info to dress up the currently known hierarchy nodes.  (new ones will get a placeholder image but no description.)
