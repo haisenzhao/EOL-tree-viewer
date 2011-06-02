@@ -16,6 +16,8 @@ var vole = (function () {
 		 * http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=1&page_depth=1
 		 */
 		
+		//TODO view treebase nexml: http://treebase.org/treebase-web/phylows/tree/TB2:Tr9274?format=nexml
+		
 		var params = {
 				url:url,
 				mode:"native"
@@ -49,7 +51,7 @@ var vole = (function () {
 		if (tree.xmlStandalone) {
 			//xml helpers
 			if (jQuery(tree).children("tree").children("node")) {
-				//tolweb, probably
+				//tolweb, probably. TODO validate?  Also TODO: handle a node (without its tree) too?
 				return new TolWebHelper();
 			}
 			
@@ -88,6 +90,7 @@ var vole = (function () {
 						//TODO find a reasonably good URL regex.  for now, just testing for "http://"
 						if (tree.indexOf("http://") === 0) {
 							viewURL(tree, visContainer);
+							jQuery(containerID).trigger("vole_view", tree);
 						} else {
 							viewString(tree, visContainer);
 						}
@@ -100,7 +103,9 @@ var vole = (function () {
 		
 		loadTemplate: function loadTemplate(templateURL) {
 			var defer = jQuery.get(templateURL).done(function (template) {
-				jQuery('head').append(template);
+				jQuery(document).ready(function() {
+					jQuery('head').append(template);
+				});
 			});
 			
 			if (init.isResolved()) {
@@ -166,20 +171,5 @@ var vole = (function () {
 	}
 })();
 
-jQuery(document).ready(function() {
-	vole.loadTemplate('templates/_nested.tmpl.html');
-	vole.loadTemplate('templates/_right_panel.tmpl.html');
-	
-	vole.setContainerID("vole-container");
-	vole.setView('nested');
-	
-	//TODO will have to manually make a list of node stats that can be used for sizing, for each tree source.
-	vole.getAreaModel().setAreaFunction(function(node) {
-		//return jQuery(node).tmplItem().data.total_descendants + 1; //for EOL trees
-		//return jQuery(node).tmplItem().data.attr("CHILDCOUNT") + 1; //for tolweb trees.  (#children isn't really any more useful than just returning 1)
-		return 1;
-	});
-
-//	vole.view('http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=2374&page_depth=1');
-	vole.view('http://www.eol.org/api/hierarchy_entries/1.0/33311700.json');
-});
+vole.loadTemplate('templates/_nested.tmpl.html');
+vole.loadTemplate('templates/_right_panel.tmpl.html');

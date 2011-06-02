@@ -202,8 +202,10 @@ Note: Layout helper script assumes jQuery
 		}
 
 		//TODO add methods to setup and tear down the event handlers
-		jQuery("div.node, a.breadcrumb.ancestor").live("click", function(){
-			vole.view(jQuery(this).attr("data-vole-url"));
+		jQuery("div.node, a.breadcrumb.ancestor").live("click", function() {
+			var node = jQuery(this).attr("data-vole-url"); //TODO for trees that are all local (a nexml file for example), could do view(jQuery(this).tmplItem().data)? Would have to make sure vole.view could handle the node element of whatever tree. 
+			
+			vole.view(node); 
 			return false; //only innermost node handles event
 		});
 

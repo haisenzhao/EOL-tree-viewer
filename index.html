@@ -21,6 +21,29 @@
 <script src="js/sources/eolTemplateHelper.js"></script>
 <script src="js/sources/TolWebHelper.js"></script>
 
+<script>
+	jQuery(document).ready(function() {
+		var url;
+		
+		vole.setContainerID("vole-container");
+		vole.setView('nested');
+
+		jQuery("#vole-container").bind("vole_view", function(event, url){
+			//console.log("viewing " + url);
+			//urlencode the url and show it as the location hash.
+			location.hash = encodeURIComponent(url);
+		});
+
+		if (location.hash.length > 0) {
+			url = decodeURIComponent(location.hash.slice(1));
+		} else {
+			url = 'http://www.eol.org/api/hierarchy_entries/1.0/33311700.json';
+		}
+
+		vole.view(url);
+	});
+</script>
+
 
 </head>
 <body>
