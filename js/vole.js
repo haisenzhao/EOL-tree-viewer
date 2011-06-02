@@ -8,16 +8,53 @@ var vole = (function () {
 		containerID = "",
 		displayRoot;
 	
-	
-	function viewURL(url, depth, container) {
-		templateHelper.getTree(url).done(function (response) {
-			views.current.show(response, templateHelper, container);
+	function viewURL(url, container) {
+		/*
+		 * TODO maybe add some intelligence here to map html urls (like
+		 * eol.org/pages/1 or tolweb.org/1) to API urls (like
+		 * eol.org/api/hierarchy_entries/1.0/33311700.json or
+		 * http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=1&page_depth=1
+		 */
+		
+		var params = {
+				url:url,
+				mode:"native"
+			};
+		
+		jQuery.get("proxy.php", params).done(function (response) {
+			vole.view(response);
 		});
 	}
 	
-	function viewString(tree, viewDepth, visContainer) {
-		//TODO try to figure out the format of the string
-		//TODO display the tree
+	function viewString(string, container) {
+		var xml = jQuery.parseXML(string);
+		//note that (at least) chrome doesn't throw a parse error for malformed xml.  have to check for a valid document. 
+		if (xml.xmlStandalone) {
+			vole.view(xml);
+			return;
+		}
+		
+		//TODO? parse newick strings?	
+	}
+	
+	function viewTree(tree, container) {
+		views.current.show(tree, getTemplateHelper(tree), container);
+	}
+	
+	function getTemplateHelper(tree) {
+		if (tree.taxonConceptID) {
+			return new EolTemplateHelper();
+		}
+		
+		if (tree.xmlStandalone) {
+			//xml helpers
+			if (jQuery(tree).children("tree").children("node")) {
+				//tolweb, probably
+				return new TolWebHelper();
+			}
+			
+			//TODO handle nexml here
+		}
 	}
 	
 	areaModel = {	
@@ -48,14 +85,14 @@ var vole = (function () {
 				
 				if (visContainer) {
 					if (typeof tree === "string") {
-						//TODO find a reasonably good URL regex.  for now, just testing for "://"
-						if (tree.indexOf("://") > 0) {
-							viewURL(tree, viewDepth, visContainer);
+						//TODO find a reasonably good URL regex.  for now, just testing for "http://"
+						if (tree.indexOf("http://") === 0) {
+							viewURL(tree, visContainer);
 						} else {
-							viewString(tree, viewDepth, visContainer);
+							viewString(tree, visContainer);
 						}
 					} else {
-						//TODO handle obj tree
+						viewTree(tree, visContainer);
 					}
 				}
 			});
@@ -136,9 +173,13 @@ jQuery(document).ready(function() {
 	vole.setContainerID("vole-container");
 	vole.setView('nested');
 	
+	//TODO will have to manually make a list of node stats that can be used for sizing, for each tree source.
 	vole.getAreaModel().setAreaFunction(function(node) {
-		return jQuery(node).tmplItem().data.total_descendants + 1;
+		//return jQuery(node).tmplItem().data.total_descendants + 1; //for EOL trees
+		//return jQuery(node).tmplItem().data.attr("CHILDCOUNT") + 1; //for tolweb trees.  (#children isn't really any more useful than just returning 1)
+		return 1;
 	});
-	
-	vole.view('http://www.eol.org/api/hierarchy_entries/1.0/33311700');
+
+//	vole.view('http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=2374&page_depth=1');
+	vole.view('http://www.eol.org/api/hierarchy_entries/1.0/33311700.json');
 });
