@@ -76,44 +76,12 @@ function EolTemplateHelper() {
 				anyNames && anyNames[0];
 		
 		return nameObj && nameObj.vernacularName || "";
-	}
+	};
 	
-	this.getDataObjects = function(dcmitype, page) {
-		page = page || this.data;
-		
-		return jQuery.grep(page.dataObjects, function (item) {
-			return item.dataType === "http://purl.org/dc/dcmitype/" + dcmitype;
-		});
-	}
-	
-	this.getImage = function(node, thumbnail) {
-		var data = node && jQuery(node).tmplItem().data || this.data,
-			that = this,
-			image;
-		
-		image = jQuery("<img src='images/ajax-loader.gif'>");
-		
-		this.api.pages(data.taxonConceptID).done(function (page) {
-			var dataObject, url;
-			
-			dataObject = that.getDataObjects("StillImage", page)[0];
-			
-			if (dataObject) {
-				if (thumbnail) {
-					url = dataObject.eolThumbnailURL;
-				} else {
-					url = dataObject.eolMediaURL || dataObject.mediaURL;
-				}
-			}
-			
-			if (url) {
-				image.addClass("resizable"); //the original (placeholder) image wasn't marked as resizable yet, because that's ugly
-				image.attr("src", url);
-			} else {
-				image.attr("src", "images/no_image.png");
-			}
-		});
-		
-		return image[0]; //returns a placeholder for now, but updates its src when the pages API call comes back
-	}
+	//override vole.TreeAdapter.prototype.matchEOLTaxonConceptID, since we already have it
+	this.matchEOLTaxonConceptID = function() {
+		return jQuery.Deferred().resolve(this.data.taxonConceptID);
+	};
 }
+
+EolTemplateHelper.prototype = new vole.TreeAdapter();

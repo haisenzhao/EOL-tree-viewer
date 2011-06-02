@@ -32,8 +32,8 @@ with EOL content.
 			<h1 id="detail-title">${scientificName}</h1>
 			<h2 id="detail-subtitle">${$item.getVernacularName()}</h2>
 
-			{{tmpl($item.getDataObjects("StillImage")[0]) "#detail_image_tmpl"}}
-			{{tmpl($item.getDataObjects("Text")[0]) "#detail_description_tmpl"}}
+			{{tmpl($item.getDataObjects("StillImage", $data)[0]) "#detail_image_tmpl"}}
+			{{tmpl($item.getDataObjects("Text", $data)[0]) "#detail_description_tmpl"}}
 
 		{{/if}}
 	</div>
@@ -154,7 +154,6 @@ with EOL content.
 	(function () {
 		var api = new EolApi(),
 			language = "en",
-			helper = new EolTemplateHelper(), //TODO get the current helper from vole
 			selectionFrozen = false;
 			selectedElement = {};
 
@@ -184,7 +183,7 @@ with EOL content.
 		jQuery(".selectable").live("mousemove", function nodeMouseMove(event) {
 			if (!selectionFrozen && this !== selectedElement ) {
 				var tmplItem = jQuery(this).tmplItem(), //the template item for the hovered node
-					taxonConceptID = tmplItem.data.taxonConceptID, //TODO for other tree sources, will need to do an EOL search to get the matching taxonConceptID
+					taxonConceptID = tmplItem.data.taxonConceptID,
 					statistics;
 
 				selectedElement = this;
@@ -198,10 +197,10 @@ with EOL content.
 				//put a 'loading' image in the details panel in case we have to wait for the api
 				image = jQuery("<img src='images/ajax-loader.gif'>");
 				jQuery("#detail").empty().append(image);
-					
-				api.pages(taxonConceptID).done(function(page) {
-					var details = jQuery("#detail_tmpl").tmpl(page, helper);
-					jQuery("#detail").empty().append(details.contents());
+
+				tmplItem.getEOLPage().done(function (page) {
+						var details = jQuery("#detail_tmpl").tmpl(page, tmplItem.helper);
+						jQuery("#detail").empty().append(details.contents());
 				});
 			}
 			

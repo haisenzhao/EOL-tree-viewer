@@ -1,6 +1,6 @@
 /* Treemap template helper object for TolWeb */
 function TolWebHelper() {
-	this.helper = this,
+	this.helper = this;
 	
 	this.getRoot = function getRoot() {
 		//assuming this is the <tree> element, return node
@@ -81,14 +81,11 @@ function TolWebHelper() {
 		}
 	};
 	
-	this.getImage = function getImage() {
-		//TODO
-		return new Image();
-	};
-	
 	this.getURL = function getURL(id) {
 		id = id | this.getID();
 		
 		return "http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&page_depth=1&node_id=" + id;
 	}
 }
+
+TolWebHelper.prototype = new vole.TreeAdapter();

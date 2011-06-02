@@ -108,7 +108,7 @@ Note: Layout helper script assumes jQuery
 				var leafBody = jQuery(this),
 					thumbnail = leafBody.width() < 150 && leafBody.height() < 150;
 					tmplItem = leafBody.tmplItem(),
-					image = tmplItem.getImage(null, thumbnail);
+					image = tmplItem.getImage(thumbnail);
 
 				leafBody.empty().append(image);
 				//TODO resize image
