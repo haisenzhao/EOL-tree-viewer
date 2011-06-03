@@ -138,7 +138,7 @@
 // Change these configuration options if needed, see above descriptions for info.
 $enable_jsonp    = true;
 $enable_native   = true;
-$valid_url_regex = '@^(http://)?(www\.)?(eol|tolweb)\.org/@i';
+$valid_url_regex = '@^(http://)?(www\.)?(eol|tolweb|treebase)\.org/@i';
 
 // ############################################################################
 
@@ -183,7 +183,10 @@ if ( !$url ) {
   
   curl_setopt( $ch, CURLOPT_USERAGENT, $_GET['user_agent'] ? $_GET['user_agent'] : $_SERVER['HTTP_USER_AGENT'] );
   
-  list( $header, $contents ) = preg_split( '/([\r\n][\r\n])\\1/', curl_exec( $ch ), 2 );
+  $response = curl_exec( $ch );
+  $parts = preg_split( '/([\r\n][\r\n])\\1/', $response);
+  $headers = array_slice($parts, 0, -1);
+  $contents = $parts[count($parts) - 1];
   
   $status = curl_getinfo( $ch );
   
@@ -191,7 +194,7 @@ if ( !$url ) {
 }
 
 // Split header text into an array.
-$header_text = preg_split( '/[\r\n]+/', $header );
+$header_text = preg_split( '/[\r\n]+/', $headers[count($headers) - 1] );
 
 if ( $_GET['mode'] == 'native' ) {
   if ( !$enable_native ) {
