@@ -38,14 +38,14 @@ var vole = (function () {
 	
 	function getTemplateHelper(tree) {
 		if (tree.taxonConceptID) {
-			return new EolTemplateHelper();
+			return new EolAdapter();
 		}
 		
 		if (tree.xmlStandalone) {
 			//xml helpers
 			if (jQuery(tree).children("tree").children("node")) {
 				//tolweb, probably. TODO validate?  Also TODO: handle a node (without its tree) too?
-				return new TolWebHelper();
+				return new TolWebAdapter();
 			}
 			
 			//TODO handle nexml here

@@ -1,5 +1,4 @@
-/* Treemap template helper object for EOL */
-function EolTemplateHelper() {
+function EolAdapter() {
 	this.helper = this;
 	this.api = new EolApi();
 	this.urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\-\.]+)*\/)([\w\-\.]+)(\.[^#?\s]+)?(\?([^#]*))?(#(.*))?$/;
@@ -84,4 +83,4 @@ function EolTemplateHelper() {
 	};
 }
 
-EolTemplateHelper.prototype = new vole.TreeAdapter();
+EolAdapter.prototype = new vole.TreeAdapter();

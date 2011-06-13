@@ -1,5 +1,4 @@
-/* Treemap template helper object for TolWeb */
-function TolWebHelper() {
+function TolWebAdapter() {
 	this.helper = this;
 	
 	this.getRoot = function getRoot() {
@@ -88,4 +87,4 @@ function TolWebHelper() {
 	}
 }
 
-TolWebHelper.prototype = new vole.TreeAdapter();
+TolWebAdapter.prototype = new vole.TreeAdapter();
