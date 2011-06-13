@@ -7,7 +7,7 @@ var vole = (function () {
 		max_depth = 5,
 		containerID = "",
 		displayRoot,
-		urlRegex = /^(?:(?:http[s]?|ftp):\/\/)?([^:\/\s]+)(?::(?:[^\/]*))?((\/[\w\-\.]+)*\/)([\w\-\.]+)(\.[^#?\s]+)?(\?([^#]*))?(#(.*))?$/;
+		urlRegex = /^(?:(?:http[s]?|ftp):\/\/)?([^:\/\s]+)(?::(?:[^\/]*))?((\/[\w\-\.:]+)*\/)([\w\-\.:]+)(\.[^#?\s]+)?(\?([^#]*))?(#(.*))?$/;
 	
 	function viewURL(url) {
 		mapURL(url).done(function(mappedURL) { 
