@@ -8,16 +8,9 @@ var vole = (function () {
 		containerID = "",
 		displayRoot;
 	
-	function viewURL(url, container) {
-		/*
-		 * TODO maybe add some intelligence here to map html urls (like
-		 * eol.org/pages/1 or tolweb.org/1) to API urls (like
-		 * eol.org/api/hierarchy_entries/1.0/33311700.json or
-		 * http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=1&page_depth=1
-		 */
-		
-		//TODO view treebase nexml: http://treebase.org/treebase-web/phylows/tree/TB2:Tr9274?format=nexml
-		
+	function viewURL(url) {
+		url = mapURL(url);
+
 		var params = {
 				url:url,
 				mode:"native"
@@ -28,7 +21,7 @@ var vole = (function () {
 		});
 	}
 	
-	function viewString(string, container) {
+	function viewString(string) {
 		var xml = jQuery.parseXML(string);
 		//note that (at least) chrome doesn't throw a parse error for malformed xml.  have to check for a valid document. 
 		if (xml.xmlStandalone) {
@@ -39,8 +32,8 @@ var vole = (function () {
 		//TODO? parse newick strings?	
 	}
 	
-	function viewTree(tree, container) {
-		views.current.show(tree, getTemplateHelper(tree), container);
+	function viewTree(tree) {
+		views.current.show(tree, getTemplateHelper(tree));
 	}
 	
 	function getTemplateHelper(tree) {
@@ -83,20 +76,16 @@ var vole = (function () {
 	return {
 		view: function view(tree) {
 			init.done(function() {
-				var visContainer = jQuery(containerID).find("#vole-vis-container");
-				
-				if (visContainer) {
-					if (typeof tree === "string") {
-						//TODO find a reasonably good URL regex.  for now, just testing for "http://"
-						if (tree.indexOf("http://") === 0) {
-							viewURL(tree, visContainer);
-							jQuery(containerID).trigger("vole_view", tree);
-						} else {
-							viewString(tree, visContainer);
-						}
+				if (typeof tree === "string") {
+					//TODO find a reasonably good URL regex.  for now, just testing for "http://"
+					if (tree.indexOf("http://") === 0) {
+						viewURL(tree);
+						jQuery(containerID).trigger("vole_view", tree);
 					} else {
-						viewTree(tree, visContainer);
+						viewString(tree);
 					}
+				} else {
+					viewTree(tree);
 				}
 			});
 		},
@@ -119,6 +108,11 @@ var vole = (function () {
 			init.done(function() {
 				if (views[name]) {
 					views.current = views[name];
+					
+					if (containerID) {
+						jQuery(containerID).empty().append(views.current.getContainer());
+						jQuery("#right_tmpl").tmpl().appendTo(containerID);
+					}
 				}
 			});
 		},
@@ -159,7 +153,9 @@ var vole = (function () {
 			containerID = "#" + id;
 			
 			init.done(function() {
-				jQuery(containerID).empty().append("<div id='vole-vis-container'>");
+				if (views.current) {
+					jQuery(containerID).empty().append(views.current.getContainer());
+				}
 				
 				jQuery("#right_tmpl").tmpl().appendTo(containerID);
 			});

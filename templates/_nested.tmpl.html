@@ -59,7 +59,8 @@ Note: Layout helper script assumes jQuery
 <script>
 	(function () {
 		var treeTemplateID = '#tree',
-			nodeTemplateID = '#node';
+			nodeTemplateID = '#node',
+			viewContainer = jQuery("<div id='vole-vis-container'>"); //TODO make this class="vole-view-nested" and change the css to match
 
 		/**
 		 * container: some node div to fetch children within
@@ -133,16 +134,18 @@ Note: Layout helper script assumes jQuery
 		
 		var view = {
 			name: 'nested',
-			show: function (tree, templateHelper, container) {
+			getContainer: function() {
+				return viewContainer;
+			},
+			show: function (tree, templateHelper) {
 				var view = jQuery(treeTemplateID).tmpl(tree, templateHelper);
 
 				//mark the data item with its view depth, so children can tell how deep they are
 				view.tmplItem().data.voleDepth = 0;
 				
-				container.empty().append(view);
+				viewContainer.empty().append(view);
 
 				vole.getLayout().doLayout(view[0], getNodeOps(), true);
-				//TODO handle leaves either here or in the template
 				
 				fetchChildren(view, templateHelper, vole.getViewDepth());
 
