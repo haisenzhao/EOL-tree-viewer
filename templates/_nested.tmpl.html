@@ -10,7 +10,7 @@ Note: Layout helper script assumes jQuery
 </script>
 
 <script id="root" type="x-jquery-tmpl">
-	<div class='node selectable root' id='${$item.getID()}'>
+	<div class='node selectable root'>
 		{{tmpl($item.data, $item.helper) '#head-breadcrumb'}}
 		{{tmpl($item.data, $item.helper) '#body'}}
 	</div>
@@ -18,7 +18,7 @@ Note: Layout helper script assumes jQuery
 
 <script id="node" type="x-jquery-tmpl">
 	{{if $item.displayableNode()}}
-		<div class='node selectable' id='${$item.getID()}'>
+		<div class='node selectable'>
 			{{tmpl($item.data, $item.helper) '#head'}}
 			{{tmpl($item.data, $item.helper) '#body'}}
 		</div>
@@ -53,7 +53,7 @@ Note: Layout helper script assumes jQuery
 </script>
 
 <script id="breadcrumb-ancestor" type="x-jquery-tmpl">
-	${' < '}<a class='breadcrumb ancestor' id='${$item.getID()}'>${$item.getName()}</a>
+	${' < '}<a class='breadcrumb ancestor'>${$item.getName()}</a>
 </script>
 
 <script>
