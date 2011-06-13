@@ -18,7 +18,7 @@ Note: Layout helper script assumes jQuery
 
 <script id="node" type="x-jquery-tmpl">
 	{{if $item.displayableNode()}}
-		<div class='node selectable' id='${$item.getID()}' data-vole-url='${$item.getURL()}'>
+		<div class='node selectable' id='${$item.getID()}'>
 			{{tmpl($item.data, $item.helper) '#head'}}
 			{{tmpl($item.data, $item.helper) '#body'}}
 		</div>
@@ -53,7 +53,7 @@ Note: Layout helper script assumes jQuery
 </script>
 
 <script id="breadcrumb-ancestor" type="x-jquery-tmpl">
-	${' < '}<a class='breadcrumb ancestor' id='${$item.getID()}' data-vole-url='${$item.getURL()}'>${$item.getName()}</a>
+	${' < '}<a class='breadcrumb ancestor' id='${$item.getID()}'>${$item.getName()}</a>
 </script>
 
 <script>
@@ -112,7 +112,6 @@ Note: Layout helper script assumes jQuery
 					image = tmplItem.getImage(thumbnail);
 
 				leafBody.empty().append(image);
-				//TODO resize image
 				
 				jQuery(image).load(function() {
 					//assuming no scaling has been done yet, setting 'natural' dims for browsers that don't set them
@@ -206,9 +205,15 @@ Note: Layout helper script assumes jQuery
 
 		//TODO add methods to setup and tear down the event handlers
 		jQuery("div.node, a.breadcrumb.ancestor").live("click", function() {
-			var node = jQuery(this).attr("data-vole-url"); //TODO for trees that are all local (a nexml file for example), could do view(jQuery(this).tmplItem().data)? Would have to make sure vole.view could handle the node element of whatever tree. 
-			
-			vole.view(node); 
+			var tmplItem = jQuery(this).tmplItem(),
+				url = tmplItem.getURL();
+
+			if (url) {
+				vole.view(url); 
+			} else {
+				//TODO try just showing the node before getting the URL?  vole won't trigger a view change event if I do
+				view.show(tmplItem.data, tmplItem.helper);
+			}
 			return false; //only innermost node handles event
 		});
 
