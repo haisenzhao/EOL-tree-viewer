@@ -82,8 +82,7 @@ function TolWebAdapter() {
 	
 	this.getURL = function getURL(id) {
 		id = id | this.getID();
-		
-		return "http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&page_depth=1&node_id=" + id;
+		return "http://tolweb.org/" + id;
 	}
 }
 

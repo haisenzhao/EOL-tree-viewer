@@ -332,6 +332,41 @@ EolApi.prototype.getDataObjects = function (dcmitype, page) {
 	});
 }
 
+EolApi.prototype.hierarchyEntryForPage = function(pagesID) {
+	var defer = new jQuery.Deferred(),
+		preferredHierarchyOrder = 
+		[
+		 	"Species 2000 & ITIS Catalogue of Life: Annual Checklist 2010",
+		 	"Integrated Taxonomic Information System (ITIS)",
+		 	"NCBI Taxonomy",
+		 	"IUCN Red List (Species Assessed for Global Conservation)",
+		 	"WORMS Species Information (Marine Species)",
+		 	"FishBase (Fish Species)",
+		 	"AntWeb (Ant Species)",
+		 	"Metalmark Moths of the World"              
+	    ];
+	
+	this.pages(pagesID).done(function(page) {
+		var i = 0,
+			len = preferredHierarchyOrder.length,
+			taxa = page.taxonConcepts,
+			match;
+		
+		for(i = 0; i < len; i++) {
+			match = jQuery.grep(taxa, function(taxon) {
+				return taxon.nameAccordingTo === preferredHierarchyOrder[i];
+			});
+			
+			if (match.length > 0) {
+				defer.resolve(match[0].identifier);
+				return;
+			}
+		}
+	});
+	
+	return defer.promise();
+}
+
 //some more info to dress up the currently known hierarchy nodes.  (new ones will get a placeholder image but no description.)
 //ID numbers may not remain the same.  Metalmark, for example, has gone through several ID changes
 EolApi.hierarchyData = {

@@ -1,7 +1,5 @@
 function EolAdapter() {
 	this.helper = this;
-	this.api = new EolApi();
-	this.urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?((\/[\w\-\.]+)*\/)([\w\-\.]+)(\.[^#?\s]+)?(\?([^#]*))?(#(.*))?$/;
 	
 	this.getRoot = function getRoot() {
 		//the tree is the same as the root node, just return this node;  (other tree types will have to handle this differently)
@@ -17,7 +15,7 @@ function EolAdapter() {
 	};
 	
 	this.getURL = function getURL() {
-		return this.api.buildURL("hierarchy_entries", this.getID());
+		return EolAdapter.api.buildURL("hierarchy_entries", this.getID());
 	}
 
 	this.getName = function getName() {
@@ -40,7 +38,7 @@ function EolAdapter() {
 			defer.resolve(this.data.children);
 		} else {
 			//create a deferred that gets this.api.hierarchySubtree(id, depth) and returns the children when it's done
-			this.api.hierarchySubtree(this.getID(), 1).done(function(subtree) {
+			EolAdapter.api.hierarchySubtree(this.getID(), 1).done(function(subtree) {
 				that.data.children = subtree.children;
 				defer.resolve(subtree.children);
 			});
@@ -84,3 +82,4 @@ function EolAdapter() {
 }
 
 EolAdapter.prototype = new vole.TreeAdapter();
+EolAdapter.api = new EolApi();
