@@ -17,14 +17,25 @@ var vole = (function () {
 			};
 		
 		jQuery.get("proxy.php", params).done(function (response) {
+			//TODO check for response "ERROR: invalid url" from proxy
+			
 			vole.view(response);
 		});
+	}
+	
+	function mapURL(url) {
+		/*
+		 * TODO map html urls (like eol.org/pages/1 or tolweb.org/1) to API urls
+		 * (like eol.org/api/hierarchy_entries/1.0/33311700.json or
+		 * http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id=1&page_depth=1
+		 */
+		return url;
 	}
 	
 	function viewString(string) {
 		var xml = jQuery.parseXML(string);
 		//note that (at least) chrome doesn't throw a parse error for malformed xml.  have to check for a valid document. 
-		if (xml.xmlStandalone) {
+		if (jQuery.isXMLDoc(xml)) {
 			vole.view(xml);
 			return;
 		}
@@ -41,11 +52,13 @@ var vole = (function () {
 			return new EolAdapter();
 		}
 		
-		if (tree.xmlStandalone) {
+		if (jQuery.isXMLDoc(tree)) {
 			//xml helpers
-			if (jQuery(tree).children("tree").children("node")) {
-				//tolweb, probably. TODO validate?  Also TODO: handle a node (without its tree) too?
+			if (tree.documentElement.localName.toLowerCase() === "tree") {
+				//assume tolweb, for now.  TODO Will have to do additional checks if I add other trees that start with <tree>
 				return new TolWebAdapter();
+			} else if (tree.documentElement.localName.toLowerCase() === "nexml") {
+				return new NexmlAdapter();
 			}
 			
 			//TODO handle nexml here
