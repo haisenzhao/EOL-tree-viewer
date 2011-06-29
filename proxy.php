@@ -138,7 +138,7 @@
 // Change these configuration options if needed, see above descriptions for info.
 $enable_jsonp    = true;
 $enable_native   = true;
-$valid_url_regex = '@^(http://)?(www\.)?(eol|tolweb|treebase)\.org/@i';
+$valid_url_regex = '@^(http://)?(www\.)?(eol|tolweb|treebase|ubio)\.org/@i';
 
 // ############################################################################
 
