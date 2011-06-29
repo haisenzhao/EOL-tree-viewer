@@ -183,7 +183,6 @@ with EOL content.
 		jQuery(".selectable").live("mousemove", function nodeMouseMove(event) {
 			if (!selectionFrozen && this !== selectedElement ) {
 				var tmplItem = jQuery(this).tmplItem(), //the template item for the hovered node
-					taxonConceptID = tmplItem.data.taxonConceptID,
 					statistics;
 
 				selectedElement = this;

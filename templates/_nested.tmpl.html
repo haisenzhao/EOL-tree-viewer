@@ -155,7 +155,10 @@ Note: Layout helper script assumes jQuery
 				vole.getLayout().doLayout(root, getNodeOps(), true);
 				
 				//if the root is also a leaf, resize its image
-				root.children("div.body").children("img")[0].resizeToFill();
+				var image = root.children("div.body").children("img.resizable")[0];
+				if (image) {
+					image.resizeToFill();
+				}
 			},
 			layoutOps: {
 				setBounds: function setBounds(node, bounds) {
