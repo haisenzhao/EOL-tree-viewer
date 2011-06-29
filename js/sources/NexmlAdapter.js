@@ -119,8 +119,9 @@ function NexmlAdapter() {
 			eolapi = this.eolapi,
 			node = this.data;
 
-		if (node.taxonConceptID) {
-			return node.taxonConceptID;
+		if (typeof node.taxonConceptID != "undefined") {
+			deferred.resolve(node.taxonConceptID);
+			return deferred;
 		}
 		
 		this.getNcbiId().done(function(ncbiId) {
@@ -129,6 +130,7 @@ function NexmlAdapter() {
 			if (!ncbiId) {
 				node.taxonConceptID = null;
 				deferred.resolve(null);
+				return;
 			}
 			
 			searchURL = eolapi.buildURL("search_by_provider", ncbiId) + "?hierarchy_id=441";
@@ -181,6 +183,8 @@ function NexmlAdapter() {
 				
 				deferred.resolve(ncbiId);
 			});
+		} else {
+			deferred.resolve(null);
 		}
 		
 		return deferred.promise()
