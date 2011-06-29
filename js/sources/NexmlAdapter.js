@@ -112,7 +112,95 @@ function NexmlAdapter() {
 	
 	this.getURL = function getURL(id) {
 		return "";
-	}
+	};
+	
+	this.matchEOLTaxonConceptID = function() {
+		var deferred = new jQuery.Deferred(),
+			eolapi = this.eolapi,
+			node = this.data;
+
+		if (node.taxonConceptID) {
+			return node.taxonConceptID;
+		}
+		
+		this.getNcbiId().done(function(ncbiId) {
+			var searchURL;
+			
+			if (!ncbiId) {
+				node.taxonConceptID = null;
+				deferred.resolve(null);
+			}
+			
+			searchURL = eolapi.buildURL("search_by_provider", ncbiId) + "?hierarchy_id=441";
+
+			vole.get(searchURL).done(function(response) {
+				if (response.length > 0) {
+					node.taxonConceptID = response[0].eol_page_id;
+					deferred.resolve(node.taxonConceptID);
+				}
+			});
+		});
+
+		return deferred.promise();
+	};
+	
+	//returns a deferred, which resolves with the current node's NCBI ID
+	this.getNcbiId = function() {
+		var deferred = new jQuery.Deferred(),
+			ubioURL = this.getUbioURL();
+		
+		if(ubioURL) {
+			vole.get(ubioURL).done(function(namebank) {
+				var ncbiURL, ncbiId;
+				
+				//TODO move this function out to a closure or util object or something
+				function getParam(url, param) {
+					var start, end;
+					
+					start = url.indexOf("&" + param + "=");
+					
+					if (start < 0) {
+						start = url.indexOf("?" + param + "=");
+					}
+					
+					if (start < 0) {
+						return null;
+					}
+					
+					start = url.indexOf("=", start) + 1;
+					end = url.indexOf("&", start);
+					return url.slice(start, end);
+				}
+				
+				ncbiURL = jQuery(namebank).children().children().children("gla\\:mapping[rdf\\:resource*='http://www.ncbi.nlm.nih.gov']").attr("rdf:resource");
+				
+				if (ncbiURL) {
+					//TODO: this name has no ncbi mapping. May be able to find a synonym or lexical variant with an ncbi url.
+					ncbiId = getParam(ncbiURL, "id");
+				}
+				
+				deferred.resolve(ncbiId);
+			});
+		}
+		
+		return deferred.promise()
+	};
+	
+	this.getUbioURL = function () {
+		var node = this.data,
+			id = node.attr("otu"),
+			doc = node.closest("nex\\:nexml"),
+			otu,
+			url;
+		
+		if (id) {
+			otu = doc.children("otus").children("otu[id=" + id + "]");
+			url = otu.children("meta[rel='skos:closeMatch'][href*='urn:lsid:ubio.org:namebank:']").attr("href");
+		}
+		
+		return url;
+	};
 }
 
 NexmlAdapter.prototype = new vole.TreeAdapter();
+

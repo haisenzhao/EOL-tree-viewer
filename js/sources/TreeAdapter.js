@@ -2,7 +2,7 @@ vole.TreeAdapter = function () {
 	this.helper = this;
 }
 
-vole.TreeAdapter.prototype.eolapi = new EolApi(); //TODO move to closure
+vole.TreeAdapter.prototype.eolapi = new EolApi();
 
 vole.TreeAdapter.prototype.getDataObjects = vole.TreeAdapter.prototype.eolapi.getDataObjects;
 
@@ -35,7 +35,7 @@ vole.TreeAdapter.prototype.matchEOLTaxonConceptID = function() {
 		deferred.resolve(node.taxonConceptID);
 	});
 	
-	return deferred;
+	return deferred.promise();
 }
 
 //Template helper method. (will be added to a jQuery template item.  this == a tmplItem)
