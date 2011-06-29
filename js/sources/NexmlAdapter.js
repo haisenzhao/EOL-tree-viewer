@@ -26,8 +26,6 @@ function NexmlAdapter() {
 				if (parentEdge.length == 0) {
 					return node;
 				}
-			
-				//parent = tree.children("node[id=" + parentEdge.attr('source') + "]");
 			}
 		}
 		
@@ -49,7 +47,10 @@ function NexmlAdapter() {
 	};
 	
 	this.hasChildren = function hasChildren() {
-		return true; //TODO find out how to get to the edges of this tree
+		var tree = this.data.parent(),
+			childEdges = tree.children("edge[source=" + this.data.attr('id') + "]");
+		
+		return childEdges.length > 0;
 	};
 	
 	this.getChildren = function getChildren() {
@@ -77,9 +78,33 @@ function NexmlAdapter() {
 	};
 
 	this.getAncestors = function getAncestors() {
-		//TODO return in leaf-to-root order
-		return [];
+		var tree = this.data.parent(),
+			node = this.data,
+			parent,
+			ancestors = [];
+		
+		parent = this.getParent(node, tree);
+		while (parent) {
+			if (parent.attr("label")) {
+				ancestors.unshift(parent);
+			}
+			parent = this.getParent(parent, tree);
+		}
+		
+		return ancestors.reverse();
 	};
+	
+	this.getParent = function (node, tree) {
+		var parentEdge = tree.children("edge[target=" + node.attr('id') + "]"),
+			parent;
+		
+		if (parentEdge.length > 0) {
+			parent = tree.children("node[id=" + parentEdge.attr('source') + "]");
+			return parent;
+		} else {
+			return null;
+		}
+	}
 	
 	this.subtreeSize = function subtreeSize(node) {
 		//TODO
