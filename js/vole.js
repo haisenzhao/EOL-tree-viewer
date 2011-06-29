@@ -11,18 +11,10 @@ var vole = (function () {
 	
 	function viewURL(url) {
 		mapURL(url).done(function(mappedURL) { 
-			if (mappedURL) {
-				url = mappedURL;
-			}
+			url = mappedURL || url;
 			
-			var params = {
-					url:url,
-					mode:"native"
-				};
-			
-			jQuery.get("proxy.php", params).done(function (response) {
+			vole.get(url).done(function (response) {
 				//TODO check for response "ERROR: invalid url" from proxy
-				
 				vole.view(response);
 			});
 		});
@@ -205,6 +197,12 @@ var vole = (function () {
 		
 		getDisplayRootData: function () {
 			return displayRoot;
+		},
+		
+		/** get a URL via vole proxy.  Returns a jqXHR. */
+		get: function (url) {
+			var params = {url:url, mode:"native"};
+			return jQuery.get("proxy.php", params);
 		}
 	}
 })();
