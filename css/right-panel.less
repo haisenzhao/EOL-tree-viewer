@@ -1,0 +1,165 @@
+#right {
+	position:absolute;
+	left:60%;
+	top:0px;
+	right: 0px;
+	bottom: 0px;
+	overflow:hidden;
+	padding-left:1px;
+}
+
+#right #tabs {
+	position: absolute;
+	top: 0px;
+	height: 24px;
+	width: 100%;
+	overflow:hidden;
+	margin: 0px;
+	padding: 0px;
+}
+
+#right #tabs li {
+	display:inline;
+}
+
+#right .tab {
+	display: inline-block;
+	height:100%;
+	padding-right: 1em;
+	padding-left: 0.5em;
+	padding-top: 5px;
+	margin-right:-1em;
+}
+
+#right .tab.selected {
+	z-index:1;
+}
+
+#right #panels {
+	position:absolute;
+	top: 24px;
+	bottom: 0px;
+	right: 0px;
+	left: 0px;
+}
+
+#right div.panel {
+	display: none;	
+	margin: 5px;
+}
+
+#options form div.row {
+	clear: both;
+}
+
+#options form .col {
+	display: inline-block;
+	margin-right: 1em;
+	vertical-align: baseline;
+}
+
+#options form .col1 {
+	text-align: right;
+	width: 8em;
+}
+
+#options form .col2 {
+	width: 5em;
+}
+
+#options form .col3 {
+	text-align: right;
+	width: 3em;
+}
+
+#options form .col4 {
+	width: 5em;
+}
+
+#options form input {
+	font-size:12px;
+}
+
+#colorVariableMinLabel {
+	float:left;	
+}
+
+#colorVariableMaxLabel {
+	float:right;	
+}
+
+#gradientBar {
+	height:20px;
+	border: 1px solid white;
+}
+
+/*I'll hide the color range controls from the user for now.  The utility is low, good defaults should work, and the controls confuse people.*/
+#colorRange, #colorVariableRange {
+	display:none;
+}
+
+#options fieldset {
+	margin-top: 1em;
+}
+
+#detail {
+	color: white;
+    background-color: black;
+	overflow:auto;
+	line-height:normal;
+}
+
+#detail figure {
+	display:block;
+	padding:1em;
+}
+
+#detail figure div.image img {
+	max-height: 50%;
+	max-width: 100%;	
+}
+
+#detail h1 {
+	font-size:250%;
+	margin-top:0.25em;
+	margin-bottom:0.25em;
+}
+
+#detail h2 {
+	font-size:150%;
+	font-weight:normal;
+	margin-top:0.25em;
+	margin-bottom:0.25em;
+}
+
+#detail-subtitle {
+	text-transform: capitalize;
+}
+
+#detail figcaption {
+	color:gray;
+}
+
+#detail figcaption a:link {
+	color:gray;
+}
+#detail figcaption a:visited {
+	color:gray;
+}
+
+#detail div.description {
+	margin-top: 10px;	
+}
+
+#search-results div.nav {
+	padding:5px;	
+}
+
+#search-results span.prev {
+	margin-right: 1em;
+}
+
+#search-results span.next {
+	margin-left: 1em;
+}
+
