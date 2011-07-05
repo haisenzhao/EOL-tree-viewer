@@ -1,3 +1,32 @@
 @import "treemap";
 @import "style";
 @import "right-panel";
+
+@split: 60%;
+
+html, body {
+	margin:0px;	
+}
+
+#vole-container {
+	width: 100%;
+	height: 100%;
+	position:absolute;
+	
+	#vole-vis-container {
+		position:absolute;
+		left:0px;
+		top:0px;
+		width: @split;
+		height: 100%;
+	}
+	
+	#right {
+		position:absolute;
+		left:@split;
+		top:0px;
+		right: 0px;
+		height: 100%;
+	}
+}
+
