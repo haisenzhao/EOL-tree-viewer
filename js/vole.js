@@ -144,7 +144,8 @@ var vole = (function () {
 					views.current = views[name];
 					
 					if (containerID) {
-						jQuery(containerID).empty().append(views.current.getContainer());
+						jQuery(containerID).empty();
+						jQuery("<div id=vole-vis-container>").append(views.current.getContainer()).appendTo(containerID);
 						jQuery("#right_tmpl").tmpl().appendTo(containerID);
 					}
 				}
@@ -187,8 +188,10 @@ var vole = (function () {
 			containerID = "#" + id;
 			
 			init.done(function() {
+				jQuery(containerID).empty();
+				
 				if (views.current) {
-					jQuery(containerID).empty().append(views.current.getContainer());
+					jQuery("<div id=vole-vis-container>").append(views.current.getContainer()).appendTo(containerID);
 				}
 				
 				jQuery("#right_tmpl").tmpl().appendTo(containerID);
