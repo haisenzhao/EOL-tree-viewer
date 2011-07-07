@@ -65,6 +65,7 @@ var vole = (function () {
 	}
 	
 	function viewTree(tree) {
+		displayRoot = tree;
 		views.current.show(tree, getTemplateHelper(tree));
 	}
 	

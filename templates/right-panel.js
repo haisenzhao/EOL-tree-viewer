@@ -198,16 +198,23 @@
 	});
 	
 	jQuery("#search form").live('submit', function () {
-		var query = jQuery("#search input").val();
+		var query = jQuery("#search input").val(),
+			rootClassificationName;
+		
+		if (!vole.getDisplayRootData().nameAccordingTo[0]) {
+			//not looking at EOL tree.  TODO disable/hide search panel when this is true.
+			return;
+		}
+		
+		rootClassificationName = vole.getDisplayRootData().nameAccordingTo[0];
 
 		//put a 'loading' image in the details panel while we have to wait for the api
 		image = jQuery("<img src='images/ajax-loader.gif'>").height(15);
 		jQuery("#search form input").after(image);
 		
 		api.searchPages(query, {page:1}, function (response) {
-			var results = jQuery.tmpl("right.search", response),
-				rootClassificationName = vole.getDisplayRootData().nameAccordingTo[0];
-
+			var results = jQuery.tmpl("right.search", response);
+			
 			//decorate the same-classification results a bit
 			results.find("li.result a").each(function () {
 				var taxonConcept = jQuery(this).tmplItem().data,
