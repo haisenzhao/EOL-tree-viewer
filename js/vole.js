@@ -210,5 +210,4 @@ var vole = (function () {
 	}
 })();
 
-vole.loadTemplate('templates/_nested.tmpl.html');
 vole.loadTemplate('templates/_right_panel.tmpl.html');
