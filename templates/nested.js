@@ -10,7 +10,7 @@
 				var view = jQuery.tmpl('nested.tree', tree, templateHelper);
 	
 				//mark the data item with its view depth, so children can tell how deep they are
-				view.tmplItem().data.voleDepth = 0;
+				view.find("div.node.root").tmplItem().data.voleDepth = 0;
 				
 				viewContainer.empty().append(view);
 	
