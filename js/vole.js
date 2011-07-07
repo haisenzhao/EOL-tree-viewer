@@ -1,6 +1,5 @@
 var vole = (function () {
-	var init = jQuery.Deferred().resolve(),
-		areaModel = {},
+	var areaModel = {},
 		views = {},
 		layout = squarifiedTreemap,
 		viewDepth = 1,
@@ -110,46 +109,28 @@ var vole = (function () {
 	
 	return {
 		view: function view(tree) {
-			init.done(function() {
-				if (typeof tree === "string") {
-					if (urlRegex.test(tree)) {
-						viewURL(tree);
-						jQuery(containerID).trigger("vole_view", tree);
-					} else {
-						viewString(tree);
-					}
+			if (typeof tree === "string") {
+				if (urlRegex.test(tree)) {
+					viewURL(tree);
+					jQuery(containerID).trigger("vole_view", tree);
 				} else {
-					viewTree(tree);
+					viewString(tree);
 				}
-			});
-		},
-		
-		loadTemplate: function loadTemplate(templateURL) {
-			var defer = jQuery.get(templateURL).done(function (template) {
-				jQuery(document).ready(function() {
-					jQuery('head').append(template);
-				});
-			});
-			
-			if (init.isResolved()) {
-				init = defer;
 			} else {
-				init = jQuery.when(init, defer);
+				viewTree(tree);
 			}
 		},
 		
 		setView: function setView(name) {
-			init.done(function() {
-				if (views[name]) {
-					views.current = views[name];
-					
-					if (containerID) {
-						jQuery(containerID).empty();
-						jQuery("<div id=vole-vis-container>").append(views.current.getContainer()).appendTo(containerID);
-						jQuery.tmpl('right').appendTo(containerID);
-					}
+			if (views[name]) {
+				views.current = views[name];
+				
+				if (containerID) {
+					jQuery(containerID).empty();
+					jQuery("<div id=vole-vis-container>").append(views.current.getContainer()).appendTo(containerID);
+					jQuery.tmpl('right').appendTo(containerID);
 				}
-			});
+			}
 		},
 		
 		addView: function addView(name, view) {
@@ -186,16 +167,14 @@ var vole = (function () {
 		
 		setContainerID: function(id) {
 			containerID = "#" + id;
+			jQuery(containerID).empty();
 			
-			init.done(function() {
-				jQuery(containerID).empty();
-				
-				if (views.current) {
-					jQuery("<div id=vole-vis-container>").append(views.current.getContainer()).appendTo(containerID);
-				}
-				
-				jQuery.tmpl('right').appendTo(containerID);
-			});
+			if (views.current) {
+				jQuery("<div id=vole-vis-container>").append(views.current.getContainer()).appendTo(containerID);
+			}
+			
+			jQuery.tmpl('right').appendTo(containerID);
+
 		},
 		
 		getDisplayRootData: function () {
