@@ -146,7 +146,7 @@ var vole = (function () {
 					if (containerID) {
 						jQuery(containerID).empty();
 						jQuery("<div id=vole-vis-container>").append(views.current.getContainer()).appendTo(containerID);
-						jQuery("#right_tmpl").tmpl().appendTo(containerID);
+						jQuery.tmpl('right').appendTo(containerID);
 					}
 				}
 			});
@@ -194,7 +194,7 @@ var vole = (function () {
 					jQuery("<div id=vole-vis-container>").append(views.current.getContainer()).appendTo(containerID);
 				}
 				
-				jQuery("#right_tmpl").tmpl().appendTo(containerID);
+				jQuery.tmpl('right').appendTo(containerID);
 			});
 		},
 		
@@ -209,5 +209,3 @@ var vole = (function () {
 		}
 	}
 })();
-
-vole.loadTemplate('templates/_right_panel.tmpl.html');
