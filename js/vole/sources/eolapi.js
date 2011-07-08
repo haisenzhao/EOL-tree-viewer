@@ -1,4 +1,5 @@
 /* See http://www.eol.org/api */
+/*global jQuery*/
 
 function PagesConfig() {
 	/* See http://www.eol.org/api/docs/pages */
@@ -30,7 +31,7 @@ function EolApi() {
 
 EolApi.baseConfig = {
 	key:"cf5cf04c752d2716f006872a898b1fa73ec9ba45"
-}
+};
 
 HierarchyConfig.prototype = PagesConfig.prototype = EolApi.baseConfig;
 
@@ -48,22 +49,22 @@ EolApi.prototype.ping = function (success, error) {
 
 EolApi.prototype.getJSONP = ( function() {
 	//not having much luck getting the browser to cache JSONP responses, so I'll just keep my own.  (Based on http://www.slideshare.net/Dmitry.Baranovskiy/your-javascript-library)
-	var jsonCache = {};
-	var keys = [];
+	var jsonCache = {},
+		keys = [];
 		
 	return function (url, config) {
-		var key;
+		var key, ajaxSettings;
 		
 		config = config || EolApi.baseConfig;
 		key = url + "?" + jQuery.param(config);
 		key.replace("http://" + this.apiHost,""); //remove the protocol and host to (hopefully) make lookups a bit faster
 		
 		if (!(key in jsonCache)) {
-			var ajaxSettings = {
+			ajaxSettings = {
 		        dataType:"jsonp", //appends the 'callback=?' param
 		        type:"GET",
 		        url:url,
-		        data:config,
+		        data:config
 			};
 				
 			//add to cache
@@ -78,7 +79,7 @@ EolApi.prototype.getJSONP = ( function() {
 		}
 		
 		return jsonCache[key];
-	}	
+	};
 })();
 
 EolApi.prototype.hierarchy_entries = function (taxonID) {
@@ -112,7 +113,9 @@ EolApi.prototype.data_objects = function (objectID) {
 };
 
 EolApi.prototype.search = function (query, config) {
-	if (!query) return jQuery.Deferred().reject("no query");
+	if (!query) {
+		return jQuery.Deferred().reject("no query");
+	}
 	
 	var url = "http://" + this.apiHost + "/api/search/" + this.apiVersion + "/" + query + ".json";
 	return this.getJSONP(url, config);
@@ -121,7 +124,7 @@ EolApi.prototype.search = function (query, config) {
 EolApi.prototype.provider_hierarchies = function () {
 	var url = "http://" + this.apiHost + "/api/provider_hierarchies/" + this.apiVersion + ".json";
 	return this.getJSONP(url);
-}
+};
 
 EolApi.prototype.hierarchies = function (id) {
 	if(id) {
@@ -130,23 +133,23 @@ EolApi.prototype.hierarchies = function (id) {
 	} else {
 		return jQuery.Deferred().reject("invalid id: " + id);
 	}
-}
+};
 
 /* returns a jQuery.Deferred promise that passes the root node to the promise.done() */
 EolApi.prototype.hierarchySubtree = function (taxonID, level) {
-	var defer = jQuery.Deferred();
-	var api = this;
+	var defer = jQuery.Deferred(),
+		api = this;
 	
 	api.hierarchy_entries(taxonID)
 		.done(function(node) {
-			var childRequests = [];
-			
-			var adopt = function (child) {
-				node.children.push(child);
-			}
+			var childRequests = [],
+				children,
+				adopt = function (child) {
+					node.children.push(child);
+				};
 	
 			if (level > 0) {
-				var children = node.children;
+				children = node.children;
 				node.children = []; //child stub nodes will be replaced by actual nodes in adopt()
 				childRequests = jQuery.map(children, function (child) { 
 					return api.hierarchySubtree(child.taxonID, level - 1).done(adopt);
@@ -154,11 +157,15 @@ EolApi.prototype.hierarchySubtree = function (taxonID, level) {
 			}
 	
 			jQuery.whenArray(childRequests)
-				.done(function() { defer.resolve(node) })
-				.fail(function(args) { defer.reject(node, taxonID, level, args) });
+				.done(function() { 
+					defer.resolve(node);
+				})
+				.fail(function(args) {
+					defer.reject(node, taxonID, level, args);
+				});
 		})
 		.fail(function(args) { 
-			defer.reject(taxonID, level, args)
+			defer.reject(taxonID, level, args);
 		});
 	
 	return defer.promise();
@@ -175,23 +182,24 @@ jQuery.extend({
 /* Gets search results and also adds the pages response for each result */
 //TODO change this to return a jQuery.Deferred instead of taking a callback
 EolApi.prototype.searchPages = function (query, searchConfig, onSuccess) {
-	var that = this;
-	var searchResponse;
-	var pageResponseCount = 0;
+	var that = this,
+		searchResponse,
+		pageResponseCount = 0,
+		setPage;
 	
 	//a function for setting search result page data
-	var setPage = function (index, searchResult) {
+	setPage = function (index, searchResult) {
 		that.pages(searchResult.id)
 		.done(function (page) {
 			searchResult.page = page;
 
-			pageResponseCount++;
+			pageResponseCount += 1;
 			if (pageResponseCount === searchResponse.results.length) {
 				onSuccess(searchResponse);
 			}
 		})
 		.fail(function() {
-			pageResponseCount++;
+			pageResponseCount += 1;
 		});
 	}; 
 	
@@ -238,40 +246,39 @@ EolApi.prototype.getIucnStatus = function(node, callback) {
 		"common_names":0,
 		"vetted":1,
 		"key":"cf5cf04c752d2716f006872a898b1fa73ec9ba45"
-	}
+	};
 
 	this.pages(node.taxonConceptID, pagesConfig).done(function(json) {
 		var iucn;
 		
 		if (json.dataObjects && json.dataObjects.length > 0) {
 			iucn = jQuery.grep(json.dataObjects, function (dataObject) {
-				return dataObject.rightsHolder == "International Union for Conservation of Nature and Natural Resources";
+				return dataObject.rightsHolder === "International Union for Conservation of Nature and Natural Resources";
 			})[0];
 		}
 		
 		callback(iucn);
 	});
-}
+};
 
 EolApi.prototype.stump = function (onSuccess) {
-	var defer = jQuery.Deferred();
-	
-	var root = {
-		id: "HOME",
-		name: "Classifications",
-		children: [],
-		data: {
-			apiContentFetched: true
-		}
-	};
-
-	var api = this;
+	var defer = jQuery.Deferred(),
+		api = this,
+		root = {
+			id: "HOME",
+			name: "Classifications",
+			children: [],
+			data: {
+				apiContentFetched: true
+			}
+		},
+		prep;
 	
 	/*
 	 * adds some fields to a hierarchy to make it a usable treemap node, then
 	 * adds the hierarchy as a child of root
 	 */
-	var prep = function(hierarchy) {
+	prep = function(hierarchy) {
 		var metadata = EolApi.hierarchyData[hierarchy.title];
 		
 		hierarchy.id = metadata ? metadata.short : "hierarchy" + hierarchy.title;
@@ -280,7 +287,7 @@ EolApi.prototype.stump = function (onSuccess) {
 		
 		hierarchy.data = {
 			image: {mediaURL:"images/tree_icon.svg"} //default image
-		}
+		};
 		
 		if (metadata) {
 			hierarchy.image = metadata.image;
@@ -300,11 +307,15 @@ EolApi.prototype.stump = function (onSuccess) {
 			});
 	
 			jQuery.whenArray(hierarchyRequests)
-				.done(function() { defer.resolve(root) })
-				.fail(function(args) { defer.reject(args) });
+				.done(function() {
+					defer.resolve(root);
+				})
+				.fail(function(args) {
+					defer.reject(args);
+				});
 		})
 		.fail(function(args) { 
-			defer.reject(args) 
+			defer.reject(args);
 		});
 	
 	return defer.promise();	
@@ -320,7 +331,7 @@ EolApi.prototype.buildURL = function (api, query) {
 	url += ".json";
 	
 	return url;
-}
+};
 
 EolApi.prototype.getDataObjects = function (dcmitype, page) {
 	if (!page || !dcmitype || typeof dcmitype !== "string") {
@@ -330,7 +341,7 @@ EolApi.prototype.getDataObjects = function (dcmitype, page) {
 	return jQuery.grep(page.dataObjects, function (item) {
 		return item.dataType === "http://purl.org/dc/dcmitype/" + dcmitype;
 	});
-}
+};
 
 EolApi.prototype.hierarchyEntryForPage = function(pagesID) {
 	var defer = new jQuery.Deferred(),
@@ -352,7 +363,7 @@ EolApi.prototype.hierarchyEntryForPage = function(pagesID) {
 			taxa = page.taxonConcepts,
 			match;
 		
-		for(i = 0; i < len; i++) {
+		for(i = 0; i < len; i += 1) {
 			match = jQuery.grep(taxa, function(taxon) {
 				return taxon.nameAccordingTo === preferredHierarchyOrder[i];
 			});
@@ -365,7 +376,7 @@ EolApi.prototype.hierarchyEntryForPage = function(pagesID) {
 	});
 	
 	return defer.promise();
-}
+};
 
 //some more info to dress up the currently known hierarchy nodes.  (new ones will get a placeholder image but no description.)
 //ID numbers may not remain the same.  Metalmark, for example, has gone through several ID changes
@@ -433,4 +444,4 @@ EolApi.hierarchyData = {
 		image:{mediaURL:"http://content7.eol.org/content/2010/07/13/04/52919_large.jpg"},
 		text: {description:"<p><b>Metalmark Moths of the World</b> <a href='http://choreutidae.lifedesks.org/'>http://choreutidae.lifedesks.org/</a><br />Metalmark moths (Lepidoptera: Choreutidae) are a poorly known, mostly tropical family of microlepidopterans.  The Metalmark Moths of the World LifeDesk provides species pages and an updated classification for the group.</p>"}
 	}
-}
+};
