@@ -462,6 +462,7 @@
                 <!-- this is not strictly necessary, but it avoids putting unreferenced files into your server -->
                 <exclude name="${dir.js}/**/*.js"/>
                 <exclude name="${dir.css}/**/*.css"/>
+            	<exclude name="${dir.css}/**/*.less"/>
             </fileset>
         </copy>
         
@@ -484,14 +485,20 @@
     <target name="-js.mylibs.concat" depends="-js.all.minify" description="(PRIVATE) Concatenates the JS files in dir.js.mylibs">
         <mkdir dir="./${dir.intermediate}/${dir.js.mylibs}"/>
 
-        <echo message="Concatenating JS libraries"/>
+        <echo message="Concatenating my JS libraries (ordered by -js.mylibs.concat target)"/>
         <!-- overwrite=no here means not to overwrite if the target is newer than the sources -->
         <concat destfile="./${dir.intermediate}/${dir.js}/libs-concat.js" overwrite="no">
-            <fileset dir="./${dir.intermediate}/${dir.js.mylibs}/">
-                <include name="**/*.js"/>
-                <exclude name="${file.default.js.bypass}"/>
-                <exclude name="${file.js.bypass}"/>                
-            </fileset>      
+            <!--Ordered js concat from https://github.com/paulirish/html5-boilerplate/wiki/Build-script . Add one entry for every file-->
+        	<fileset file="./${dir.js.mylibs}/sources/eolapi.js" />
+        	<fileset file="./${dir.js.mylibs}/layouts/treemap.js" />
+        	<fileset file="./${dir.js.mylibs}/layouts/pivotTreemap.js" />
+        	<fileset file="./${dir.js.mylibs}/vole.js" />
+        	<fileset file="./${dir.js.mylibs}/views/nested.js" />
+        	<fileset file="./${dir.js.mylibs}/right-panel.js" />
+        	<fileset file="./${dir.js.mylibs}/sources/TreeAdapter.js" />
+        	<fileset file="./${dir.js.mylibs}/sources/EolAdapter.js" />
+        	<fileset file="./${dir.js.mylibs}/sources/TolWebAdapter.js" />
+        	<fileset file="./${dir.js.mylibs}/sources/NexmlAdapter.js" />
         </concat>
     </target>
     
@@ -616,6 +623,8 @@
             <fileset dir="./${dir.intermediate}" includes="${page-files}"/>
         </replaceregexp>
         <!--[! use comments like this one to avoid having them get minified -->
+    	
+    	<foreach list="${file.stylesheets}" param="css_file" target="-css-remove-concatenated-stylesheets" /> 
 
         <echo message="Updating the HTML with the new css filename: ${style.css}"/>
         <if>
@@ -703,18 +712,31 @@
 
     <!-- CSS -->
     <target name="-css-remove-concatenated-stylesheets">
-            <echo>Removing ${css_file} from html</echo>
+            <echo>Removing ${css_file} from ${page-files} in ${dir.intermediate}</echo>
             <replaceregexp match="&lt;link.+href=&quot;.*${css_file}&quot;.*&gt;" replace="  ">
-                <fileset dir="${dir.publish}" includes="${page-files}"/>
-            </replaceregexp>       
+                <fileset dir="${dir.intermediate}" includes="${page-files}"/>
+            </replaceregexp>
     </target>
+
+	<target name="-less" depends="-mkdirs">
+		<echo message="Compiling LessCSS..."/>
+        <apply executable="java" parallel="false">
+            <fileset dir="${dir.css}" includes="*.less"/>
+            <arg line="-jar"/>
+            <arg path="./${dir.build.tools}/${tool.lesscss}"/>
+            <srcfile/>
+        	<mapper type="glob" from="*.less" to="${basedir}/${dir.intermediate}/${dir.css}/*.less.css"/>
+        	<targetfile/>
+        </apply>
+	</target>
         
-    <target name="-css" depends="-mkdirs" description="Concatenates and Minifies any stylesheets listed in the file.stylesheets property">
+    <target name="-css" depends="-mkdirs, -less" description="Concatenates and Minifies any stylesheets listed in the file.stylesheets property">
         <echo message="Concatenating css..."/>
         
         <!-- overwrite=no here means not to overwrite if the target is newer than the sources -->
         <concat destfile="./${dir.intermediate}/${dir.css}/style-concat.css" overwrite="no">
             <filelist dir="./${dir.source}/${dir.css}" files="${stylesheet-files}"/>
+        	<fileset dir="./${dir.intermediate}/${dir.css}" includes="*.less.css"/>
         </concat>
         
         <echo message="Minifying css..."/>
@@ -752,7 +774,7 @@
             <mapper type="glob" from="*.css" to="${basedir}/${dir.publish}/${dir.css}/*.css"/>
             <targetfile/>
         </apply>
-        <foreach list="${file.stylesheets}" param="css_file" target="-css-remove-concatenated-stylesheets" />        
+        <!--<foreach list="${file.stylesheets}" param="css_file" target="-css-remove-concatenated-stylesheets" /> -->       
     </target>
     
     
