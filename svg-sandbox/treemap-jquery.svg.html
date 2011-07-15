@@ -27,14 +27,19 @@
 	$(".vole-view-nested-svg").svg(onLoad);
 
 	function onLoad(svg) {
-		svg.rect(0, 0, 800, 800, 10, 10, {"class":"node root selectable"});
-		svg.text(0, 16, "Chordata < Animalia");
+		var g = svg.group({"class":"node root selectable"});
+		
+		svg.rect(g, 0, 0, 800, 800, 10, 10, {"class":"node root selectable"});
+		svg.text(g, 0, 16, "Chordata < Animalia");
+		var body = svg.group(g, {"class":"body children to-fetch", "transform": "translate(0, 20)"});
 
-		svg.rect(0, 20, 400, 780, 10, 10, {"class":"node selectable"});
-		svg.text(0, 36, "Amphibia");
+		var node1 = svg.group(body, {"class": "node selectable", "transform": "translate(0, 0)"});
+		svg.rect(node1, 0, 0, 400, 780, 10, 10, {"class":"node selectable"});
+		svg.text(node1, 0, 16, "Amphibia");
 
-		svg.rect(400, 20, 400, 780, 10, 10, {"class":"node selectable"});
-		svg.text(400, 36, "Appendicularia");
+		var node2 = svg.group(body, {"class": "node selectable", "transform": "translate(400, 0)"});
+		svg.rect(node2, 0, 0, 400, 780, 10, 10, {"class":"node selectable"});
+		svg.text(node2, 0, 16, "Appendicularia");
 	}
 	
 </script>
