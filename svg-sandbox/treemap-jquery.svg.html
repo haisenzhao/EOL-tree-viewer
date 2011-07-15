@@ -29,17 +29,33 @@
 	function onLoad(svg) {
 		var g = svg.group({"class":"node root selectable"});
 		
-		svg.rect(g, 0, 0, 800, 800, 10, 10, {"class":"node root selectable"});
-		svg.text(g, 0, 16, "Chordata < Animalia");
-		var body = svg.group(g, {"class":"body children to-fetch", "transform": "translate(0, 20)"});
+		border(g, 800, 800);
+		head(g, "Chordata < Animalia");
+		var b = body(g);
 
-		var node1 = svg.group(body, {"class": "node selectable", "transform": "translate(0, 0)"});
-		svg.rect(node1, 0, 0, 400, 780, 10, 10, {"class":"node selectable"});
-		svg.text(node1, 0, 16, "Amphibia");
+		node(b, 0, 0, 400, 800, "Amphibia");
+		node(b, 400, 0, 400, 800, "Appendicularia");
+	}
 
-		var node2 = svg.group(body, {"class": "node selectable", "transform": "translate(400, 0)"});
-		svg.rect(node2, 0, 0, 400, 780, 10, 10, {"class":"node selectable"});
-		svg.text(node2, 0, 16, "Appendicularia");
+	function head(parent, text) {
+		return $(".vole-view-nested-svg").svg('get').text(parent, 0, 16, text);
+	}
+
+	function border(parent, width, height) {
+		return $(".vole-view-nested-svg").svg('get').rect(parent, 0, 0, width, height, 10, 10, {"class":"node selectable"});
+	}
+
+	function body(parent) {
+		return $(".vole-view-nested-svg").svg('get').group(parent, {"class":"body children", "transform": "translate(0, 20)"});
+	}
+
+	function node(parent, tx, ty, width, height, label) {
+		var g = $(".vole-view-nested-svg").svg('get').group(parent, {"class": "node selectable", "transform": "translate(" + tx + ", " + ty + ")"});
+
+		border(g, width, height - 20);
+		head(g, label);
+
+		return g;
 	}
 	
 </script>
