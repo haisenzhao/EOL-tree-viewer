@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' content='' />
+<title>jquery.svg with external css</title>
+<!--[if IE]>
+<script src='http://html5shiv.googlecode.com/svn/trunk/html5.js'></script>
+<![endif]-->
+<link rel='stylesheet/less' type='text/css' href='treemap.less'>
+<link rel='stylesheet' type='text/css' href='../js/lib/jquery.svg/jquery.svg.css'> 
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+
+<script src="../js/lib/jquery.svg/jquery.svg.js"></script>
+<script src="../js/lib/jquery.svg/jquery.svgdom.js"></script>
+
+<script src='../js/lib/less/less.js' type='text/javascript'></script>
+<script type='text/javascript' charset='utf-8'>
+    less.env = 'development';
+    less.watch();
+  </script>
+</head>
+<body style='background-color:black;margin:0px;'>
+<div class='vole-view-nested-svg'></div>
+
+<script>
+	$(".vole-view-nested-svg").svg(onLoad);
+
+	function onLoad(svg) {
+		svg.configure({viewBox: '0 0 800 800'});
+		
+		var root = node(null, 0, 0, 800, 800, "Chordata < Animalia");
+
+		var container = jQuery(root).children("g.body")[0];
+		var parent = node(container, 0, 0, 400, 780, "Amphibia");
+		container = jQuery(parent).children("g.body")[0];
+
+		node(container, 0, 0, 400, 400, "snap");
+		node(container, 0, 400, 400, 360, "crackle");
+
+		container = jQuery(root).children("g.body")[0];
+		parent = node(container, 400, 0, 400, 780, "Appendicularia");
+		container = jQuery(parent).children("g.body")[0];
+
+		node(container, 0, 0, 400, 500, "pop");
+		parent = node(container, 0, 500, 400, 260, "shemp");
+
+		container = jQuery(parent).children("g.body")[0];
+		node(container, 0, 0, 300, 240, "tom");
+		node(container, 300, 0, 100, 240, "jerry");
+
+		jQuery("g.node").click(function(event) {
+			var parent = jQuery(this).parent().closest("g.node")[0];
+			
+			console.log("clicked " + this);
+			console.log("before:" + jQuery(svg.root()).attr("viewBox"));
+			zoomToFit(svg.root(), parent);
+			console.log("after:" + jQuery(svg.root()).attr("viewBox"));
+			return false;
+		});
+	}
+
+	function head(parent, text) {
+		return $(".vole-view-nested-svg").svg('get').text(parent, 0, 16, text);
+	}
+
+	function border(parent, width, height) {
+		return $(".vole-view-nested-svg").svg('get').rect(parent, 0, 0, width, height, 10, 10, {"class":"node selectable", "vector-effect":"non-scaling-stroke" });
+	}
+
+	function body(parent) {
+		return $(".vole-view-nested-svg").svg('get').group(parent, {"class":"body", "transform": "translate(0, 20)"});
+	}
+
+	function node(parent, tx, ty, width, height, label) {
+		var g = $(".vole-view-nested-svg").svg('get').group(parent, {"class": "node selectable", "transform": "translate(" + tx + ", " + ty + ")"});
+
+		border(g, width, height);
+		head(g, label);
+		body(g);
+
+		return g;
+	}
+
+	function animateViewBox() {
+		//TODO the animate() feature of the jquery svg plugin is broken in jquery 1.6.2. Will have to re-implement. 
+	}
+
+	function zoomToFit(svg, element) {
+		jQuery(svg).attr('viewBox', getViewBox(svg, element));
+		//TODO: will want to hide parent background fill, so we don't end up with white-on-white.  jQuery.fadeOut() doesn't work on <rect>, but animating the opacity and then display:none should work.
+	}
+
+	function getViewBox(svg, element) {
+		var bounds = element.getBBox();
+
+		transform(element.getTransformToElement(svg), bounds);
+
+		return bounds.x + " " + bounds.y + " " + bounds.width + " " + bounds.height;
+	}
+
+	function transform(matrix, rect) {
+		//note: assuming no skew or rotation, just scale and translation
+		
+		rect.x = matrix.a * rect.x + matrix.e;
+		rect.y = matrix.b * rect.y + matrix.f;
+
+		rect.width = matrix.a * rect.width;
+		rect.height = matrix.d * rect.height;
+	}
+	
+</script>
+
+</body>
+</html>
