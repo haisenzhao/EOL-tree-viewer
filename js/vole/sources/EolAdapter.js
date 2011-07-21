@@ -1,45 +1,44 @@
 function EolAdapter() {
 	this.helper = this;
 	
-	this.getRoot = function getRoot() {
+	this.getRoot = function getRoot(tree) {
 		//the tree is the same as the root node, just return this node;  (other tree types will have to handle this differently)
-		return this.data;
+		return tree;
 	};
 	
-	this.displayableNode = function displayableNode() {
-		return this.data && "total_descendants" in this.data; //if this is just a child stub, this will be undefined, and we can't map without area
+	this.displayableNode = function displayableNode(node) {
+		return node && "total_descendants" in node; //if this is just a child stub, this will be undefined, and we can't map without area
 	};
 		
-	this.getID = function getID() {
-		return this.data.taxonID;
+	this.getID = function getID(node) {
+		return node.taxonID;
 	};
 	
-	this.getURL = function getURL() {
-		return EolAdapter.api.buildURL("hierarchy_entries", this.getID());
+	this.getURL = function getURL(node) {
+		return EolAdapter.api.buildURL("hierarchy_entries", this.getID(node));
 	}
 
-	this.getName = function getName() {
-		return this.data.scientificName;
+	this.getName = function getName(node) {
+		return node.scientificName;
 	};
 	
-	this.hasChildren = function hasChildren() {
-		return this.data.children.length > 0;
+	this.hasChildren = function hasChildren(node) {
+		return node.children.length > 0;
 	};
 	
-	this.hasChildrenLocal = function hasChildrenLocal() {
-		return this.data.children.length > 0 && "total_descendants" in this.data.children[0]; //if it has stats, it's the full node
+	this.hasChildrenLocal = function hasChildrenLocal(node) {
+		return node.children.length > 0 && this.displayableNode(node.children[0]); //if it has stats, it's the full node
 	};
 	
-	this.getChildrenAsync = function getChildrenAsync() {
-		var defer = new jQuery.Deferred(),
-			that = this;
+	this.getChildrenAsync = function getChildrenAsync(node) {
+		var defer = new jQuery.Deferred();
 		
-		if (this.hasChildrenLocal()) {
-			defer.resolve(this.data.children);
+		if (this.hasChildrenLocal(node)) {
+			defer.resolve(node.children);
 		} else {
 			//create a deferred that gets this.api.hierarchySubtree(id, depth) and returns the children when it's done
-			EolAdapter.api.hierarchySubtree(this.getID(), 1).done(function(subtree) {
-				that.data.children = subtree.children;
+			EolAdapter.api.hierarchySubtree(this.getID(node), 1).done(function(subtree) {
+				node.children = subtree.children;
 				defer.resolve(subtree.children);
 			});
 		}
@@ -47,14 +46,14 @@ function EolAdapter() {
 		return defer;
 	};
 
-	this.getAncestors = function getAncestors() {
+	this.getAncestors = function getAncestors(node) {
 		//reverse to leaf-to-root order. Called on a slice(0) clone because reverse() modifies the original array.
-		return this.data.ancestors.slice(0).reverse(); 
+		return node.ancestors.slice(0).reverse(); 
 	};
 	
-	this.getVernacularName = function getVernacularName() {
+	this.getVernacularName = function getVernacularName(node) {
 		var language = "en", //TODO pull this out and make it settable
-			vernacularNames = this.data.vernacularNames,
+			vernacularNames = node.vernacularNames,
 			anyNames,
 			preferredName,
 			nameObj;
@@ -76,8 +75,8 @@ function EolAdapter() {
 	};
 	
 	//override vole.TreeAdapter.prototype.matchEOLTaxonConceptID, since we already have it
-	this.matchEOLTaxonConceptID = function() {
-		return jQuery.Deferred().resolve(this.data.taxonConceptID);
+	this.matchEOLTaxonConceptID = function(node) {
+		return jQuery.Deferred().resolve(node.taxonConceptID);
 	};
 }
 
