@@ -3,8 +3,8 @@
 		headHeight = 20,
 		headFontSize = 16,
 		borderRadius = 10,
-		minScale = 0.5,
-		maxScale = 4,
+		minScale = 0.4,
+		maxScale = 6,
 		
 		view = {
 			name: 'nested-svg',
@@ -42,27 +42,30 @@
 				 */
 				setBounds: function setBounds(node, bounds) {
 					var viewport = node.nearestViewportElement,
-						node = jQuery(node),
+						jqNode = jQuery(node),
 						border, body, clip,
 						sx, sy,
-						scale;
+						bodyScale, nodeScale;
 					
-					node.attr('transform', "translate(" + bounds.x + "," + bounds.y + ")");
+					jqNode.attr('transform', "translate(" + bounds.x + "," + bounds.y + ")");
 					bounds.x = bounds.y = 0;
 					
-					border = jQuery(node).children("rect.node");
+					border = jqNode.children("rect.node");
 					border.attr(bounds);
 					
-					clip = jQuery(node).children("clipPath").children("rect");
+					clip = jqNode.children("clipPath").children("rect");
 					clip.attr(bounds);
 					
 					//scale down the body so that, when the node is zoomed to full screen, text in children is normally sized
+					nodeScale = node.getTransformToElement(node.ownerSVGElement).a;
 					sx = bounds.width / jQuery(viewport).width();
 					sy = bounds.height / jQuery(viewport).height();
-					scale = Math.max(sx, sy);
+					bodyScale = Math.max(sx, sy);
+					bodyScale = bodyScale / nodeScale;
 					
-					body = jQuery(node).children("g.body");
-					body.attr('transform', "translate(0, " + headHeight + ") scale(" + scale + ")");
+					
+					body = jqNode.children("g.body");
+					body.attr('transform', "translate(0, " + headHeight + ") scale(" + bodyScale + ")");
 				},
 			
 				/*
@@ -231,27 +234,51 @@
 	 * Event Handlers *
 	 ******************/
 	
-	jQuery(".vole-view-nested-svg g.node").live('click', function(event) {
-		var scene = jQuery(".vole-view-nested-svg g.scene")[0];
+	jQuery(".vole-view-nested-svg svg").live("mousemove mouseup mousedown", function() {
+		var lastX, lastY, dragging, panCount = 0;
+		
+		return function (event) {
 			
-		console.log("clicked " + this);
-		console.log("before:" + jQuery(scene).attr("transform"));
-		zoomToFit(scene, this);
-		console.log("after:" + jQuery(scene).attr("transform"));
-		
-		fetchDescendants(jQuery(this), jQuery(this).data('templateAdapter'), jQuery(this).data('depth') + 1, view.layoutOps);
-		
-		updateLOD(this.ownerSVGElement);
-		
-		return false;
-	});
+			
+			var svg = this,
+				x = event.pageX,
+				y = event.pageY,
+				node, 
+				scene = jQuery(".vole-view-nested-svg g.scene")[0];
+			
+			if (event.type == "mousedown" ) {
+				lastX = x;
+				lastY = y;
+			} else if (event.type == "mouseup" ){
+				node = jQuery(event.target).closest("g.node");
+				if (node.length > 0 && !dragging) {
+					zoomToFit(scene, node[0]);
+					
+					fetchDescendants(node, node.data('templateAdapter'), node.data('depth') + 1, view.layoutOps);
+					
+					updateLOD(svg);
+				}
+				
+				lastX = lastY = null;
+				dragging = false;
+			} else if (lastX != null && event.type == "mousemove" ) {
+				dragging = true;
+				pan(svg, scene, x - lastX, y - lastY);
+				panCount += 1;
+				console.log(panCount);
+				
+				lastX = x;
+				lastY = y;
+			}
+			
+			return false;
+		};
+	}());
 	
-	$(".vole-view-nested-svg svg").live("mousewheel", function(event, delta) {
+	jQuery(".vole-view-nested-svg svg").live("mousewheel", function(event, delta) {
 		var dir = delta > 0 ? 'Up' : 'Down',
 			vel = Math.abs(delta),
 			x, y, transform;
-		
-		console.log("wheel " + dir + " at page (" + event.pageX + ", " + event.pageY + ") at a velocity of " + vel);
 		
 		x = event.pageX - this.offsetLeft;
 		y = event.pageY - this.offsetTop;
@@ -308,27 +335,34 @@
 			scene = jQuery(svg).children("g.scene")[0],
 			scale = Math.pow(2, amount/4);
 			
-		//console.log("zooming " + scale + "X at viewport (" + x + ", " + y + ")");
-		//jQuery(svg).parent().svg('get').line(null, x - 2, y + 0.5, x + 2.5, y + 0.5, {stroke:"red"});
+//		console.log("zooming " + scale + "X at viewport (" + x + ", " + y + ")");
+//		jQuery(svg).parent().svg('get').line(null, x - 2, y + 0.5, x + 2.5, y + 0.5, {stroke:"red"});
 		
 		var viewportToScene = svg.getTransformToElement(scene);
 		var pointInScene = viewportToScene.translate(x,y);
 		var width = jQuery(svg).width() * viewportToScene.a;
 		var height = jQuery(svg).height() * viewportToScene.d;
 		
-		//console.log("centering on scene (" + pointInScene.e + ", " + pointInScene.f + ")");
-		//jQuery(svg).parent().svg('get').line(scene, pointInScene.e + 0.5, pointInScene.f - 2, pointInScene.e + 0.5, pointInScene.f + 2.5, {stroke:"yellow"});
+//		console.log("centering on scene (" + pointInScene.e + ", " + pointInScene.f + ")");
+//		jQuery(svg).parent().svg('get').line(scene, pointInScene.e + 0.5, pointInScene.f - 2, pointInScene.e + 0.5, pointInScene.f + 2.5, {stroke:"yellow"});
 		
 		//move current transform back to origin
 		m = scene.getTransformToElement(svg);
-		m.e=0;
-		m.f=0;
-
-		m = m.translate(width / 2, height / 2); //center
+		m.e=x;
+		m.f=y;
 		
 		m = m.scale(scale); //zoom
 		
-		m = m.translate(-pointInScene.e, -pointInScene.f); //move clicked point to center
+		m = m.translate(-pointInScene.e, -pointInScene.f); //move clicked point to same position in viewport
+		
+		scene.transform.baseVal.initialize(svg.createSVGTransformFromMatrix(m));
+	}
+	
+	function pan(svg, scene, dx, dy) {
+		var m = svg.createSVGMatrix();
+		
+		m = m.translate(dx, dy);
+		m = m.multiply(scene.getTransformToElement(svg));
 		
 		scene.transform.baseVal.initialize(svg.createSVGTransformFromMatrix(m));
 	}
@@ -337,15 +371,15 @@
 		
 		jQuery(svg).find("g.node").each(function(index, element) {
 			var scale = this.getTransformToElement(svg).a;
-			console.log(scale);
+//			console.log(scale);
 			if (scale >= minScale && scale <= maxScale ) {
 				jQuery(this).children("rect").show();
 				jQuery(this).children("text").show();
-				console.log("showing " + jQuery(this).children("text").text());
+//				console.log("showing " + jQuery(this).children("text").text());
 			} else {
 				jQuery(this).children("rect").hide();
 				jQuery(this).children("text").hide();
-				console.log("hiding " + jQuery(this).children("text").text());
+//				console.log("hiding " + jQuery(this).children("text").text());
 			}
 		});
 		
