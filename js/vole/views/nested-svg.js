@@ -3,6 +3,8 @@
 		headHeight = 20,
 		headFontSize = 16,
 		borderRadius = 10,
+		minScale = 0.5,
+		maxScale = 4,
 		
 		view = {
 			name: 'nested-svg',
@@ -13,8 +15,12 @@
 				var svg = $(".vole-view-nested-svg").svg('get'),
 					view;
 				
+				//firefox svg element doesn't seem to obey the 100% dims, so we'll just make sure it's sized now
+				jQuery(svg.root()).width(jQuery(svg.root()).parent().width());
+				jQuery(svg.root()).height(jQuery(svg.root()).parent().height());
+				
 				svg.clear();
-				view = node(svg, svg.root(), tree, templateAdapter);
+				view = node(svg, svg.group({"class": "scene"}), tree, templateAdapter);
 				
 				//mark the data item with its view depth, so children can tell how deep they are
 				jQuery(view).data('depth', 0);
@@ -28,7 +34,7 @@
 			resize: function () {
 //				var root = viewContainer.children("svg");
 //				vole.getLayout().doLayout(root[0], getNodeOps(), true);
-				//do nothing for this view.  it will have been zoom/panned.
+				//TODO resize the svg element for firefox (which doesn't obey the 100% dims)
 			},
 			layoutOps: {
 				/*
@@ -37,8 +43,9 @@
 				setBounds: function setBounds(node, bounds) {
 					var viewport = node.nearestViewportElement,
 						node = jQuery(node),
-						border, body,
-						sx, sy;
+						border, body, clip,
+						sx, sy,
+						scale;
 					
 					node.attr('transform', "translate(" + bounds.x + "," + bounds.y + ")");
 					bounds.x = bounds.y = 0;
@@ -46,12 +53,16 @@
 					border = jQuery(node).children("rect.node");
 					border.attr(bounds);
 					
+					clip = jQuery(node).children("clipPath").children("rect");
+					clip.attr(bounds);
+					
 					//scale down the body so that, when the node is zoomed to full screen, text in children is normally sized
-					sx = bounds.width / viewport.clientWidth;
-					sy = bounds.height / viewport.clientHeight;
+					sx = bounds.width / jQuery(viewport).width();
+					sy = bounds.height / jQuery(viewport).height();
+					scale = Math.max(sx, sy);
 					
 					body = jQuery(node).children("g.body");
-					body.attr('transform', "translate(0, " + headHeight + ") scale(" + sx + "," + sy + ")");
+					body.attr('transform', "translate(0, " + headHeight + ") scale(" + scale + ")");
 				},
 			
 				/*
@@ -62,7 +73,7 @@
 						children;
 					
 					if (node.tagName.toLowerCase() === "svg") {
-						childContainer = jQuery(node);
+						childContainer = jQuery(node).children("g.scene").first();
 					} else {
 						childContainer = jQuery(node).children("g.body").first();
 					}
@@ -72,7 +83,7 @@
 			
 				/* takes either the root <svg> element, or a <g class='node'> and returns the area in which its child nodes can be laid out */
 				getLayoutBounds: function getLayoutBounds(node) {
-					var container;
+					var container, matrix;
 					
 					if (node.tagName.toLowerCase() === "svg") {
 						container = jQuery(node);
@@ -83,11 +94,14 @@
 							height: container.height()
 						};
 					} else {
+						container = jQuery(node).children("g.body");
+						matrix = node.getTransformToElement(container[0]);
+						
 						return {
 							x: 0,
 							y: 0,
-							width: node.getBBox().width,
-							height: node.getBBox().height - 20
+							width: matrix.a * node.getBBox().width,
+							height: matrix.d * (node.getBBox().height - 20)
 						};
 					}
 				}
@@ -122,7 +136,8 @@
 	
 	function clip(svg, container, data, templateAdapter) {
 		var clipPath = svg.other(container, "clipPath", {id:"clip" + templateAdapter.getID(data)});
-		svg.use(clipPath, "#border" + templateAdapter.getID(data));
+//		svg.use(clipPath, "#border" + templateAdapter.getID(data));
+		svg.rect(clipPath, 0, 0, 0, 0);
 		
 		return clipPath;
 	}
@@ -163,7 +178,7 @@
 		if (!parentName || parentDepth < maxDepth) {
 			parentBody.addClass("async-wait");
 			templateAdapter.getChildrenAsync(data).done(function (children) {
-				//parentBody.empty(); 
+				parentBody.empty(); 
 				//TODO hide background image, if there is one
 				
 				jQuery.each(children, function(index, child) {
@@ -217,16 +232,36 @@
 	 ******************/
 	
 	jQuery(".vole-view-nested-svg g.node").live('click', function(event) {
-		var svg = jQuery(this).parent().closest("svg")[0];
+		var scene = jQuery(".vole-view-nested-svg g.scene")[0];
 			
 		console.log("clicked " + this);
-		console.log("before:" + jQuery(svg).attr("viewBox"));
-		zoomToFit(svg, this);
-		console.log("after:" + jQuery(svg).attr("viewBox"));
+		console.log("before:" + jQuery(scene).attr("transform"));
+		zoomToFit(scene, this);
+		console.log("after:" + jQuery(scene).attr("transform"));
 		
 		fetchDescendants(jQuery(this), jQuery(this).data('templateAdapter'), jQuery(this).data('depth') + 1, view.layoutOps);
 		
+		updateLOD(this.ownerSVGElement);
+		
 		return false;
+	});
+	
+	$(".vole-view-nested-svg svg").live("mousewheel", function(event, delta) {
+		var dir = delta > 0 ? 'Up' : 'Down',
+			vel = Math.abs(delta),
+			x, y, transform;
+		
+		console.log("wheel " + dir + " at page (" + event.pageX + ", " + event.pageY + ") at a velocity of " + vel);
+		
+		x = event.pageX - this.offsetLeft;
+		y = event.pageY - this.offsetTop;
+		
+		zoom(this, delta, x, y);
+		
+		//TODO hide nodes that are too small or too big to be visible
+		updateLOD(this);
+		
+        return false;
 	});
 
 	/* ***************
@@ -241,28 +276,88 @@
 		return jQuery("g.node.root", viewContainer);
 	}
 	
-	function zoomToFit(svg, element) {
-		jQuery(svg).attr('viewBox', getViewBox(svg, element));
+	function zoomToFit(scene, element) {
+//		jQuery(svg).attr('viewBox', getViewBox(svg, element)); //setting viewBox in chrome makes all of the getTransform type methods throw exceptions...
+		var tx = getTransformToFit(scene, element);
+		
+		scene.transform.baseVal.initialize(tx);
 		//TODO: will want to hide parent background fill, so we don't end up with white-on-white.  jQuery.fadeOut() doesn't work on <rect>, but animating the opacity and then display:none should work.
 	}
-
-	function getViewBox(svg, element) {
-		var bounds = element.getBBox();
-
-		transform(element.getTransformToElement(svg), bounds);
-
-		return bounds.x + " " + bounds.y + " " + bounds.width + " " + bounds.height;
-	}
-
-	function transform(matrix, rect) {
-		//note: assuming no skew or rotation, just scale and translation
+	
+	function getTransformToFit(scene, element) {
+		var svg = scene.ownerSVGElement,
+			box = element.getBBox(),
+			m = svg.createSVGMatrix(),
+			width = jQuery(svg).width(),
+			height = jQuery(svg).height(),
+			s;
 		
-		rect.x = matrix.a * rect.x + matrix.e;
-		rect.y = matrix.b * rect.y + matrix.f;
-
-		rect.width = matrix.a * rect.width;
-		rect.height = matrix.d * rect.height;
+		s = Math.min(width / box.width, height / box.height);
+		m = m.scale(s);
+		
+		m = m.multiply(scene.getTransformToElement(element));
+		
+		return svg.createSVGTransformFromMatrix(m);
 	}
 	
-	viewContainer.svg(function() {vole.addView(view.name, view);});
+	/*
+	 * x, y are the desired center of the view, in screen pixels, relative to the upper left corner of the current view
+	 */
+	function zoom(svg, amount, x, y) {
+		var m = svg.createSVGMatrix(),
+			scene = jQuery(svg).children("g.scene")[0],
+			scale = Math.pow(2, amount/4);
+			
+		//console.log("zooming " + scale + "X at viewport (" + x + ", " + y + ")");
+		//jQuery(svg).parent().svg('get').line(null, x - 2, y + 0.5, x + 2.5, y + 0.5, {stroke:"red"});
+		
+		var viewportToScene = svg.getTransformToElement(scene);
+		var pointInScene = viewportToScene.translate(x,y);
+		var width = jQuery(svg).width() * viewportToScene.a;
+		var height = jQuery(svg).height() * viewportToScene.d;
+		
+		//console.log("centering on scene (" + pointInScene.e + ", " + pointInScene.f + ")");
+		//jQuery(svg).parent().svg('get').line(scene, pointInScene.e + 0.5, pointInScene.f - 2, pointInScene.e + 0.5, pointInScene.f + 2.5, {stroke:"yellow"});
+		
+		//move current transform back to origin
+		m = scene.getTransformToElement(svg);
+		m.e=0;
+		m.f=0;
+
+		m = m.translate(width / 2, height / 2); //center
+		
+		m = m.scale(scale); //zoom
+		
+		m = m.translate(-pointInScene.e, -pointInScene.f); //move clicked point to center
+		
+		scene.transform.baseVal.initialize(svg.createSVGTransformFromMatrix(m));
+	}
+	
+	function updateLOD(svg) {
+		
+		jQuery(svg).find("g.node").each(function(index, element) {
+			var scale = this.getTransformToElement(svg).a;
+			console.log(scale);
+			if (scale >= minScale && scale <= maxScale ) {
+				jQuery(this).children("rect").show();
+				jQuery(this).children("text").show();
+				console.log("showing " + jQuery(this).children("text").text());
+			} else {
+				jQuery(this).children("rect").hide();
+				jQuery(this).children("text").hide();
+				console.log("hiding " + jQuery(this).children("text").text());
+			}
+		});
+		
+		
+	}
+	
+	viewContainer.svg({
+		onLoad: function(svgwrapper) {
+			vole.addView(view.name, view);
+		},
+		settings: {width:"100%", height: "100%", version: "1.2"}
+	});
+	
+	
 })();

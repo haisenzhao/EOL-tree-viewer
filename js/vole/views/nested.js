@@ -186,7 +186,7 @@
 	}
 
 	//TODO add methods to setup and tear down the event handlers
-	jQuery("div.node, a.breadcrumb.ancestor").live("click", function() {
+	jQuery(".vole-view-nested div.node, .vole-view-nested a.breadcrumb.ancestor").live("click", function() {
 		var tmplItem = jQuery(this).tmplItem(),
 			url = tmplItem.getURL();
 
