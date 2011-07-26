@@ -494,6 +494,7 @@
         	<fileset file="./${dir.js.mylibs}/layouts/pivotTreemap.js" />
         	<fileset file="./${dir.js.mylibs}/vole.js" />
         	<fileset file="./${dir.js.mylibs}/views/nested.js" />
+        	<fileset file="./${dir.js.mylibs}/views/nested-svg.js" />
         	<fileset file="./${dir.js.mylibs}/right-panel.js" />
         	<fileset file="./${dir.js.mylibs}/sources/TreeAdapter.js" />
         	<fileset file="./${dir.js.mylibs}/sources/EolAdapter.js" />
