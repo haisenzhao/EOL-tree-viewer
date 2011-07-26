@@ -264,8 +264,8 @@
 			} else if (lastX != null && event.type == "mousemove" ) {
 				dragging = true;
 				pan(svg, scene, x - lastX, y - lastY);
-				panCount += 1;
-				console.log(panCount);
+				//panCount += 1;
+				//console.log(panCount);
 				
 				lastX = x;
 				lastY = y;
@@ -359,12 +359,12 @@
 	}
 	
 	function pan(svg, scene, dx, dy) {
-		var m = svg.createSVGMatrix();
+		var t = svg.createSVGTransform();
 		
-		m = m.translate(dx, dy);
-		m = m.multiply(scene.getTransformToElement(svg));
+		t.setTranslate(dx, dy);
 		
-		scene.transform.baseVal.initialize(svg.createSVGTransformFromMatrix(m));
+		scene.transform.baseVal.insertItemBefore(t, 0);
+		scene.transform.baseVal.consolidate();
 	}
 	
 	function updateLOD(svg) {
