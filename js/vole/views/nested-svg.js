@@ -43,20 +43,26 @@
 				setBounds: function setBounds(node, bounds) {
 					var viewport = node.nearestViewportElement,
 						jqNode = jQuery(node),
-						border, body, clip,
+						border, body, clip, label,
 						sx, sy,
-						bodyScale, nodeScale;
+						bodyScale, nodeScale,
+						headHeight;
 					
-					jqNode.attr('transform', "translate(" + bounds.x + "," + bounds.y + ")");
+					jqNode.attr("transform", "translate(" + bounds.x + "," + bounds.y + ")");
 					bounds.x = bounds.y = 0;
 					
-					border = jqNode.children("rect.node");
+					border = jqNode.children("rect");
 					border.attr(bounds);
 					
 					clip = jqNode.children("clipPath").children("rect");
 					clip.attr(bounds);
 					
-					//scale down the body so that, when the node is zoomed to full screen, text in children is normally sized
+					resizeLabel(jqNode, bounds);
+					
+					label = jqNode.children("text")[0];
+					headHeight = label.getBBox().height * label.getTransformToElement(node).a;
+					
+					//scale down the body so that, when the node is zoomed to full screen, (unresized) text in children is normally sized
 					nodeScale = node.getTransformToElement(node.ownerSVGElement).a;
 					sx = bounds.width / jQuery(viewport).width();
 					sy = bounds.height / jQuery(viewport).height();
@@ -64,7 +70,7 @@
 					bodyScale = bodyScale / nodeScale;
 					
 					
-					body = jqNode.children("g.body");
+					body = jqNode.children("g");
 					body.attr('transform', "translate(0, " + headHeight + ") scale(" + bodyScale + ")");
 				},
 			
@@ -76,17 +82,17 @@
 						children;
 					
 					if (node.tagName.toLowerCase() === "svg") {
-						childContainer = jQuery(node).children("g.scene").first();
+						childContainer = jQuery(node).children("g").first();
 					} else {
-						childContainer = jQuery(node).children("g.body").first();
+						childContainer = jQuery(node).children("g").first();
 					}
 					
-					return jQuery.makeArray(childContainer.children("g.node"));
+					return jQuery.makeArray(childContainer.children("g"));
 				},
 			
 				/* takes either the root <svg> element, or a <g class='node'> and returns the area in which its child nodes can be laid out */
 				getLayoutBounds: function getLayoutBounds(node) {
-					var container, matrix;
+					var container, matrix, label;
 					
 					if (node.tagName.toLowerCase() === "svg") {
 						container = jQuery(node);
@@ -97,14 +103,14 @@
 							height: container.height()
 						};
 					} else {
-						container = jQuery(node).children("g.body");
+						container = jQuery(node).children("g");
 						matrix = node.getTransformToElement(container[0]);
-						
+						label = jQuery(node).children("text")[0];
 						return {
 							x: 0,
 							y: 0,
 							width: matrix.a * node.getBBox().width,
-							height: matrix.d * (node.getBBox().height - 20)
+							height: matrix.d * (node.getBBox().height - label.getTransformToElement(node).a * label.getBBox().height)
 						};
 					}
 				}
@@ -280,12 +286,11 @@
 			vel = Math.abs(delta),
 			x, y, transform;
 		
-		x = event.pageX - this.offsetLeft;
-		y = event.pageY - this.offsetTop;
+//		x = event.pageX - this.offsetLeft;
+//		y = event.pageY - this.offsetTop;
 		
-		zoom(this, delta, x, y);
+		zoom(this, delta, event.clientX, event.clientY);
 		
-		//TODO hide nodes that are too small or too big to be visible
 		updateLOD(this);
 		
         return false;
@@ -346,14 +351,14 @@
 //		console.log("centering on scene (" + pointInScene.e + ", " + pointInScene.f + ")");
 //		jQuery(svg).parent().svg('get').line(scene, pointInScene.e + 0.5, pointInScene.f - 2, pointInScene.e + 0.5, pointInScene.f + 2.5, {stroke:"yellow"});
 		
-		//move current transform back to origin
+		//move current transform to clicked location (in viewport space)
 		m = scene.getTransformToElement(svg);
 		m.e=x;
 		m.f=y;
 		
 		m = m.scale(scale); //zoom
 		
-		m = m.translate(-pointInScene.e, -pointInScene.f); //move clicked point to same position in viewport
+		m = m.translate(-pointInScene.e, -pointInScene.f); //move clicked point in scene to same position in viewport
 		
 		scene.transform.baseVal.initialize(svg.createSVGTransformFromMatrix(m));
 	}
@@ -368,24 +373,52 @@
 	}
 	
 	function updateLOD(svg) {
-		
-		jQuery(svg).find("g.node").each(function(index, element) {
-			var scale = this.getTransformToElement(svg).a;
-//			console.log(scale);
-			if (scale >= minScale && scale <= maxScale ) {
-				jQuery(this).children("rect").show();
-				jQuery(this).children("text").show();
-//				console.log("showing " + jQuery(this).children("text").text());
-			} else {
-				jQuery(this).children("rect").hide();
-				jQuery(this).children("text").hide();
-//				console.log("hiding " + jQuery(this).children("text").text());
-			}
-		});
-		
-		
+		var node = jQuery(svg).children("g.scene").children("g.node");
+		updateSubtreeLOD(node, svg);
 	}
 	
+	function updateSubtreeLOD(node, svg) {
+		var scale = node[0].getTransformToElement(svg).a;
+
+		if (scale < minScale) {
+			node.hide(); //hide the entire subtree
+			return;
+		} else if (scale > maxScale) {
+			node.children("rect").hide();
+			node.children("text").hide();
+		} else {
+			node.show();
+			node.children("rect").show();
+			node.children("text").show();
+		}
+		
+		 //note: selecting on just "g" instead of "g.body" and "g.node" is much faster (esp. in firefox).  Avoids the jquery.svg implementation of the class selector.  But it only works if there are no other "g" children.
+		node.children("g").children("g").each(function(index, Element) {
+			updateSubtreeLOD(jQuery(this), svg);
+		});
+	}
+	
+	function resizeLabel(jqNode, bounds) {
+		var tx = 5, 
+			ty, scale, value, bbox;
+		
+		//resize labels that run outside the clip
+		label = jqNode.children("text");
+		bbox = label[0].getBBox();
+		if (bbox.width > (bounds.width - 10)) {
+			scale = (bounds.width - 10) / bbox.width;
+		}
+		
+		ty = 0;
+		value = "translate(" + tx + "," + ty + ")";
+		
+		if (scale) {
+			value += " scale(" + scale + ")";
+		}
+		
+		label.attr("transform", value);
+	}
+
 	viewContainer.svg({
 		onLoad: function(svgwrapper) {
 			vole.addView(view.name, view);
