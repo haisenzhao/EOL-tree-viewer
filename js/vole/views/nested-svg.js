@@ -241,7 +241,7 @@
 	 ******************/
 	
 	jQuery(".vole-view-nested-svg svg").live("mousemove mouseup mousedown", function() {
-		var lastX, lastY, dragging, panCount = 0;
+		var lastX, lastY, dragging, panCount = 0, lastSelection;
 		
 		return function (event) {
 			
@@ -249,7 +249,7 @@
 			var svg = this,
 				x = event.pageX,
 				y = event.pageY,
-				node, 
+				node, nodeData,
 				scene = jQuery(".vole-view-nested-svg g.scene")[0];
 			
 			if (event.type == "mousedown" ) {
@@ -267,14 +267,27 @@
 				
 				lastX = lastY = null;
 				dragging = false;
-			} else if (lastX != null && event.type == "mousemove" ) {
-				dragging = true;
-				pan(svg, scene, x - lastX, y - lastY);
-				//panCount += 1;
-				//console.log(panCount);
-				
-				lastX = x;
-				lastY = y;
+			} else if (event.type == "mousemove" ) {
+				if (lastX != null) {
+					//pan
+					dragging = true;
+					pan(svg, scene, x - lastX, y - lastY);
+					updateLOD(svg);
+					
+					lastX = x;
+					lastY = y;
+				} else {
+					//hover-selection
+					node = jQuery(event.target).closest("g.node");
+					
+					if (node[0] != lastSelection) {
+						nodeData = node.data();
+						node.trigger('voleSelection', nodeData);
+						console.log(nodeData);
+					}
+					
+					lastSelection = node[0];
+				}
 			}
 			
 			return false;
