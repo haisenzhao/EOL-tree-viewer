@@ -41,11 +41,22 @@ vole.TreeAdapter.prototype.getImage = function getImage(thumbnail) {
 	var image = jQuery("<img src='images/ajax-loader.gif'>"),
 		eolapi = this.eolapi;
 
+	this.getImageURL(node, thumbnail).done(function(url) {
+		image.attr("src", url);
+	});
+	
+	return image[0];
+};
+
+vole.TreeAdapter.prototype.getImageURL = function (node, thumbnail) {
+	var eolapi = this.eolapi,
+		deferred = new jQuery.Deferred();
+
 	this.getEOLPage(node).done(function(page) {
 		var dataObject, url;
 		
 		if (!page) {
-			image.attr("src", "images/no_image.png");
+			deferred.resolve("images/no_image.png");
 			return;
 		}
 		
@@ -60,14 +71,11 @@ vole.TreeAdapter.prototype.getImage = function getImage(thumbnail) {
 		}
 		
 		if (url) {
-			image.addClass("resizable"); //the original (placeholder) image wasn't marked as resizable yet, because that's ugly
-			image.attr("src", url);
+			deferreed.resolve(url);
 		} else {
-			image.attr("src", "images/no_image.png");
+			deferred.resolve("images/no_image.png");
 		}
 	});
-	
-	return image[0];
 };
 
 vole.TreeAdapter.prototype.getEOLPage = function (node) {
