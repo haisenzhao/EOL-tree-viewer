@@ -283,7 +283,6 @@
 					if (node[0] != lastSelection) {
 						nodeData = node.data();
 						node.trigger('voleSelection', nodeData);
-						console.log(nodeData);
 					}
 					
 					lastSelection = node[0];
@@ -390,20 +389,25 @@
 	}
 	
 	function updateSubtreeLOD(node, svg) {
-		var scale = node[0].getTransformToElement(svg).a;
+		var body = node.children("g"),
+			scale = body[0].getTransformToElement(svg).a;
 		
 		//have to show first in order to check isLabelOnScreen(node, svg)
 		node.show();
+		body.show();
 		node.children("rect").show();
 		node.children("text").show();
 
 		if (scale < minScale) {
-			node.hide(); //hide the entire subtree
-			return;
+			body.hide(); //hide the descendants
+			//TODO show image
+			return; //don't check descendants
 		} else if (scale > maxScale && !isLabelOnScreen(node, svg)) {
 			node.children("rect").hide();
 			node.children("text").hide();
 		}
+		
+		//TODO assume children will be visible, hide image
 		
 		//note: selecting on just "g" instead of "g.body" and "g.node" is much faster (esp. in firefox).  Avoids the jquery.svg implementation of the class selector.  But it only works if there are no other "g" children.
 		node.children("g").children("g").each(function(index, Element) {
