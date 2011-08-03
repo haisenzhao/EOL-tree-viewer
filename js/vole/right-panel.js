@@ -159,42 +159,23 @@
 			selectionFrozen = false;
 		}
 	});
-
-	//node hover handler - updates details and statistics panels
-	//TODO refactor this into a custom selection event handler, so it could be used by other kinds of views
-	jQuery(".selectable").live("mousemove", function nodeMouseMove(event) {
-		if (!selectionFrozen && this !== selectedElement ) {
-			var tmplItem = jQuery(this).tmplItem(), //the template item for the hovered node
-				statistics;
-
-			selectedElement = this;
-			jQuery(".selectable").removeClass("selected selected-path").filter(this).addClass("selected selected-path");
-			jQuery(this).parents("div.node").addClass("selected-path");
-
+	
+	jQuery(document).bind('voleSelection', function selectionHandler(event, nodeData) {
+		if (!selectionFrozen) {
 			//update statistics panel
-			statistics = jQuery.tmpl("right.statistics", tmplItem.data);
+			statistics = jQuery.tmpl("right.statistics", nodeData.node);
 			jQuery("#statistics").empty().append(statistics.contents());
-				
+			
 			//put a 'loading' image in the details panel in case we have to wait for the api
 			image = jQuery("<img src='images/ajax-loader.gif'>");
 			jQuery("#detail").empty().append(image);
-
-			tmplItem.getEOLPage().done(function (page) {
-					var details = jQuery.tmpl("right.detail", page, tmplItem.helper);
-					jQuery("#detail").empty().append(details.contents());
+			
+			//update the details panel
+			nodeData.templateAdapter.getEOLPage().done(function (page) {
+				var details = jQuery.tmpl("right.detail", page, nodeData.templateAdapter);
+				jQuery("#detail").empty().append(details.contents());
 			});
 		}
-		
-		return false;
-	});
-		
-	jQuery("body, div.root").live("mouseleave", function rootMouseLeave(event) {
-		if (!selectionFrozen) {
-			selectedElement = {};
-			jQuery(".selectable").removeClass("selected selected-path");
-		};
-
-		return false;
 	});
 	
 	jQuery("#search form").live('submit', function () {
