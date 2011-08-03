@@ -313,7 +313,6 @@
 		var tx = getTransformToFit(scene, element);
 		
 		scene.transform.baseVal.initialize(tx);
-		//TODO: will want to hide parent background fill, so we don't end up with white-on-white.  jQuery.fadeOut() doesn't work on <rect>, but animating the opacity and then display:none should work.
 	}
 	
 	function getTransformToFit(scene, element) {
@@ -379,23 +378,51 @@
 	
 	function updateSubtreeLOD(node, svg) {
 		var scale = node[0].getTransformToElement(svg).a;
+		
+		//have to show first in order to check isLabelOnScreen(node, svg)
+		node.show();
+		node.children("rect").show();
+		node.children("text").show();
 
 		if (scale < minScale) {
 			node.hide(); //hide the entire subtree
 			return;
-		} else if (scale > maxScale) {
+		} else if (scale > maxScale && !isLabelOnScreen(node, svg)) {
 			node.children("rect").hide();
 			node.children("text").hide();
-		} else {
-			node.show();
-			node.children("rect").show();
-			node.children("text").show();
 		}
 		
-		 //note: selecting on just "g" instead of "g.body" and "g.node" is much faster (esp. in firefox).  Avoids the jquery.svg implementation of the class selector.  But it only works if there are no other "g" children.
+		//note: selecting on just "g" instead of "g.body" and "g.node" is much faster (esp. in firefox).  Avoids the jquery.svg implementation of the class selector.  But it only works if there are no other "g" children.
 		node.children("g").children("g").each(function(index, Element) {
 			updateSubtreeLOD(jQuery(this), svg);
 		});
+	}
+	
+	function isLabelOnScreen(node, svg) {
+		var label = node.children("text")[0],
+			matrix = label.getTransformToElement(svg),
+			svg = jQuery(svg),
+			labelBounds = label.getBBox(),
+			viewport = {
+				x: 0,
+				y: 0,
+				width: svg.width(),
+				height: svg.height()
+			};
+
+		labelBounds.x = matrix.a * labelBounds.x + matrix.e;
+		labelBounds.y = matrix.d * labelBounds.y + matrix.f;
+		labelBounds.width *= matrix.a;
+		labelBounds.height *= matrix.d;
+		
+		return intersect(viewport, labelBounds);
+	}
+	
+	function intersect(r1, r2) {
+		return !(r2.x > r1.x + r1.width 
+			|| r2.x + r2.width < r1.x
+			|| r2.y > r1.y + r1.height
+			|| r2.y + r2.height < r1.y);
 	}
 	
 	function resizeLabel(jqNode, bounds) {
