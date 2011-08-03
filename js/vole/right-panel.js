@@ -34,7 +34,7 @@
 		
 			"{{if scientificName}}"+
 				"<h1 id='detail-title'>${scientificName}</h1>"+
-				"<h2 id='detail-subtitle'>${$item.getVernacularName()}</h2>"+
+				"<h2 id='detail-subtitle'>${$item.getVernacularName($data)}</h2>"+
 		
 				"{{tmpl($item.getDataObjects('StillImage', $data)[0]) 'right.detailImage'}}"+
 				"{{tmpl($item.getDataObjects('Text', $data)[0]) 'right.detailDescription'}}"+
@@ -171,7 +171,7 @@
 			jQuery("#detail").empty().append(image);
 			
 			//update the details panel
-			nodeData.templateAdapter.getEOLPage().done(function (page) {
+			nodeData.templateAdapter.getEOLPage(nodeData.node).done(function (page) {
 				var details = jQuery.tmpl("right.detail", page, nodeData.templateAdapter);
 				jQuery("#detail").empty().append(details.contents());
 			});

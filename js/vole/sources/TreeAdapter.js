@@ -6,11 +6,9 @@ vole.TreeAdapter.prototype.eolapi = new EolApi();
 
 vole.TreeAdapter.prototype.getDataObjects = vole.TreeAdapter.prototype.eolapi.getDataObjects;
 
-//Template helper method. (will be added to a jQuery template item.  this == a tmplItem)
-vole.TreeAdapter.prototype.matchEOLTaxonConceptID = function() {
+vole.TreeAdapter.prototype.matchEOLTaxonConceptID = function (node) {
 	var deferred = new jQuery.Deferred(),
-		query = this.getName(),
-		node = this.data;
+		query = this.getName(node);
 
 	this.eolapi.search(query).done(function(response) {
 		var results = response.results,
@@ -38,13 +36,12 @@ vole.TreeAdapter.prototype.matchEOLTaxonConceptID = function() {
 	return deferred.promise();
 }
 
-//Template helper method. (will be added to a jQuery template item.  this == a tmplItem)
-//returns a jQuery(<img class='resizable'>) that will get updated once the url is returned by the eolapi
+//returns a jQuery(<img>) that will get updated once the url is returned by the eolapi
 vole.TreeAdapter.prototype.getImage = function getImage(thumbnail) {
 	var image = jQuery("<img src='images/ajax-loader.gif'>"),
 		eolapi = this.eolapi;
 
-	this.getEOLPage().done(function(page) {
+	this.getEOLPage(node).done(function(page) {
 		var dataObject, url;
 		
 		if (!page) {
@@ -73,18 +70,16 @@ vole.TreeAdapter.prototype.getImage = function getImage(thumbnail) {
 	return image[0];
 };
 
-//Template helper method. (will be added to a jQuery template item.  this == a tmplItem)
-vole.TreeAdapter.prototype.getEOLPage = function getEOLPage() {
-	var node = this.data,
-		eolapi = this.eolapi,
+vole.TreeAdapter.prototype.getEOLPage = function (node) {
+	var eolapi = this.eolapi,
 		deferred = new jQuery.Deferred();
 	
 	if (node.page) {
-		//shortcut if this.data.page already fetched
+		//shortcut if node.page already fetched
 		return deferred.resolve(node.page);
 	}
 	
-	this.matchEOLTaxonConceptID().done(function(taxonConceptID) {
+	this.matchEOLTaxonConceptID(node).done(function(taxonConceptID) {
 		if (!taxonConceptID) {
 			node.page = null;
 			deferred.resolve(null);
