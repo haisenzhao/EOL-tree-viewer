@@ -80,14 +80,9 @@
 				 * takes either the root <svg> element, or a <g class='node'> and returns its child g.nodes
 				 */
 				getLayoutChildren: function getLayoutChildren(node) {
-					var childContainer,
-						children;
+					var childContainer;
 					
-					if (node.tagName.toLowerCase() === "svg") {
-						childContainer = jQuery(node).children("g").first();
-					} else {
-						childContainer = jQuery(node).children("g").first();
-					}
+					childContainer = jQuery(node).children("g").first(); //whether <svg> or <g class='node'>, the (only) <g> child is now the child container
 					
 					return jQuery.makeArray(childContainer.children("g"));
 				},
@@ -148,7 +143,6 @@
 	
 	function clip(svg, container, data, templateAdapter) {
 		var clipPath = svg.other(container, "clipPath", {id:"clip" + templateAdapter.getID(data)});
-//		svg.use(clipPath, "#border" + templateAdapter.getID(data));
 		svg.rect(clipPath, 0, 0, 0, 0);
 		
 		return clipPath;
@@ -223,7 +217,6 @@
 		}
 	}
 
-	
 	/* ****************
 	 * Event Handlers *
 	 ******************/
@@ -232,8 +225,6 @@
 		var lastX, lastY, dragging, panCount = 0, lastSelection;
 		
 		return function (event) {
-			
-			
 			var svg = this,
 				x = event.pageX,
 				y = event.pageY,
@@ -282,13 +273,6 @@
 	}());
 	
 	jQuery(".vole-view-nested-svg svg").live("mousewheel", function(event, delta) {
-		var dir = delta > 0 ? 'Up' : 'Down',
-			vel = Math.abs(delta),
-			x, y, transform;
-		
-//		x = event.pageX - this.offsetLeft;
-//		y = event.pageY - this.offsetTop;
-		
 		zoom(this, delta, event.clientX, event.clientY);
 		
 		updateLOD(this);
@@ -309,7 +293,6 @@
 	}
 	
 	function zoomToFit(scene, element) {
-//		jQuery(svg).attr('viewBox', getViewBox(svg, element)); //setting viewBox in chrome makes all of the getTransform type methods throw exceptions...
 		var tx = getTransformToFit(scene, element);
 		
 		scene.transform.baseVal.initialize(tx);
@@ -337,19 +320,10 @@
 	function zoom(svg, amount, x, y) {
 		var m = svg.createSVGMatrix(),
 			scene = jQuery(svg).children("g.scene")[0],
-			scale = Math.pow(2, amount/4);
-			
-//		console.log("zooming " + scale + "X at viewport (" + x + ", " + y + ")");
-//		jQuery(svg).parent().svg('get').line(null, x - 2, y + 0.5, x + 2.5, y + 0.5, {stroke:"red"});
-		
-		var viewportToScene = svg.getTransformToElement(scene);
-		var pointInScene = viewportToScene.translate(x,y);
-		var width = jQuery(svg).width() * viewportToScene.a;
-		var height = jQuery(svg).height() * viewportToScene.d;
-		
-//		console.log("centering on scene (" + pointInScene.e + ", " + pointInScene.f + ")");
-//		jQuery(svg).parent().svg('get').line(scene, pointInScene.e + 0.5, pointInScene.f - 2, pointInScene.e + 0.5, pointInScene.f + 2.5, {stroke:"yellow"});
-		
+			scale = Math.pow(2, amount/4),
+			viewportToScene = svg.getTransformToElement(scene),
+			pointInScene = viewportToScene.translate(x,y);
+
 		//move current transform to clicked location (in viewport space)
 		m = scene.getTransformToElement(svg);
 		m.e=x;
