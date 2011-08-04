@@ -56,7 +56,7 @@ vole.TreeAdapter.prototype.getImageURL = function (node, thumbnail) {
 		var dataObject, url;
 		
 		if (!page) {
-			deferred.resolve("images/no_image.png");
+			deferred.resolve(null); //TODO this (and several other Deferred.resolve() calls) should probably have been a Deferred.reject()
 			return;
 		}
 		
@@ -70,12 +70,10 @@ vole.TreeAdapter.prototype.getImageURL = function (node, thumbnail) {
 			}
 		}
 		
-		if (url) {
-			deferreed.resolve(url);
-		} else {
-			deferred.resolve("images/no_image.png");
-		}
+		deferred.resolve(url);
 	});
+	
+	return deferred;
 };
 
 vole.TreeAdapter.prototype.getEOLPage = function (node) {
