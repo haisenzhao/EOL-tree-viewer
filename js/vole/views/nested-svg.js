@@ -70,10 +70,13 @@
 					body = jqNode.children("g");
 					body.attr('transform', "translate(0, " + headHeight + ") scale(" + bodyScale + ")");
 					
-					bounds.y = headHeight;
-					bounds.height -= headHeight;
+//					bounds.y = headHeight;
+//					bounds.height -= headHeight;
 					image = jqNode.children("image");
-					image.attr(bounds);
+//					image.attr(bounds);
+					image.attr('width', bounds.width);
+					image.attr('height', bounds.height - headHeight);
+					image.attr('y', headHeight);
 				},
 			
 				/*
@@ -197,7 +200,8 @@
 		if (!parentName || parentDepth < maxDepth) {
 			parentBody.addClass("async-wait");
 			templateAdapter.getChildrenAsync(data).done(function (children) {
-				parentNode.children("image").hide();
+//				parentNode.children("image").hide();
+				fadeOut(parentNode.children("image"));
 				
 				jQuery.each(children, function(index, child) {
 					childNode = node(svg, parentBody, child, templateAdapter);
@@ -226,10 +230,16 @@
 		
 		return function (event) {
 			var svg = this,
-				x = event.pageX,
-				y = event.pageY,
-				node, nodeData,
-				scene = jQuery(".vole-view-nested-svg g.scene")[0];
+			x = event.pageX,
+			y = event.pageY,
+			node, nodeData,
+			scene;
+			
+			if (event.button == 2) {
+				return;
+			}
+			
+			scene = jQuery(".vole-view-nested-svg g.scene")[0];
 			
 			if (event.type == "mousedown" ) {
 				lastX = x;
@@ -373,7 +383,8 @@
 		childNodes = body.children("g");
 		
 		if (childNodes.length > 0) {
-			node.children("image").hide();
+//			node.children("image").hide();
+			fadeOut(node.children("image"));
 		
 			//note: selecting on just "g" instead of "g.body" and "g.node" is much faster (esp. in firefox).  Avoids the jquery.svg implementation of the class selector.  But it only works if there are no other "g" children.
 			childNodes.each(function(index, Element) {
@@ -430,6 +441,14 @@
 		}
 		
 		label.attr("transform", value);
+	}
+	
+	function fadeOut(element) {
+		//standard jQuery fadeOut doesn't seem to work on svg, even with jquery.svganim.js plugin
+		jQuery(element).animate({'opacity':0}, function complete() {
+			//note that jQuery().animate is animating the style opacity, not the attribute opacity
+			jQuery(this).hide().css('opacity', 1);
+		});
 	}
 
 	viewContainer.svg({
