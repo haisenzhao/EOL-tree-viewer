@@ -28,8 +28,6 @@
 				vole.getLayout().doLayout(svg.root(), getNodeOps(), true);
 				
 				fetchDescendants(jQuery(view), templateAdapter, vole.getViewDepth(), this.layoutOps);
-	
-				fetchLeafImages(jQuery(view), templateAdapter);
 			},
 			resize: function () {
 //				var root = viewContainer.children("svg");
@@ -43,7 +41,7 @@
 				setBounds: function setBounds(node, bounds) {
 					var viewport = node.nearestViewportElement,
 						jqNode = jQuery(node),
-						border, body, clip, label,
+						border, body, clip, label, image,
 						sx, sy,
 						bodyScale, nodeScale,
 						headHeight;
@@ -69,9 +67,13 @@
 					bodyScale = Math.max(sx, sy);
 					bodyScale = bodyScale / nodeScale;
 					
-					
 					body = jqNode.children("g");
 					body.attr('transform', "translate(0, " + headHeight + ") scale(" + bodyScale + ")");
+					
+					bounds.y = headHeight;
+					bounds.height -= headHeight;
+					image = jqNode.children("image");
+					image.attr(bounds);
 				},
 			
 				/*
@@ -129,6 +131,7 @@
 		border(svg, g, data, templateAdapter);
 		clip(svg, g, data, templateAdapter);
 		head(svg, g, data, templateAdapter);
+		image(svg, g, data, templateAdapter);
 		body(svg, g);
 
 		jQuery(g).data({
@@ -158,6 +161,20 @@
 	function body(svg, container) {
 		return svg.group(container, {"class":"body children-to-fetch", "transform": "translate(0, " + headHeight + ")"});
 	}
+	
+	function image(svg, container, data, templateAdapter) {
+		var image = svg.image(container, 0, headHeight, 0, 0, "images/empty.png", {"preserveAspectRatio":"xMidYMid slice"}),
+			thumbnail = false;
+	
+		//update the href, assume asynchronous
+		templateAdapter.getImageURL(data, thumbnail).done(function (url) {
+			if (url) {
+				image.href.baseVal = url;
+			}
+		});
+		
+		return image;
+	}
 
 	/* **********
 	 * Updaters *
@@ -175,11 +192,10 @@
 	
 	function fetchChildren(parentBody, templateAdapter, maxDepth, layoutOps) {
 		var parentBody = jQuery(parentBody),
-			parentNode = parentBody.parent()[0],
-			data = jQuery(parentNode).data('node'),
-			parentDepth = jQuery(parentNode).data('depth'),
+			parentNode = parentBody.parent(),
+			data = parentNode.data('node'),
+			parentDepth = parentNode.data('depth'),
 			parentName = templateAdapter.getName(data),
-			layoutBounds = layoutOps.getLayoutBounds(parentNode),
 			svg = $(".vole-view-nested-svg").svg('get'),
 			childNode;
 
@@ -187,15 +203,14 @@
 		if (!parentName || parentDepth < maxDepth) {
 			parentBody.addClass("async-wait");
 			templateAdapter.getChildrenAsync(data).done(function (children) {
-				parentBody.empty(); 
-				//TODO hide background image, if there is one
+				parentNode.children("image").hide();
 				
 				jQuery.each(children, function(index, child) {
 					childNode = node(svg, parentBody, child, templateAdapter);
 					jQuery(childNode).data('depth', parentDepth + 1);
 				});
 				
-				vole.getLayout().doLayout(parentNode, getNodeOps(), true);
+				vole.getLayout().doLayout(parentNode[0], getNodeOps(), true);
 	
 				parentBody.removeClass("children-to-fetch async-wait");
 				
@@ -203,38 +218,11 @@
 					parentBody.addClass("children");
 				}
 	
-				//these both basically happen asynchronously: any node bodies marked "leaf to-fetch" will get images and any "children to-fetch" will get children
-				fetchLeafImages(parentNode, templateAdapter);
 				fetchDescendants(parentBody, templateAdapter, vole.getViewDepth(), layoutOps);
 			});
-		} else {
-			parentBody.addClass("image-to-fetch");
-			fetchLeafImages(parentNode, templateAdapter);
 		}
 	}
 
-	function fetchLeafImages(container, templateHelper) {
-//		jQuery(container).find("div.body.image-to-fetch").each(function(){
-//			var leafBody = jQuery(this),
-//				thumbnail = leafBody.width() < 150 && leafBody.height() < 150;
-//				tmplItem = leafBody.tmplItem(),
-//				image = tmplItem.getImage(thumbnail);
-//
-//			leafBody.empty().append(image);
-//			
-//			jQuery(image).load(function() {
-//				//assuming no scaling has been done yet, setting 'natural' dims for browsers that don't set them
-//				this.naturalWidth = this.naturalWidth || this.width;
-//				this.naturalHeight = this.naturalHeight || this.height;
-//	
-//				if (jQuery(this).hasClass("resizable")) {
-//					this.resizeToFill();
-//				}
-//			});
-//
-//			leafBody.removeClass("image-to-fetch");
-//		});
-	}
 	
 	/* ****************
 	 * Event Handlers *
@@ -390,6 +378,7 @@
 	
 	function updateSubtreeLOD(node, svg) {
 		var body = node.children("g"),
+			childNodes,
 			scale = body[0].getTransformToElement(svg).a;
 		
 		//have to show first in order to check isLabelOnScreen(node, svg)
@@ -400,19 +389,25 @@
 
 		if (scale < minScale) {
 			body.hide(); //hide the descendants
-			//TODO show image
-			return; //don't check descendants
+			node.children("image").show();
+			return; //don't check descendants' visibility
 		} else if (scale > maxScale && !isLabelOnScreen(node, svg)) {
 			node.children("rect").hide();
 			node.children("text").hide();
 		}
 		
-		//TODO assume children will be visible, hide image
+		childNodes = body.children("g");
 		
-		//note: selecting on just "g" instead of "g.body" and "g.node" is much faster (esp. in firefox).  Avoids the jquery.svg implementation of the class selector.  But it only works if there are no other "g" children.
-		node.children("g").children("g").each(function(index, Element) {
-			updateSubtreeLOD(jQuery(this), svg);
-		});
+		if (childNodes.length > 0) {
+			node.children("image").hide();
+		
+			//note: selecting on just "g" instead of "g.body" and "g.node" is much faster (esp. in firefox).  Avoids the jquery.svg implementation of the class selector.  But it only works if there are no other "g" children.
+			childNodes.each(function(index, Element) {
+				updateSubtreeLOD(jQuery(this), svg);
+			});
+		} else {
+			node.children("image").show();
+		}
 	}
 	
 	function isLabelOnScreen(node, svg) {
