@@ -59,8 +59,8 @@
   <!-- other scripts, not added to production minified .js file-->
   <script src="js/lib/less/less.js" type="text/javascript"></script>
   <script type="text/javascript" charset="utf-8">
-    less.env = "development";
-    less.watch();
+    //less.env = "development";
+    //less.watch();
   </script>
 
   <!-- Note that scripts will only get concatenated if they are added to the -js.mylibs.concat target in build.xml -->
@@ -86,7 +86,6 @@
 		vole.setView('nested-svg');
 
 		jQuery("#vole-container").bind("vole_view", function(event, url){
-			//console.log("viewing " + url);
 			//urlencode the url and show it as the location hash.
 			location.hash = encodeURIComponent(url);
 		});
@@ -96,6 +95,15 @@
 		} else {
 			url = 'http://www.eol.org/api/hierarchy_entries/1.0/28991246.json';
 		}
+
+		vole.getAreaModel().getArea = function(viewNode) {
+			//FIXME? assumes viewNode is a DOM element with data attached
+			var viewNode = jQuery(viewNode),
+				templateAdapter = viewNode.data('templateAdapter'), 
+				data = viewNode.data('node');
+			
+			return data && templateAdapter && templateAdapter.getSubtreeSize(data) || 1;
+		};
 
 		vole.view(url);
 	});

@@ -83,10 +83,11 @@ function EolAdapter() {
 		//total_descendants does not include this node, but the media stats (total_descendants_with_text, etc) *do* appear to include it
 		return node && node.total_descendants + 1;
 	};
-//	
-//	this.getNumberOfLeaves = function(node) {
-//		//no way to determine this from the eol api response
-//	}
+	
+	this.getNumberOfLeaves = function(node) {
+		//no way to determine this from the eol api response
+		return 1;
+	}
 }
 
 EolAdapter.prototype = new vole.TreeAdapter();
