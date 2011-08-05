@@ -366,26 +366,36 @@
 	function updateSubtreeLOD(node, svg) {
 		var body = node.children("g"),
 			childNodes,
-			scale = body[0].getTransformToElement(svg).a;
-		
-		//have to show at least the node and label first in order to check isLabelOnScreen(node, svg)
-		node.removeClass('hideLabel');
+			scale = body[0].getTransformToElement(svg).a,
+			classesToAdd = "",
+			classesToRemove = "";
 
 		if (scale < minScale) {
 			node.addClass('hideSubtree');
 			return; //don't check descendants' visibility
 		} else {
-			node.removeClass('hideSubtree');
+			classesToRemove += " hideSubtree";
 		}
 		
+		//have to show at least the node and label first in order to check isLabelOnScreen(node, svg)
+		node.removeClass('hideLabel');
+		
 		if (scale > maxScale && !isLabelOnScreen(node, svg)) {
-			node.addClass('hideLabel').addClass('hideBackground');
+			classesToAdd += " hideLabel hideBackground";
 		} else {
-			node.removeClass('hideBackground');
+			classesToRemove += " hideBackground";
+		}
+		
+		//try to reduce the number of style updates by doing these all at once
+		if (classesToAdd.length > 0) {
+			node.addClass(classesToAdd);
+		}
+		
+		if (classesToRemove.length > 0) {
+			node.removeClass(classesToRemove);
 		}
 		
 		childNodes = body.children("g");
-		
 		if (childNodes.length > 0) {
 			childNodes.each(function(index, Element) {
 				updateSubtreeLOD(jQuery(this), svg);
