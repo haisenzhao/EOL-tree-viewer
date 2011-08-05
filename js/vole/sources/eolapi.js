@@ -361,12 +361,16 @@ EolApi.prototype.hierarchyEntryForPage = function(pagesID) {
 		var i = 0,
 			len = preferredHierarchyOrder.length,
 			taxa = page.taxonConcepts,
-			match;
+			match,
+			hierarchy;
+		
+		function filter(taxon) {
+			return taxon.nameAccordingTo === hierarchy;
+		}
 		
 		for(i = 0; i < len; i += 1) {
-			match = jQuery.grep(taxa, function(taxon) {
-				return taxon.nameAccordingTo === preferredHierarchyOrder[i];
-			});
+			hierarchy = preferredHierarchyOrder[i];
+			match = jQuery.grep(taxa, filter);
 			
 			if (match.length > 0) {
 				defer.resolve(match[0].identifier);
