@@ -123,7 +123,7 @@
 	//TODO make all of these more jQuery-ish.  Should just be able to create the elements and return them, and let the caller add them to the DOM where they want (remove svg and parent params).  May have to modify jquery.svg plugin.
 	//TODO in the end, the only param should really be the node itself
 	function node(svg, container, data, templateAdapter) {
-		var g = svg.group(container, {"class": "node selectable", "transform": "translate(0, 0)", "clip-path": "url(#clip" + templateAdapter.getID(data) + ")"}),
+		var g = svg.group(container, {"class": "node selectable children-to-fetch", "transform": "translate(0, 0)", "clip-path": "url(#clip" + templateAdapter.getID(data) + ")"}),
 			parent;
 
 		border(svg, g, data, templateAdapter);
@@ -156,7 +156,7 @@
 	}
 
 	function body(svg, container) {
-		return svg.group(container, {"class":"body children-to-fetch", "transform": "translate(0, " + headHeight + ")"});
+		return svg.group(container, {"class":"body", "transform": "translate(0, " + headHeight + ")"});
 	}
 	
 	function image(svg, container, data, templateAdapter) {
@@ -182,14 +182,18 @@
 	 * templateHelper: the tree source
 	 */
 	function fetchDescendants(container, templateHelper, maxDepth, layoutOps) {
-		container.find("g.body.children-to-fetch").each(function(){
-			fetchChildren(this, templateHelper, maxDepth, layoutOps);
-		});
+		//get children on the given node, or any descendants marked 'children-to-fetch'
+		container
+			.filter("g.node.children-to-fetch")
+			.add(container.find("g.node.children-to-fetch"))
+			.each(function(){
+				fetchChildren(this, templateHelper, maxDepth, layoutOps);
+			});
 	}
 	
-	function fetchChildren(parentBody, templateAdapter, maxDepth, layoutOps) {
-		var parentBody = jQuery(parentBody),
-			parentNode = parentBody.parent(),
+	function fetchChildren(parentNode, templateAdapter, maxDepth, layoutOps) {
+		var parentNode = jQuery(parentNode),
+			parentBody = parentNode.children("g.body"),
 			data = parentNode.data('node'),
 			parentDepth = parentNode.data('depth'),
 			parentName = templateAdapter.getName(data),
@@ -198,11 +202,8 @@
 
 		//display children if there is space or if the parent is unnamed 
 		if (!parentName || parentDepth < maxDepth) {
-			parentBody.addClass("async-wait");
+			parentNode.addClass("async-wait");
 			templateAdapter.getChildrenAsync(data).done(function (children) {
-//				parentNode.children("image").hide();
-				fadeOut(parentNode.children("image"));
-				
 				jQuery.each(children, function(index, child) {
 					childNode = node(svg, parentBody, child, templateAdapter);
 					jQuery(childNode).data('depth', parentDepth + 1);
@@ -210,7 +211,7 @@
 				
 				vole.getLayout().doLayout(parentNode[0], getNodeOps(), true);
 	
-				parentBody.removeClass("children-to-fetch async-wait");
+				parentNode.removeClass("children-to-fetch async-wait");
 				
 				if (children.length > 0) {
 					parentBody.addClass("children");
@@ -239,7 +240,7 @@
 				return;
 			}
 			
-			scene = jQuery(".vole-view-nested-svg g.scene")[0];
+			scene = jQuery(".vole-view-nested-svg g.scene");
 			
 			if (event.type == "mousedown" ) {
 				lastX = x;
@@ -247,7 +248,7 @@
 			} else if (event.type == "mouseup" ){
 				node = jQuery(event.target).closest("g.node");
 				if (node.length > 0 && !dragging) {
-					zoomToFit(scene, node[0]);
+					zoomToFit(scene[0], node[0]);
 					
 					fetchDescendants(node, node.data('templateAdapter'), node.data('depth') + 1, view.layoutOps);
 					
@@ -256,11 +257,13 @@
 				
 				lastX = lastY = null;
 				dragging = false;
+				scene.removeClass('panning');
 			} else if (event.type == "mousemove" ) {
 				if (lastX != null) {
 					//pan
 					dragging = true;
-					pan(svg, scene, x - lastX, y - lastY);
+					scene.addClass('panning'); //this addClass doesn't seem to work. (at least in chrome)
+					pan(svg, scene[0], x - lastX, y - lastY);
 					updateLOD(svg);
 					
 					lastX = x;
@@ -365,33 +368,28 @@
 			childNodes,
 			scale = body[0].getTransformToElement(svg).a;
 		
-		//have to show first in order to check isLabelOnScreen(node, svg)
-		node.show();
-		body.show();
-		node.children("rect").show();
-		node.children("text").show();
+		//have to show at least the node and label first in order to check isLabelOnScreen(node, svg)
+		node.removeClass('hideLabel');
 
 		if (scale < minScale) {
-			body.hide(); //hide the descendants
-			node.children("image").show();
+			node.addClass('hideSubtree');
 			return; //don't check descendants' visibility
-		} else if (scale > maxScale && !isLabelOnScreen(node, svg)) {
-			node.children("rect").hide();
-			node.children("text").hide();
+		} else {
+			node.removeClass('hideSubtree');
+		}
+		
+		if (scale > maxScale && !isLabelOnScreen(node, svg)) {
+			node.addClass('hideLabel').addClass('hideBackground');
+		} else {
+			node.removeClass('hideBackground');
 		}
 		
 		childNodes = body.children("g");
 		
 		if (childNodes.length > 0) {
-//			node.children("image").hide();
-			fadeOut(node.children("image"));
-		
-			//note: selecting on just "g" instead of "g.body" and "g.node" is much faster (esp. in firefox).  Avoids the jquery.svg implementation of the class selector.  But it only works if there are no other "g" children.
 			childNodes.each(function(index, Element) {
 				updateSubtreeLOD(jQuery(this), svg);
 			});
-		} else {
-			node.children("image").show();
 		}
 	}
 	

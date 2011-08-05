@@ -56,6 +56,12 @@
 		width:100%;
 		height:100%;
 	}
+	
+	g.scene.panning, g.scene.zooming {
+		image {
+			display: none !important;
+		}
+	}
 
 	//move anything that's not treemap-layout-specific to main style.less
 	rect.node {
@@ -74,5 +80,26 @@
 		fill: white;
 		stroke: none;
 		font-size: inherit;
+	}
+	
+	g.node {
+		> image { display: none; } //default: show subtree, hide image
+	
+		&.hideSubtree {
+			> g.body { display: none; }
+			> image { display: inline; opacity: 1.0;}
+		}
+		
+		&.hideBackground {
+			> rect { display: none; }
+		}
+		
+		&.hideLabel {
+			> text { display: none; }
+		}
+		
+		&.children-to-fetch {
+			> image { display: inline; opacity: 1.0;}
+		}
 	}
 }
