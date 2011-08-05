@@ -161,7 +161,7 @@
 	
 	function image(svg, container, data, templateAdapter) {
 		var image = svg.image(container, 0, headHeight, 0, 0, "images/empty.png", {"preserveAspectRatio":"xMidYMid slice"}),
-			thumbnail = false;
+			thumbnail = true;
 	
 		//update the href, assume asynchronous
 		templateAdapter.getImageURL(data, thumbnail).done(function (url) {
@@ -380,7 +380,7 @@
 		//have to show at least the node and label first in order to check isLabelOnScreen(node, svg)
 		node.removeClass('hideLabel');
 		
-		if (scale > maxScale && !isLabelOnScreen(node, svg)) {
+		if (scale > maxScale ) {
 			classesToAdd += " hideLabel hideBackground";
 		} else {
 			classesToRemove += " hideBackground";

@@ -58,8 +58,14 @@
 	}
 	
 	g.scene.panning, g.scene.zooming {
+		//go-faster mode.  these properties don't seem to be supported on svg <image> by chrome. (even though they presumably are for html <img>)
+		color-rendering: optimizeSpeed;
+		shape-rendering: optimizeSpeed;
+		text-rendering: optimizeSpeed;
+
 		image {
 			display: none !important;
+			image-rendering: optimizeSpeed;
 		}
 	}
 
@@ -92,6 +98,7 @@
 		
 		&.hideBackground {
 			> rect { display: none; }
+			> image { display: none !important; } //override the children-to-fetch selector
 		}
 		
 		&.hideLabel {
