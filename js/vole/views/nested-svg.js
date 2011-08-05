@@ -443,10 +443,13 @@
 	
 	function fadeOut(element) {
 		//standard jQuery fadeOut doesn't seem to work on svg, even with jquery.svganim.js plugin
-		jQuery(element).animate({'opacity':0}, function complete() {
-			//note that jQuery().animate is animating the style opacity, not the attribute opacity
-			jQuery(this).hide().css('opacity', 1);
-		});
+		element = jQuery(element);
+		if (element.css('opacity') == 1) {
+			element.animate({'opacity':0}, function complete() {
+				//note that jQuery().animate is animating the style opacity, not the attribute opacity
+				jQuery(this).hide();
+			});
+		}
 	}
 
 	viewContainer.svg({
