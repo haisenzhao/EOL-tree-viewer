@@ -47,36 +47,50 @@ EolApi.prototype.ping = function (success, error) {
 };
 
 EolApi.prototype.getJSONP = ( function() {
-	//not having much luck getting the browser to cache JSONP responses, so I'll just keep my own.  (Based on http://www.slideshare.net/Dmitry.Baranovskiy/your-javascript-library)
-	var jsonCache = {};
-	var keys = [];
-		
-	return function (url, config, requestID) {
-		var key = url + "?" + jQuery.param(config);
-		key.replace("http://" + this.apiHost,""); //remove the protocol and host to (hopefully) make lookups a bit faster
-		
-		if (!(key in jsonCache)) {
-			var ajaxSettings = {
+	var supports_local_storage = false;
+	
+	function getJSONPUncached(url, config) {
+		var ajaxSettings = {
 		        dataType:"jsonp", //appends the 'callback=?' param
 		        type:"GET",
 		        url:url,
 		        data:config,
 			};
-				
-			//add to cache
-			jsonCache[key] = jQuery.ajax(ajaxSettings);
-			keys.push(key);
-			
-			//maintain the cache max. size
-			if (keys.length > this.cacheSize) {
-				delete jsonCache[keys.shift()];
-			}
-			
-		}
 		
-		return jsonCache[key];
+		return jQuery.ajax(ajaxSettings);
+	}
+	
+	function getJSONPCached(url, config) {
+		var key = url + "?" + jQuery.param(config),
+			promise;
+		
+		if (localStorage[key] == undefined) {
+			promise = getJSONPUncached(url, config);
+			
+			promise.done(function(response) {
+				localStorage[key] = JSON.stringify(response); //TODO expire cached responses?
+			});
+		} else {
+			promise = jQuery.Deferred().resolve(JSON.parse(localStorage[key])).promise();
+		}
+
+		return promise;
 	}	
+	
+	try {
+		supports_local_storage = 'localStorage' in window && window['localStorage'] !== null;
+	} catch (e) { 
+		supports_local_storage = false; 
+	}
+		
+	if (supports_local_storage) {
+		return getJSONPCached;
+	} else {
+		return getJSONPUncached;
+	}
 })();
+
+
 
 EolApi.prototype.hierarchy_entries = function (taxonID) {
 	//TODO handle unknown taxonIDs.  API responds with an http 200 OK, so I still have to check for errors on ajax 'success'. And it's in XML instead of json.  Response is like <response><error><message>Unknown identifier taxonID</message></error></response> 
@@ -305,8 +319,12 @@ EolApi.prototype.stump = function (onSuccess) {
 			});
 	
 			jQuery.whenArray(hierarchyRequests)
-				.done(function() { defer.resolve(root) })
-				.fail(function(args) { defer.reject(args) });
+				.done(function() { 
+					defer.resolve(root) 
+				})
+				.fail(function(args) {
+					defer.reject(args) 
+				});
 		})
 		.fail(function(args) { 
 			defer.reject(args) 
