@@ -233,4 +233,11 @@ jQuery(document).ready(function() {
 		vole.tm.view(null);
 		//TODO update right panel div sizes to fit remaining height
 	});
+	
+	jQuery("#dump").click(function() {
+		var stats = vole.tm.getCurrentStats(),
+			data = "data:application/x-download;charset=utf-8," + encodeURIComponent(stats);
+		
+		window.open(data, "_self");
+	});
 });

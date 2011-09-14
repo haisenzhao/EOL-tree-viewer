@@ -554,5 +554,31 @@ EOLTreeMap.getSubtree = function(tree, id){
 	return null;
 };
 
+EOLTreeMap.prototype.getCurrentStats = function() {
+	var stats = "",
+		controller = this.controller,
+		tree = this.shownTree;
+	
+	//head row
+	stats += "TaxonID" + ",";
+	stats += "Name" + ",";
+  	jQuery.each(controller.stats, function (key, stat) {
+		stats += stat.name + ",";
+	});
+  	stats += "\n";
+	
+	TreeUtil.eachLevel(tree, 0, controller.levelsToShow, function(node) {
+		stats += node.taxonID + ",";
+		stats += node.name + ",";
+      	jQuery.each(controller.stats, function (key, stat) {
+			var value = stat.func(node);
+			stats += value + ",";
+		});
+      	stats += "\n";
+	});
+	
+	return stats;
+};
+
 /* Used to test taxon color values for being a hex color string */
 EOLTreeMap.hexPattern = /^#([0-9a-f]{3}){1,2}$/i;
