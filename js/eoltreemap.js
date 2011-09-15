@@ -556,25 +556,21 @@ EOLTreeMap.getSubtree = function(tree, id){
 
 EOLTreeMap.prototype.getCurrentStats = function() {
 	var stats = "",
-		controller = this.controller,
+		properties = ["taxonID", "scientificName", "parentNameUsageID", "total_unreviewed_text", "total_descendants_with_images", "total_descendants_with_text", "total_trusted_images", "total_unreviewed_images", "total_trusted_text", "total_descendants"],
+	    controller = this.controller,
 		tree = this.shownTree;
 	
 	//head row
-	stats += "TaxonID" + ",";
-	stats += "Name" + ",";
-  	jQuery.each(controller.stats, function (key, stat) {
-		stats += stat.name + ",";
-	});
-  	stats += "\n";
-	
+	for (var i = 0; i < properties.length; i++) {
+		stats += properties[i] + ",";
+	}
+	stats += "\n";
+
 	TreeUtil.eachLevel(tree, 0, controller.levelsToShow, function(node) {
-		stats += node.taxonID + ",";
-		stats += node.name + ",";
-      	jQuery.each(controller.stats, function (key, stat) {
-			var value = stat.func(node);
-			stats += value + ",";
-		});
-      	stats += "\n";
+		for (var i = 0; i < properties.length; i++) {
+			stats += node[properties[i]] + ",";
+		}
+		stats += "\n";
 	});
 	
 	return stats;
