@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>VoLE technical description</title>
+</head>
+<body>
+<h1>Overview</h1>
+	<h2>Usage</h2>
+		<p>On the left-hand side of the screen, VoLE shows users a browseable treemap of Encyclopedia of Life taxa. Initially, all of the publicly-accessible EOL trees are shown. Clicking on any of these takes you to the root of that tree. By default, only two levels of the tree are shown: the current parent node fills the view space, and its children are differently sized rectangles filling the area within the parent. To browse to a child node (making it the parent, and showing its children), the user clicks within the child rectangle. Also, the labels of all of the nodes function as a link to the corresponding EOL page. However, instead of getting the usual label, the parent node gets a "breadcrumb trail" ending at the node itself and showing as many ancestors as will fit in the label area. These breadcrumbs can be clicked to browse directly to that ancestor.</p>
+		<p>On the right-hand side of the screen is a tabbed panel containing a number of contextual detail pages and settings. The default page shows an image and general description of the taxon that the mouse is currently hovering over in the treemap. Another shows EOL statistics for the hovered node. Others show treemap display settings, search for a taxon, or display help text.</p>
+		<p>[Search usage overview here? See details below]</p>
+		
+	<h2>Project structure</h2>
+		<p>VoLE is written entirely in HTML, CSS and javascript. The overall structure is contained in index.html. The styling (layout, typography and color scheme) are contained in several .css files. The functionality is contained in several javascript files, some of which are 3rd party libraries described below.</p>
+	
+	<h2>EOL API, API interface</h2>
+		<p>All of the data, text and images in VoLE come from the Encyclopedia of Life. It's served by APIs (application programming interfaces), which are documented at http://eol.org/api:</p>
+			<table>
+			<thead><tr><th>Method</th><th>Description</th></tr></thead>
+			<tbody>
+			<tr><td>ping</td>	 <td>returns either a positive response (indicating APIs are functional), or returns a negative response or nothing at all (indicating APIs are not functional at that time).</td></tr>
+			<tr><td>search</td>	 <td>given a value for a specific element (e.g. scientific name=Homo sapiens), returns a paginated list of the EOL pages containing the search term</td></tr>
+			<tr><td>pages</td>	 <td>takes an EOL page identifier and returns the scientific name for that page, and optionally returns information about common names, media (text, images and videos), and references to the hierarchies which recognize the taxon described on the page.</td></tr>
+			<tr><td>collections</td>	 <td>returns all metadata about a particular collection and the items it contains indexed by EOL</td></tr>
+			<tr><td>data_objects</td>	 <td>returns all metadata about a particular data object (text, image or video) indexed by EOL</td></tr>
+			<tr><td>hierarchy_entries</td>	 <td>gives access to a single hierarchy indexed by EOL and its internal relationships</td></tr>
+			<tr><td>provider_hierarchies</td>	 <td>lists the identifiers for all hierarchies supplied by content partners</td></tr>
+			<tr><td>hierarchies</td>	 <td>given a hierarchy identifier, this method returns metadata about the hierarchy and lists the root taxa</td></tr>
+			<tr><td>search_by_provider</td>	 <td>get the EOL page IDs given a provider's hierarchy_id and the provider's own unique identifier (e.g. search for the EOL page ID for the ITIS TSN 180542: http://eol.org/api/search_by_provider/1.0/180542?hierarchy_id=107 )</td></tr>
+			</tbody></table>
+		<p>All of the APIs offer both a JSONP and an XML response format.  VoLE uses the JSONP response, which avoids browser security restrictions on getting XML from a different domain, allowing VoLE to be hosted anywhere. Internally, VoLE has an API interface component that uses jQuery AJAX methods to fetch the data, and it caches the responses (for the current browser session) to prevent repeating requests.</p> 
+	
+	<h2>Treemap, JIT</h2>
+		<p>The tree is presented in a space-filling treemap layout. In this layout, nodes take up enough display space to contain their children. Specifically, VoLE uses a squarified treemap, which is calculated by the Javascript Infovis Toolkit.  This algorithm tries to arrange sibling nodes within their parent so that they are as close as possible to being square, which makes for a more readable treemap.</p>
+		<p>Leaf nodes can be sized to show a chosen property of the node. (Leaf nodes, in this case, being nodes that are currently displayed without children, even if they have children in the full source tree.) By default, VoLE gives a displayed leaf node a size proportional to the number of nodes in its subtree. This allows users to visually estimate the relative diversity of the displayed taxa. The user may choose instead to size the node by any of the statistics served by the hierarchy_entries API (amount of text or images in the EOL, the number of descendants that have text or images, etc.).</p>
+		<p>Initially, leaf nodes are all filled with an image of their taxon. Alternatively, the user may hide the images and color the nodes to show some other hierarchy_entries statistic of their choice. This is done by scaling the statistic (for the currently displayed nodes) to a color gradient, with the lowest value giving a black node and the highest value giving a bright green node.</p>
+		
+<h1>Code walkthrough</h1>
+	<h2>Viewing a subtree for some ID</h2>
+		<p>When the wants to view a node, VoLE first has to construct the parts of the tree that are needed to view that node. It needs the node itself and the descendants of that node (up to the display depth set by the user). Also, to create the breadcrumb trail, it needs all of the ancestors of the node.  Since the user may have gone directly to that node (by using a bookmark or the search panel, for example), it's possible that some or all of these nodes will need to be fetched from the API. The first step is to fetch the chosen node and any ancestors that are needed to connect it to the already-fetched portion of the tree. Then, the rest of the subtree is fetched recursively until the desired depth is reached.</p>
+		<p>Next, the Javascript Infovis Toolkit is used to create HTML DOM elements for the nodes, and arrange them in the treemap layout. After the elements are created and laid out, VoLE adds animated placeholder images to let the user know that it is fetching taxon images from the EOL. When the images arrive, they replace the placeholder nodes and are scaled to fit the node.</p>
+		<p>As mentioned above, the nodes can be sized or colored according to all of the tree topology and content count stats included in the hierarchy_entries API. Since linear sizing can be extreme, sizes can be scaled by one of a number of sublinear functions. The chosen color stat is mapped linearly to a color gradient. The color range is scaled to the current visible range of the stat, so the current highest value will get the brightest color and the current lowest value with get the darkest color. This makes even small differences visible to the user (at the expense of hiding absolute values and differences when the view is changed). The color gradient and the current value range extremes are shown on the options panel.</p>
+		
+	<h2>User Interface</h2>
+		<p>overing the mouse over a node sets it as "selected" and triggers event handlers to update the detail view, stats and treemap highlighting. The detail and stats handlers fetch the content they need from the API and insert it into their respective pages in the tab panel. The highlight handler uses jQuery to add a "highlight" CSS class to the selected node and all of its ancestors. Holding down the "F" key prevents the node selection event from being triggered, so that the user to mouse around without updating the selected node (to copy text or click a link in the detail view, for example).</p> 
+	
+	<h2>Search</h2>
+		<p>The search panel allows the user to go directly to any taxon in the Encyclopedia of Life, without having to browse through the tree from the root, or even know the scientific name of the taxon. It uses the search API to get a list of matching page IDs. VoLE then fetches the page objects from the pages API.  Each page object has a list of hierarchy entries that refer to the page.  VoLE uses these hierarchy entries to segregate the search results into 1) those that are in the tree the users is currently browsing, 2) those that are in a different tree, and 3) those that do not appear in any of the public EOL classifications. The search results are presented to the user in these groups, with links to browse the VoLE treemap directly to the result taxon.</p>
+		<p>In addition to the page matches, search API also returns a snippet of the content that was matched.  VoLE uses this to display the matched text as users hover the mouse over results. This allows users to see why, for example, an unfamiliar scientific name was matched by their query.</p>
+		
+<h1>Future Plans</h1>
+	<h2>Pan/zoom (SVG or canvas)</h2>
+	<p>[details here]</p>
+	<h2>Mobile + touch</h2>
+	<p>[details here]</p>
+	<h2>Other applications (games, etc.)</h2>
+	<p>[details here]</p>
+</body>
+</html>
