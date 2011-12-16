@@ -14,7 +14,7 @@
 	<h2>Project structure</h2>
 		<p>VoLE is written entirely in HTML, CSS and javascript. The overall structure is contained in index.html. The styling (layout, typography and color scheme) are contained in several .css files. The functionality is contained in several javascript files, some of which are 3rd party libraries described below.</p>
 	
-	<h2>EOL API, API interface</h2>
+	<h2>EOL API</h2>
 		<p>All of the data, text and images in VoLE come from the Encyclopedia of Life. It's served by APIs (application programming interfaces), which are documented at http://eol.org/api:</p>
 			<table>
 			<thead><tr><th>Method</th><th>Description</th></tr></thead>
@@ -31,13 +31,13 @@
 			</tbody></table>
 		<p>All of the APIs offer both a JSONP and an XML response format.  VoLE uses the JSONP response, which avoids browser security restrictions on getting XML from a different domain, allowing VoLE to be hosted anywhere. Internally, VoLE has an API interface component that uses jQuery AJAX methods to fetch the data, and it caches the responses (for the current browser session) to prevent repeating requests.</p> 
 	
-	<h2>Treemap, JIT</h2>
+	<h2>Treemap</h2>
 		<p>The tree is presented in a space-filling treemap layout. In this layout, nodes take up enough display space to contain their children. Specifically, VoLE uses a squarified treemap, which is calculated by the Javascript Infovis Toolkit.  This algorithm tries to arrange sibling nodes within their parent so that they are as close as possible to being square, which makes for a more readable treemap.</p>
 		<p>Leaf nodes can be sized to show a chosen property of the node. (Leaf nodes, in this case, being nodes that are currently displayed without children, even if they have children in the full source tree.) By default, VoLE gives a displayed leaf node a size proportional to the number of nodes in its subtree. This allows users to visually estimate the relative diversity of the displayed taxa. The user may choose instead to size the node by any of the statistics served by the hierarchy_entries API (amount of text or images in the EOL, the number of descendants that have text or images, etc.).</p>
 		<p>Initially, leaf nodes are all filled with an image of their taxon. Alternatively, the user may hide the images and color the nodes to show some other hierarchy_entries statistic of their choice. This is done by scaling the statistic (for the currently displayed nodes) to a color gradient, with the lowest value giving a black node and the highest value giving a bright green node.</p>
 		
 <h1>Code walkthrough</h1>
-	<h2>Viewing a subtree for some ID</h2>
+	<h2>Viewing a subtree</h2>
 		<p>When the wants to view a node, VoLE first has to construct the parts of the tree that are needed to view that node. It needs the node itself and the descendants of that node (up to the display depth set by the user). Also, to create the breadcrumb trail, it needs all of the ancestors of the node.  Since the user may have gone directly to that node (by using a bookmark or the search panel, for example), it's possible that some or all of these nodes will need to be fetched from the API. The first step is to fetch the chosen node and any ancestors that are needed to connect it to the already-fetched portion of the tree. Then, the rest of the subtree is fetched recursively until the desired depth is reached.</p>
 		<p>Next, the Javascript Infovis Toolkit is used to create HTML DOM elements for the nodes, and arrange them in the treemap layout. After the elements are created and laid out, VoLE adds animated placeholder images to let the user know that it is fetching taxon images from the EOL. When the images arrive, they replace the placeholder nodes and are scaled to fit the node.</p>
 		<p>As mentioned above, the nodes can be sized or colored according to all of the tree topology and content count stats included in the hierarchy_entries API. Since linear sizing can be extreme, sizes can be scaled by one of a number of sublinear functions. The chosen color stat is mapped linearly to a color gradient. The color range is scaled to the current visible range of the stat, so the current highest value will get the brightest color and the current lowest value with get the darkest color. This makes even small differences visible to the user (at the expense of hiding absolute values and differences when the view is changed). The color gradient and the current value range extremes are shown on the options panel.</p>
